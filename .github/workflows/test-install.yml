@@ -23,7 +23,7 @@ jobs:
           sudo apt-get update -y
           echo ::endgroup::
           echo ::group::Install
-          sudo aptitude install -y mkvtoolnix ffmpeg
+          sudo aptitude install -f -y mkvtoolnix ffmpeg
           echo ::endgroup::
 
       - name: Program versions
