@@ -22,7 +22,7 @@ jobs:
           sudo apt-get update -y
           echo ::endgroup::
           echo ::group::Install
-          sudo apt-get install -f -y libavfilter9 libavformat60 ffmpeg
+          sudo apt-get install -f -y libavcodec59 libavfilter9 libavformat60 ffmpeg
           echo ::endgroup::
 
       - name: Program versions
