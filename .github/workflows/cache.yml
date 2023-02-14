@@ -16,7 +16,7 @@ jobs:
     steps:
 
       - name: Download input
-        run: curl -Z --create-dirs --output-dir input -K - < <(cat <<< ${{ inputs.urls }})
+        run: curl -Z --create-dirs --output-dir input -K - <<< "${{ inputs.urls }}"
 
       - name: Check input
         run: |
