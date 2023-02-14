@@ -10,7 +10,7 @@ jobs:
       - name: Install programs
         run: |
           # ./install-ubuntu.sh
-          apt-get install -y aptitude
+          sudo apt-get install -y aptitude
           echo "::group::Add repositories"
           sig="/usr/share/keyrings/gpg-pub-moritzbunkus.gpg"
           sudo curl -so $sig "https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg"
