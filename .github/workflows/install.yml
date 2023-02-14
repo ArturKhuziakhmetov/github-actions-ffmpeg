@@ -1,0 +1,23 @@
+name: Reusable Install
+on: workflow_call
+jobs:
+  install:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add repositories
+        run: |
+          sudo add-apt-repository ppa:savoury1/ffmpeg4
+          sudo add-apt-repository ppa:savoury1/ffmpeg5
+          sig="/usr/share/keyrings/gpg-pub-moritzbunkus.gpg"
+          sudo curl -so $sig "https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg"
+          sudo tee "/etc/apt/sources.list.d/mkvtoolnix.download.list" <<< \
+          "deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu $(lsb_release -cs) main"
+
+      - name: Update
+        run: sudo apt-get update -y
+
+      - name: Install
+        run: sudo apt-get install -y ffmpeg mkvtoolnix
+
+      - name: Check program versions
+        run: mkvmerge -V; ffmpeg -version

@@ -1,33 +1,13 @@
 # git commit -am "dev" && git push -qf && gh workflow run test-install.yml
-name: Test Install
-run-name: ffmpeg-git
+
+name: Install
+run-name: Install ffmpeg and mkvtoolnix
 on: workflow_dispatch
 jobs:
+  call-install:
+    uses: ./.github/workflows/install.yml
   job:
     runs-on: ubuntu-latest
     steps:
-
-      - name: Install programs
-        run: |
-          # ./install-ubuntu.sh
-          echo "::group::Add repositories"
-          # sig="/usr/share/keyrings/gpg-pub-moritzbunkus.gpg"
-          # sudo curl -so $sig "https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg"
-          # sudo tee "/etc/apt/sources.list.d/mkvtoolnix.download.list" <<< \
-          # "deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu $(lsb_release -cs) main"
-          sudo add-apt-repository ppa:savoury1/ffmpeg4
-          sudo add-apt-repository ppa:savoury1/ffmpeg5
-          sudo add-apt-repository ppa:savoury1/ffmpeg-git
-          echo ::endgroup::
-          echo ::group::Update
-          sudo apt-get update -y
-          echo ::endgroup::
-          echo ::group::Install
-          sudo apt-get install -y ffmpeg
-          echo ::endgroup::
-
-      - name: Program versions
-        run: |
-          # Versions
-          mkvmerge -V
-          ffmpeg -version
+      - name: Test
+        run: ffprobe -version
