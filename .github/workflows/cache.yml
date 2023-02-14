@@ -1,4 +1,4 @@
-# git commit -am "dev" && git push -f && gh workflow run cache.yml -F urls=@urls -F xxh=@xxh
+# git commit -am "dev" && git push -qf && gh workflow run cache.yml -F urls=@urls -F xxh=@xxh
 
 name: Cache input
 on:
@@ -16,7 +16,7 @@ jobs:
     steps:
 
       - name: Download input
-        run: curl -Z --create-dirs --output-dir input -K - <<< ${{ inputs.urls }}
+        run: curl -Z --create-dirs --output-dir input -K - < <(cat <<< ${{ inputs.urls }})
 
       - name: Check input
         run: |
