@@ -1,6 +1,6 @@
 # git commit -am "dev" && git push -qf && gh workflow run test-install.yml
 name: Test Install
-run-name: q
+run-name: apt-fast
 on: workflow_dispatch
 jobs:
   job:
@@ -17,8 +17,8 @@ jobs:
           # sudo add-apt-repository ppa:savoury1/multimedia
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
-          sudo apt-get update -qy
-          sudo apt-get install -qy mkvtoolnix ffmpeg
+          sudo apt-fast update -y
+          sudo apt-fast install -y mkvtoolnix ffmpeg
 
       - name: Program versions
         run: |
