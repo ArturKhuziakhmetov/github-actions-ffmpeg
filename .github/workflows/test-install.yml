@@ -1,33 +1,29 @@
 # git commit -am "dev" && git push -qf && gh workflow run test-install.yml
 name: Test Install
-run-name: apt-fast with cache
+run-name: ffmpeg-git
 on: workflow_dispatch
 jobs:
   job:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Cache /var/cache/apt/apt-fast
-        uses: actions/cache@v3
-        with:
-          path: /var/cache/apt
-          key: cache-apt
-
       - name: Install programs
         run: |
           # ./install-ubuntu.sh
+          echo "::group::Add repositories"
           sig="/usr/share/keyrings/gpg-pub-moritzbunkus.gpg"
           sudo curl -so $sig "https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg"
           sudo tee "/etc/apt/sources.list.d/mkvtoolnix.download.list" <<< \
           "deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu $(lsb_release -cs) main"
-          # sudo add-apt-repository ppa:savoury1/graphics
-          # sudo add-apt-repository ppa:savoury1/multimedia
-          echo ::group::add-apt-repository
           sudo add-apt-repository ppa:savoury1/ffmpeg4
-          sudo add-apt-repository ppa:savoury1/ffmpeg5
+          sudo add-apt-repository ppa:savoury1/ffmpeg-git
           echo ::endgroup::
+          echo ::group::Update
           sudo apt-fast update -y
+          echo ::endgroup::
+          echo ::group::Install
           sudo apt-fast install -y mkvtoolnix ffmpeg
+          echo ::endgroup::
 
       - name: Program versions
         run: |
