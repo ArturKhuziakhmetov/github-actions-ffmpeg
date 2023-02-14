@@ -1,4 +1,4 @@
-name: Reusable Install
+name: Reusable install
 on: workflow_call
 jobs:
   install:
