@@ -10,8 +10,8 @@ jobs:
       - name: Cache /var/cache/apt/apt-fast
         uses: actions/cache@v3
         with:
-          path: /var/cache/apt/apt-fast
-          key: cache-apt-fast
+          path: /var/cache/apt
+          key: cache-apt
 
       - name: Install programs
         run: |
@@ -26,11 +26,13 @@ jobs:
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
           echo ::endgroup::
-          sudo apt-fast update -y
-          sudo apt-fast install -y mkvtoolnix ffmpeg
+          sudo apt-fast update -qy
+          sudo apt-fast install -qy mkvtoolnix ffmpeg
 
       - name: Program versions
         run: |
           # Versions
           mkvmerge -V
           ffmpeg -version
+          apt-fast --help
+          man apt-fast
