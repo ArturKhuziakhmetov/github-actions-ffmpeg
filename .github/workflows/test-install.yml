@@ -19,10 +19,10 @@ jobs:
           sudo add-apt-repository ppa:savoury1/ffmpeg-git
           echo ::endgroup::
           echo ::group::Update
-          sudo apt-fast update -y
+          sudo apt-get update -y
           echo ::endgroup::
           echo ::group::Install
-          sudo apt-fast install -y mkvtoolnix ffmpeg
+          sudo apt-get install -y mkvtoolnix ffmpeg
           echo ::endgroup::
 
       - name: Program versions
