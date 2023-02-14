@@ -1,7 +1,10 @@
-name: Reusable install
-on: workflow_call
+# git commit -am "dev" && git push -qf && gh workflow run install.yml
+
+name: Install
+run-name: Install ffmpeg and mkvtoolnix
+on: workflow_dispatch
 jobs:
-  install:
+  main:
     runs-on: ubuntu-latest
     steps:
       - name: Add repositories
