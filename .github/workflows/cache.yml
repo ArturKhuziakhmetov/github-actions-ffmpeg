@@ -18,34 +18,14 @@ jobs:
         if: always()
         run: |
           curl -K - << "EOF"
-          ${{ inputs.urls }}
-          EOF
+          ${{ inputs.urls }}EOF
           echo AAAAAAAAAAAA
 
       - name: Download input
         if: always()
-        run: curl -K - << "EOF"
-          ${{ inputs.urls }}
-          EOF
-
-      - name: Download input
-        if: always()
         run: |
-          curl -K <(printf "${{ inputs.urls }}")
+          curl -K <(printf '${{ inputs.urls }}')
           echo CCCCCCCCCC
-
-      - name: Download input
-        if: always()
-        run: |
-          curl -K <(echo "${{ inputs.urls }}")
-          echo QQQQQQQQQQ
-
-      - name: Download input
-        if: always()
-        run: |
-          printf -v var "${{ inputs.urls }}"
-          curl -K <(echo "$var")
-          echo RRRRRRRRRR
 
 
       # - name: Check input
