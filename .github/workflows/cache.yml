@@ -27,6 +27,24 @@ jobs:
           curl -K <(printf '${{ inputs.urls }}')
           echo CCCCCCCCCC
 
+      - name: Download input
+        if: always()
+        run: |
+          curl -K <(echo '${{ inputs.urls }}')
+          echo EEEEEEEEEEEEE
+
+      - name: Download input
+        if: always()
+        run: |
+          curl -K <(echo -e '${{ inputs.urls }}')
+          echo FFFFFFFFFFFFF
+
+      - name: Download input
+        if: always()
+        run: |
+          ${{ inputs.xxh }}
+          echo FFFFFFFFFFFFF
+
 
       # - name: Check input
       #   run: |
