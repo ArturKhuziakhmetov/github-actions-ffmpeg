@@ -6,26 +6,56 @@ on:
     inputs:
       urls:
         required: true
-        type: string
       xxh:
         required: true
-        type: string
 jobs:
   job:
     runs-on: ubuntu-latest
     steps:
+        # run: curl -Z --create-dirs --output-dir input -K - <<< '${{ inputs.urls }}'
 
       - name: Download input
-        run: curl -Z --create-dirs --output-dir input -K - <<< '${{ inputs.urls }}'
-
-      - name: Check input
-        run: |
-          stat -c "%10s  %n" input/*
-          xxhsum -c <<< ${{ inputs.xxh }}
-
-      - name: Cache save input
         if: always()
-        uses: actions/cache/save@v3
-        with:
-          path: input
-          key: input-005
+        run: |
+          curl -K - << "EOF"
+          ${{ inputs.urls }}
+          EOF
+          echo AAAAAAAAAAAA
+
+      - name: Download input
+        if: always()
+        run: curl -K - << "EOF"
+          ${{ inputs.urls }}
+          EOF
+
+      - name: Download input
+        if: always()
+        run: |
+          curl -K <(printf "${{ inputs.urls }}")
+          echo CCCCCCCCCC
+
+      - name: Download input
+        if: always()
+        run: |
+          curl -K <(echo "${{ inputs.urls }}")
+          echo QQQQQQQQQQ
+
+      - name: Download input
+        if: always()
+        run: |
+          printf -v var "${{ inputs.urls }}"
+          curl -K <(echo "$var")
+          echo RRRRRRRRRR
+
+
+      # - name: Check input
+      #   run: |
+      #     stat -c "%10s  %n" input/*
+      #     xxhsum -c <<< ${{ inputs.xxh }}
+
+      # - name: Cache save input
+      #   if: always()
+      #   uses: actions/cache/save@v3
+      #   with:
+      #     path: input
+      #     key: input-005
