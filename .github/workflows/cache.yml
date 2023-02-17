@@ -17,15 +17,17 @@ jobs:
 
       - name: Download
         run: |
-          curl -Z --create-dirs --output-dir input $(echo ${{ inputs.urls }})
+          xargs curl -Z --create-dirs --output-dir input << "EOF"
+          ${{ inputs.urls }}EOF
 
       - name: List files
         run: |
-          stat -c "%10s %n" input/*
+          cd input && ls -Qs1
 
       - name: Check sums
         run: |
-          b2sum -c <<< ${{ inputs.sums }}
+          b2sum -c << "EOF"
+          ${{ inputs.sums }}EOF
 
       - name: Save cache
         # if: always()
