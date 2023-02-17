@@ -1,59 +1,35 @@
-# git commit -am "dev" && git push -qf && gh workflow run cache.yml -F urls=@urls -F xxh=@xxh
+# git commit -am "dev" && git push -qf && gh workflow run cache.yml -F urls=@urls1 -F sums=@sums1 -f cache=plichta-1
 
-name: Cache input
+name: Create cache
 on:
   workflow_dispatch:
     inputs:
       urls:
         required: true
-      xxh:
+      sums:
+        required: true
+      cache:
         required: true
 jobs:
-  job:
+  caching:
     runs-on: ubuntu-latest
     steps:
-        # run: curl -Z --create-dirs --output-dir input -K - <<< '${{ inputs.urls }}'
 
-      - name: Download input
-        if: always()
+      - name: Download
+        run: >
+          curl -Z --create-dirs --output-dir input ${{ inputs.urls }}
+
+      - name: List files
         run: |
-          curl -K - << "EOF"
-          ${{ inputs.urls }}EOF
-          echo AAAAAAAAAAAA
+          stat -c "%10s %n" input/*
 
-      - name: Download input
-        if: always()
+      - name: Check sums
         run: |
-          curl -K <(printf '${{ inputs.urls }}')
-          echo CCCCCCCCCC
+          b2sum -c <<< ${{ inputs.sums }}
 
-      - name: Download input
-        if: always()
-        run: |
-          curl -K <(echo '${{ inputs.urls }}')
-          echo EEEEEEEEEEEEE
-
-      - name: Download input
-        if: always()
-        run: |
-          curl -K <(echo -e '${{ inputs.urls }}')
-          echo FFFFFFFFFFFFF
-
-      - name: Download input
-        if: always()
-        run: |
-          ${{ inputs.xxh }}
-          echo FFFFFFFFFFFFF
-
-
-      # - name: Check input
-      #   run: |
-      #     stat -c "%10s  %n" input/*
-      #     xxhsum -c <<< ${{ inputs.xxh }}
-
-      # - name: Cache save input
-      #   if: always()
-      #   uses: actions/cache/save@v3
-      #   with:
-      #     path: input
-      #     key: input-005
+      - name: Save cache
+        # if: always()
+        uses: actions/cache/save@v3
+        with:
+          path: input
+          key: ${{ inputs.cache }}
