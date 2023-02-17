@@ -22,10 +22,12 @@ jobs:
           ${{ inputs.urls }}EOF
 
       - name: List files
+        working-directory: input
         run: |
-          cd input && ls -Qs1
+          ls -Qs1
 
       - name: Check sums
+        working-directory: input
         run: |
           b2sum -c << "EOF"
           ${{ inputs.sums }}EOF
