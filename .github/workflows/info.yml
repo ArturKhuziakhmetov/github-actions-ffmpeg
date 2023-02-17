@@ -1,0 +1,15 @@
+# git commit -am "dev" && git push -qf && gh workflow run info.yml
+
+name: Info
+run-name: Env and programs
+on: workflow_dispatch
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Env
+        run: env | sort | uniq
+
+      - name: Programs
+        run: compgen -c | sort | uniq
