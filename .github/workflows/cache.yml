@@ -1,6 +1,7 @@
 # git commit -am "dev" && git push -qf && gh workflow run cache.yml -F urls=@urls1 -F sums=@sums1 -f cache=plichta-1
 
 name: Create cache
+run-name: ${{ inputs.cache }}
 on:
   workflow_dispatch:
     inputs:
@@ -30,7 +31,6 @@ jobs:
           ${{ inputs.sums }}EOF
 
       - name: Save cache
-        # if: always()
         uses: actions/cache/save@v3
         with:
           path: input
