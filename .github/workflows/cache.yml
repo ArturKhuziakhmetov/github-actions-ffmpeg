@@ -16,8 +16,8 @@ jobs:
     steps:
 
       - name: Download
-        run: >
-          curl -Z --create-dirs --output-dir input ${{ inputs.urls }}
+        run: |
+          curl -Z --create-dirs --output-dir input $(echo ${{ inputs.urls }})
 
       - name: List files
         run: |
