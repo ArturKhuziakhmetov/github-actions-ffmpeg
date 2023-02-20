@@ -1,15 +1,14 @@
-# git commit -am "dev" && git push -qf && gh workflow run cache.yml -F urls=@urls1 -F sums=@sums1 -f cache=plichta-1
+# git commit -am "dev" && git push -qf && gh workflow run cache.yml -f id=3f1836af-8589-3da4-eea4-8b7a06f9d6ae -F sums=@sums
 
 name: Create cache
 run-name: ${{ inputs.cache }}
 on:
   workflow_dispatch:
     inputs:
-      urls:
+      id:
+        description: Sendbig transfer id
         required: true
       sums:
-        required: true
-      cache:
         required: true
 jobs:
   caching:
@@ -18,8 +17,7 @@ jobs:
 
       - name: Download
         run: |
-          xargs curl -Z --create-dirs --output-dir input << "EOF"
-          ${{ inputs.urls }}EOF
+          curl --parallel --remote-header-name --remote-name-all --create-dirs --output-dir input $(curl https://s1.sendbig.com/api/Archive/viewArchive --referer https://www.sendbig.com --json '{identifier:"${{ inputs.id }}"}' | jq -j '.data.files[] | "https://", .serverIdentifier, ".sendbig.com/api/Files/download/", .id, "/${{ inputs.id }}/20138 "')
 
       - name: List files
         working-directory: input
@@ -27,7 +25,6 @@ jobs:
           ls -Qs1
 
       - name: Check sums
-        working-directory: input
         run: |
           b2sum -c << "EOF"
           ${{ inputs.sums }}EOF
@@ -36,4 +33,4 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: input
-          key: ${{ inputs.cache }}
+          key: ${{ inputs.id }}
