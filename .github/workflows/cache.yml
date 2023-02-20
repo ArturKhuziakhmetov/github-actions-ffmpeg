@@ -26,8 +26,9 @@ jobs:
           $(curl \
           --referer 'https://www.sendbig.com' \
           --header 'Content-Type: application/json' \
-          --data '{identifier:"${{ inputs.id }}"}' | \
+          --data '{identifier:"${{ inputs.id }}"}' \
           'https://s1.sendbig.com/api/Archive/viewArchive' \
+          | \
           jq -j '.data.files[] |
           "https://",
           .serverIdentifier,
