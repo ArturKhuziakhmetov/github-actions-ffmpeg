@@ -1,23 +1,39 @@
 # git commit -am "dev" && git push -qf && gh workflow run cache.yml -f id=3f1836af-8589-3da4-eea4-8b7a06f9d6ae -F sums=@sums
 
 name: Create cache
-run-name: ${{ inputs.cache }}
+run-name: ${{ inputs.id }}
 on:
   workflow_dispatch:
     inputs:
       id:
-        description: Sendbig transfer id
+        description: sendbig transfer id
         required: true
       sums:
         required: true
 jobs:
-  caching:
+  ${{ inputs.id }}:
     runs-on: ubuntu-latest
     steps:
 
       - name: Download
         run: |
-          curl --parallel --remote-header-name --remote-name-all --create-dirs --output-dir input $(curl https://s1.sendbig.com/api/Archive/viewArchive --referer https://www.sendbig.com --json '{identifier:"${{ inputs.id }}"}' | jq -j '.data.files[] | "https://", .serverIdentifier, ".sendbig.com/api/Files/download/", .id, "/${{ inputs.id }}/20138 "')
+          curl \
+          --parallel \
+          --remote-header-name \
+          --remote-name-all \
+          --create-dirs \
+          --output-dir 'input' \
+          $(curl \
+          --referer 'https://www.sendbig.com' \
+          --header 'Content-Type: application/json' \
+          --data '{identifier:"${{ inputs.id }}"}' | \
+          'https://s1.sendbig.com/api/Archive/viewArchive' \
+          jq -j '.data.files[] |
+          "https://",
+          .serverIdentifier,
+          ".sendbig.com/api/Files/download/",
+          .id, 
+          "/${{ inputs.id }}/20138 "')
 
       - name: List files
         working-directory: input
