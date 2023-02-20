@@ -11,7 +11,7 @@ on:
       sums:
         required: true
 jobs:
-  create cache:
+  create-cache:
     runs-on: ubuntu-latest
     steps:
 
