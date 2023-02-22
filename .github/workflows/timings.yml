@@ -18,8 +18,8 @@ jobs:
           # Install ffmpeg
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
-          sudo apt-get update -y
-          sudo apt-get install -y ffmpeg
+          sudo apt-fast update -y
+          sudo apt-fast install -y ffmpeg
 
       - name: FFmpeg version
         run: |
@@ -30,6 +30,8 @@ jobs:
         with:
           path: input
           key: ${{ inputs.id }}
+          restore-keys: |
+            3f1836af
 
       - name: Timings
         run: |
