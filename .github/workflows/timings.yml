@@ -30,8 +30,7 @@ jobs:
         with:
           path: input
           key: ${{ inputs.id }}
-          restore-keys: |
-            3f1836af
+          restore-keys: ""
 
       - name: Timings
         run: |
