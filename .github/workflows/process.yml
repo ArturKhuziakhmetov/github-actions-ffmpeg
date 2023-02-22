@@ -1,0 +1,56 @@
+name: Plichta French transcoding
+run-name: Test 30s
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        required: true
+      preset:
+        required: true
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preset
+        run: |
+          # Preset
+          cat << "" > preset
+          ${{ inputs.id }}
+
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: input
+          key: ${{ inputs.id }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+
+      - name: Install ffmpeg
+        run: |
+          # Install ffmpeg
+          sudo add-apt-repository ppa:savoury1/ffmpeg4
+          sudo add-apt-repository ppa:savoury1/ffmpeg5
+          sudo apt-fast update -y
+          sudo apt-fast install -y ffmpeg
+
+      - name: FFmpeg version
+        run: |
+          ffmpeg -version
+
+      - name: Transcoding
+        run: |
+          # Transcoding
+          mkdir output
+          time parallel -tk --joblog parallel.log \
+          FFREPORT=file=%p-%t-{#}-{%}.log:level=32 \
+          ffmpeg -hide_banner -nostats -benchmark -v 24 -i {} -ss 5 -t 30 -vf trim=6,crop=884:884:1036:0,fps=fps=source_fps:start_time=0:eof_action=pass -ac 1 -fpre preset output/{/.}.mkv ::: input/*
+
+      - name: Upload output artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: output
+          path: |
+            output
+            *.log
+
+# git commit -am. ; git push -qf ; gh workflow run process.yml -f id=3f1836af-8589-3da4-eea4-8b7a06f9d6ae -F preset=@preset
