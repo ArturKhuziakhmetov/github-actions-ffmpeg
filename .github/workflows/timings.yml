@@ -1,0 +1,38 @@
+# git commit -am "dev" && git push -qf && gh workflow run timings.yml -f id=3f1836af-8589-3da4-eea4-8b7a06f9d6ae -F script=@get-timings.sh
+
+name: ${{ inputs.id }}
+run-name: Get timings
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        required: true
+      script:
+        required: true
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install ffmpeg
+        run: |
+          # Install ffmpeg
+          sudo add-apt-repository ppa:savoury1/ffmpeg4
+          sudo add-apt-repository ppa:savoury1/ffmpeg5
+          sudo apt-get update -y
+          sudo apt-get install -y ffmpeg
+
+      - name: FFmpeg version
+        run: |
+          ffmpeg -version
+
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: input
+          key: ${{ inputs.id }}
+
+      - name: Timings
+        run: |
+          # get-timings.sh
+          ${{ inputs.script }}
+

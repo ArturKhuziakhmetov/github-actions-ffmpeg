@@ -22,19 +22,17 @@ jobs:
           --remote-header-name \
           --remote-name-all \
           --create-dirs \
-          --output-dir 'input' \
+          --output-dir input \
           $(curl \
-          --referer 'https://www.sendbig.com' \
+          --referer https://www.sendbig.com \
           --header 'Content-Type: application/json' \
           --data '{identifier:"${{ inputs.id }}"}' \
-          'https://s1.sendbig.com/api/Archive/viewArchive' \
+          https://s1.sendbig.com/api/Archive/viewArchive \
           | \
-          jq -j '.data.files[] |
-          "https://",
-          .serverIdentifier,
+          jq -j '.data.files | sort_by(.fileSize) | reverse[] |
+          "https://", .serverIdentifier,
           ".sendbig.com/api/Files/download/",
-          .id,
-          "/${{ inputs.id }}/20138 "')
+          .id, "/${{ inputs.id }}/20138 "')
 
       - name: List files
         working-directory: input
