@@ -36,5 +36,6 @@ jobs:
       - name: Timings
         run: |
           # get-timings.sh
+          set -- input/*
           ${{ inputs.script }}
 
