@@ -1,6 +1,6 @@
 # git commit -am "dev" && git push -qf && gh workflow run cache.yml -f id=3f1836af-8589-3da4-eea4-8b7a06f9d6ae -F sums=@sums
 
-name: Create cache
+name: Plichta French
 run-name: ${{ inputs.id }}
 on:
   workflow_dispatch:
