@@ -1,7 +1,7 @@
-# git commit -am "dev" && git push -qf && gh workflow run timings.yml -f id=3f1836af-8589-3da4-eea4-8b7a06f9d6ae -F script=@get-timings.sh
+# git commit -am. ; git push -qf ; gh workflow run timings.yml -f id=3f1836af-8589-3da4-eea4-8b7a06f9d6ae -F script=@get-timings.sh
 
-name: Plichta French
-run-name: Get timings
+name: Plichta French timings
+run-name: Get timings parallel
 on:
   workflow_dispatch:
     inputs:
