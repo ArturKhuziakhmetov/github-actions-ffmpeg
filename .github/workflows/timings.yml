@@ -13,6 +13,14 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: input
+          key: ${{ inputs.id }}
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+
       - name: Install ffmpeg
         run: |
           # Install ffmpeg
@@ -24,13 +32,6 @@ jobs:
       - name: FFmpeg version
         run: |
           ffmpeg -version
-
-      - name: Restore cache
-        uses: actions/cache/restore@v3
-        with:
-          path: input
-          key: ${{ inputs.id }}
-          restore-keys: ""
 
       - name: Timings
         run: |

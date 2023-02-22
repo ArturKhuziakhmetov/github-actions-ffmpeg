@@ -6,7 +6,6 @@ on:
   workflow_dispatch:
     inputs:
       id:
-        description: sendbig transfer id
         required: true
       sums:
         required: true
@@ -17,22 +16,14 @@ jobs:
 
       - name: Download
         run: |
-          curl \
-          --parallel \
-          --remote-header-name \
-          --remote-name-all \
-          --create-dirs \
-          --output-dir input \
-          $(curl \
-          --referer https://www.sendbig.com \
+          # Download
+          curl -qZJ --remote-name-all --create-dirs --output-dir input \
+          $(curl --referer https://www.sendbig.com \
           --header 'Content-Type: application/json' \
           --data '{identifier:"${{ inputs.id }}"}' \
-          https://s1.sendbig.com/api/Archive/viewArchive \
-          | \
+          https://s1.sendbig.com/api/Archive/viewArchive | \
           jq -j '.data.files | sort_by(.fileSize) | reverse[] |
-          "https://", .serverIdentifier,
-          ".sendbig.com/api/Files/download/",
-          .id, "/${{ inputs.id }}/20138 "')
+          "https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)/${{ inputs.id }}/20138 "')
 
       - name: List files
         working-directory: input
@@ -49,3 +40,5 @@ jobs:
         with:
           path: input
           key: ${{ inputs.id }}
+          enableCrossOsArchive: true
+
