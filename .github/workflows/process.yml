@@ -41,8 +41,8 @@ jobs:
         run: |
           # Transcoding
           mkdir output
-          time parallel -tk --joblog parallel.log \
-          FFREPORT=file=%p-%t-{#}-{%}.log:level=32 \
+          time parallel -tkj1 --joblog parallel.log \
+          FFREPORT=file=%p-%t-{#}-{%}.log:level=48 \
           ffmpeg -hide_banner -nostats -benchmark -v 24 -i {} -ss 5 -t 30 -vf trim=6,crop=884:884:1036:0,fps=fps=source_fps:start_time=0:eof_action=pass -ac 1 -fpre preset output/{/.}.mkv ::: input/*
 
       - name: Upload output artifact
