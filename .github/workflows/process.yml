@@ -10,8 +10,8 @@ jobs:
           # Install ffmpeg
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
-          sudo fast-apt update -y
-          sudo fast-apt install -y ffmpeg
+          sudo apt-fast update -y
+          sudo apt-fast install -y ffmpeg
 
       - name: FFmpeg version
         run: |
