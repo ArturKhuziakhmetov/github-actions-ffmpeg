@@ -1,12 +1,6 @@
 name: Plichta French transcoding
 run-name: Test 30s
-on:
-  workflow_dispatch:
-    inputs:
-      id:
-        required: true
-      preset:
-        required: true
+on: workflow_dispatch
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -15,7 +9,7 @@ jobs:
         run: |
           # Install ffmpeg
           sudo add-apt-repository ppa:savoury1/ffmpeg4
-          sudo add-apt-repository ppa:savoury1/ffmpeg5
+          sudo add-apt-repository ppa:savoury1/ffmpeg-git
           sudo apt-get update -y
           sudo apt-get install -y ffmpeg
 
@@ -27,31 +21,43 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: input
-          key: ${{ inputs.id }}
+          key: 3f1836af-8589-3da4-eea4-8b7a06f9d6ae
           enableCrossOsArchive: true
           fail-on-cache-miss: true
 
       - name: Preset
         run: |
-          # Preset
-          cat << "EOF" > preset
-          ${{ inputs.preset }}EOF
-          cat preset
+          cat << "EOF" | tee preset
+          vcodec=libx264
+          preset=veryfast
+          tune=animation
+          x264opts=no-scenecut
+          crf=25
+          g=1439
+          acodec=libopus
+          ab=16k
+          apply_phase_inv=0
+          frame_duration=60
+          application=voip
+          cutoff=12000
+          EOF
 
       - name: Transcoding
         run: |
-          # Transcoding
-          mkdir output
-          time parallel -tk --joblog parallel.log \
-          FFREPORT=file=%p-%t-{#}-{%}.log:level=32 \
-          ffmpeg -hide_banner -nostats -benchmark -v 24 -i {} -ss 5 -t 30 -vf trim=6,crop=884:884:1036:0,fps=fps=source_fps:start_time=0:eof_action=pass -ac 1 -fpre ./preset output/{/.}.mkv ::: input/*
+          for file in input/*; do
+          echo "::group::$file"
+          silence_start=$(ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=4:n=1e-3,ametadata=mode=print:file=- -f null - | tail -1 | cut -c21-)
+          FFREPORT=file=%p-%t.log:level=32 \
+          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$file" -ss 5 -t 30 -vf trim=6:$(jq -n $silence_start-1),crop=896:896:1024:0,fps=fps=source_fps:start_time=0:eof_action=pass -ac 1 -fpre preset "${file##*/}"
+          echo "::endgroup::"
+          done
 
       - name: Upload output artifact
         uses: actions/upload-artifact@v3
         with:
           name: output
           path: |
-            output
+            *.mkv
             *.log
 
-# git commit -am. ; git push -qf ; gh workflow run process.yml -f id=3f1836af-8589-3da4-eea4-8b7a06f9d6ae -F preset=@preset
+# git commit -am. ; git push -qf ; gh workflow run process.yml
