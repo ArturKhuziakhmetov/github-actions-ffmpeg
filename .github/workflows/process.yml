@@ -1,21 +1,24 @@
 name: Plichta French transcoding
-run-name: Test 30s
+run-name: Test 30s + mkvmerge
 on: workflow_dispatch
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - name: Install ffmpeg
+      - name: Install ffmpeg + mkvtoolnix
         run: |
-          # Install ffmpeg
+          # Install ffmpeg + mkvtoolnix
+          sig=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg
+          sudo curl -so $sig https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
+          echo deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu jammy main | \
+          sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
           sudo apt-fast update -y
-          sudo apt-fast install -y ffmpeg
+          sudo apt-fast install -y mkvtoolnix ffmpeg
 
-      - name: FFmpeg version
-        run: |
-          ffmpeg -version
+      - name: Versions
+        run: mkvmerge -V; ffmpeg -version
 
       - name: Restore cache
         uses: actions/cache/restore@v3
@@ -42,22 +45,39 @@ jobs:
           cutoff=12000
           EOF
 
-      - name: Transcoding
+      - name: Make dirs
+        run: mkdir output tmp
+
+      - name: ffmpeg
+        working-directory: input
         run: |
-          for file in input/*; do
-          echo "::group::$file"
+          for file in *.mkv; do
+          echo ::group::"$file"
           silence_start=$(ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=4:n=1e-3,ametadata=mode=print:file=- -f null - | tail -1 | cut -c21-)
           FFREPORT=file=%p-%t.log:level=32 \
-          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$file" -ss 5 -t 30 -vf trim=6:$(jq -n $silence_start-1),crop=896:896:1024:0,fps=fps=source_fps:start_time=0:eof_action=pass -ac 1 -fpre preset "${file##*/}"
-          echo "::endgroup::"
+          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$file" -ss 5 -to $silence_start -t 30 -vf trim=6:$(jq -n $silence_start-1),crop=896:896:1024:0,fps=fps=source_fps:start_time=0:eof_action=pass -ac 1 -fpre preset "../tmp/$file"
+          echo ::endgroup::
+          done
+
+      - name: mkvmerge
+        working-directory: tmp
+        run: |
+          for file in *.mkv; do
+          mkvmerge "$file" -o "../output/$file"
           done
 
       - name: Upload output artifact
         uses: actions/upload-artifact@v3
         with:
           name: output
-          path: |
-            *.mkv
-            *.log
+          path: output
+          retention-days: 1
+
+      - name: Upload logs artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs
+          path: input/*.log
+          retention-days: 1
 
 # git commit -am. ; git push -qf ; gh workflow run process.yml
