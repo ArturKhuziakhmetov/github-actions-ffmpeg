@@ -29,6 +29,7 @@ jobs:
           fail-on-cache-miss: true
 
       - name: Preset
+        working-directory: input
         run: |
           cat << "EOF" | tee preset
           vcodec=libx264
