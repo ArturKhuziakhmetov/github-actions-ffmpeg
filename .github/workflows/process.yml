@@ -1,5 +1,5 @@
 name: Plichta French transcoding
-run-name: Test 30s + mkvmerge
+run-name: Full process
 on: workflow_dispatch
 jobs:
   main:
@@ -56,7 +56,7 @@ jobs:
           echo ::group::"$file"
           silence_start=$(ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=4:n=1e-3,ametadata=mode=print:file=- -f null - | tail -1 | cut -c21-)
           FFREPORT=file=%p-%t.log:level=32 \
-          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$file" -ss 5 -to $silence_start -t 30 -vf trim=6:$(jq -n $silence_start-1),crop=896:896:1024:0,fps=fps=source_fps:start_time=0:eof_action=pass -ac 1 -fpre preset "../tmp/$file"
+          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$file" -ss 5 -to $silence_start -vf trim=6:$(jq -n $silence_start-1),crop=896:896:1024:0,fps=fps=source_fps:start_time=0:eof_action=pass -ac 1 -fpre preset "../tmp/$file"
           echo ::endgroup::
           done
 
