@@ -1,5 +1,5 @@
 name: Plichta French transcoding
-run-name: Full process downscale
+run-name: Full process downscale x2
 on: workflow_dispatch
 jobs:
   main:
