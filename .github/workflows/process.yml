@@ -1,5 +1,5 @@
-name: Plichta French transcoding
-run-name: Full process downscale x2
+name: Fight 1.e4 like Caruana
+run-name: Full process
 on: workflow_dispatch
 jobs:
   main:
@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: input
-          key: 3f1836af-8589-3da4-eea4-8b7a06f9d6ae
+          key: be2f142e-6380-9601-0eff-b44f8fd99aea
           enableCrossOsArchive: true
           fail-on-cache-miss: true
 
@@ -36,8 +36,9 @@ jobs:
           preset=veryfast
           tune=animation
           x264opts=no-scenecut
-          crf=25
-          g=1439
+          crf=23
+          g=1500
+          threads=1
           acodec=libopus
           ab=16k
           apply_phase_inv=0
@@ -52,11 +53,17 @@ jobs:
       - name: ffmpeg
         working-directory: input
         run: |
-          for file in *.mkv; do
+          for file in *.mp4; do
           echo ::group::"$file"
-          silence_start=$(ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=4:n=1e-3,ametadata=mode=print:file=- -f null - | tail -1 | cut -c21-)
+
+          duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
+
           FFREPORT=file=%p-%t.log:level=32 \
-          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$file" -ss 5 -to $(jq -n $silence_start+0.5) -vf trim=6:$(jq -n $silence_start-1),crop=896:896:1024:0,scale=448:448:flags=sinc,fps=fps=source_fps:start_time=0:eof_action=pass -ac 1 -fpre preset "../tmp/$file"
+          ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
+          -ss 11 -to $(jq -n $duration-11) -vf \
+          trim=13:$(jq -n $duration-13),crop=544:540:416:0,fps=fps=25:start_time=0:eof_action=pass \
+          -ac 1 -fpre preset "../tmp/$file"
+
           echo ::endgroup::
           done
 
