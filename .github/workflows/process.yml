@@ -13,7 +13,7 @@ jobs:
           echo deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu jammy main | \
           sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
           sudo add-apt-repository ppa:savoury1/ffmpeg4
-          sudo add-apt-repository ppa:savoury1/ffmpeg5
+          sudo add-apt-repository ppa:savoury1/ffmpeg-git
           sudo apt-fast update -y
           sudo apt-fast install -y mkvtoolnix ffmpeg
 
