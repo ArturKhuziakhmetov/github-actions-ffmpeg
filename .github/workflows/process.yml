@@ -81,4 +81,4 @@ jobs:
           path: input/*.log
           retention-days: 5
 
-# git commit -am. ; git push -qf ; gh workflow run process.yml
+# git commit -am. && git push -qf && gh workflow run process.yml

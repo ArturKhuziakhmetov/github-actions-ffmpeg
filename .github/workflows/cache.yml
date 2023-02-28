@@ -1,6 +1,6 @@
-# git commit -am "dev" && git push -qf && gh workflow run cache.yml -f id=3f1836af-8589-3da4-eea4-8b7a06f9d6ae -F sums=@sums
+# git commit -am. && git push -qf && gh workflow run cache.yml -f id=be2f142e-6380-9601-0eff-b44f8fd99aea -F sums=@sums
 
-name: Plichta French
+name: Fight 1.e4 like Caruana
 run-name: ${{ inputs.id }}
 on:
   workflow_dispatch:
