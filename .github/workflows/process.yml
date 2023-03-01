@@ -1,4 +1,4 @@
-name: Fight 1.e4 like Caruana
+name: Fight 1.e4 like Caruana - PROCESS
 run-name: Full process
 on: workflow_dispatch
 jobs:
@@ -62,7 +62,7 @@ jobs:
           ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
           -ss 11 -to $(jq -n $duration-11) -vf \
           trim=13:$(jq -n $duration-13),crop=544:540:416:0,fps=fps=25:start_time=0:eof_action=pass \
-          -ac 1 -fpre preset "../tmp/$file"
+          -ac 1 -fpre preset "../tmp/$(basename "$file" .mp4).mkv"
 
           echo ::endgroup::
           done
