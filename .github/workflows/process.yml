@@ -68,7 +68,6 @@ jobs:
 
           FFREPORT=file=%p-%t.log:level=32 \
           ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
-          -t 20 \
           -ss 8.5 -to $(jq -n $duration-7) \
           -vf trim=$trim,crop=$crop,fps=$fps \
           -ac 1 -fpre preset \
@@ -87,7 +86,7 @@ jobs:
       - name: Archive logs
         working-directory: input
         run: |
-          7zz a -mx9 ../output/info/logs.7z *.log
+          7zz a ../output/info/logs.7z *.log
 
       - name: Upload artifacts
         if: always()
