@@ -13,7 +13,7 @@ jobs:
           echo deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu jammy main | \
           sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
           sudo add-apt-repository ppa:savoury1/ffmpeg4
-          sudo add-apt-repository ppa:savoury1/ffmpeg-git
+          sudo add-apt-repository ppa:savoury1/ffmpeg5
           sudo apt-fast update -y
           sudo apt-fast install -y mkvtoolnix ffmpeg
 
@@ -74,18 +74,13 @@ jobs:
           mkvmerge "$file" -o "../output/$file"
           done
 
-      - name: Upload output artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
           name: output
-          path: output
-          retention-days: 5
-
-      - name: Upload logs artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: logs
-          path: input/*.log
+          path: |
+            output
+            input/*.log
           retention-days: 5
 
 # git commit -am. && git push -qf && gh workflow run process.yml
