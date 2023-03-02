@@ -35,7 +35,7 @@ jobs:
       - name: Unzip files
         working-directory: input
         run: |
-          for file in *.001; do 7zz e "$file"
+          for file in *.001; do 7zz e "$file"; done
 
       - name: List files
         working-directory: input
