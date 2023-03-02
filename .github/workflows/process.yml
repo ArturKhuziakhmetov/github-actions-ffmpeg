@@ -68,7 +68,7 @@ jobs:
 
           FFREPORT=file=%p-%t.log:level=32 \
           ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
-          -t 20
+          -t 20 \
           -ss 8.5 -to $(jq -n $duration-7) \
           -vf trim=$trim,crop=$crop,fps=$fps \
           -ac 1 -fpre preset \
