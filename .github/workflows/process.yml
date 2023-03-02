@@ -5,6 +5,17 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
+
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            input/*.mp4
+            input/*.mkv
+          key: 475acdf1-a121-054f-44f3-172632bd1adb
+          enableCrossOsArchive: true
+          fail-on-cache-miss: true
+
       - name: Install ffmpeg + mkvtoolnix
         run: |
           # Install ffmpeg + mkvtoolnix
@@ -18,15 +29,8 @@ jobs:
           sudo apt-fast install -y mkvtoolnix ffmpeg
 
       - name: Versions
-        run: mkvmerge -V; ffmpeg -version
-
-      - name: Restore cache
-        uses: actions/cache/restore@v3
-        with:
-          path: input
-          key: 475acdf1-a121-054f-44f3-172632bd1adb
-          enableCrossOsArchive: true
-          fail-on-cache-miss: true
+        run: |
+          mkvmerge -V; ffmpeg -version
 
       - name: Preset
         working-directory: input
