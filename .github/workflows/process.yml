@@ -72,7 +72,7 @@ jobs:
           -ss 8.5 -to $(jq -n $duration-7) \
           -vf trim=$trim,crop=$crop,fps=$fps \
           -ac 1 -fpre preset \
-          ../tmp/"$(basename "$file" .mp4)".mkv
+          "../tmp/$(basename "$file" .mp4).mkv"
 
           echo ::endgroup::
           done
@@ -81,7 +81,7 @@ jobs:
         working-directory: tmp
         run: |
           for file in *.mkv; do
-          mkvmerge "$file" -o ../output/"$file"
+          mkvmerge "$file" -o "../output/$file"
           done
 
       - name: Archive logs
