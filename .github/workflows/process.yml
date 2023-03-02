@@ -1,5 +1,5 @@
 name: Chessable LTR Giri French - PROCESS
-run-name: Full process 20s
+run-name: Full process
 on: workflow_dispatch
 jobs:
   main:
