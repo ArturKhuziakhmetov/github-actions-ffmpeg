@@ -19,7 +19,7 @@ jobs:
           sudo add-apt-repository ppa:savoury1/utilities
           sudo apt-fast -y update
           sudo apt-fast -y install 7zip
-          7z
+          7zip
 
       - name: Download
         run: |
@@ -35,8 +35,7 @@ jobs:
       - name: Unzip files
         working-directory: input
         run: |
-          cat * > input.zip
-          unzip input.zip
+          for file in *.001; do 7zip e "$file"
 
       - name: List files
         working-directory: input
