@@ -14,11 +14,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Update 7zip
+      - name: Install 7zip
         run: |
+          echo ::group::Installing 7zip
           sudo add-apt-repository ppa:savoury1/utilities
           sudo apt-fast -y update
           sudo apt-fast -y install 7zip
+          echo ::endgroup::
           7zz
 
       - name: Download

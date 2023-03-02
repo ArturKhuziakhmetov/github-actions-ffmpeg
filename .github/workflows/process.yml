@@ -1,5 +1,5 @@
-name: Fight 1.e4 like Caruana - PROCESS
-run-name: Full process
+name: Chessable LTR Giri French - PROCESS
+run-name: Full process 20s
 on: workflow_dispatch
 jobs:
   main:
@@ -24,7 +24,7 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: input
-          key: be2f142e-6380-9601-0eff-b44f8fd99aea
+          key: 475acdf1-a121-054f-44f3-172632bd1adb
           enableCrossOsArchive: true
           fail-on-cache-miss: true
 
@@ -36,8 +36,8 @@ jobs:
           preset=veryfast
           tune=animation
           x264opts=no-scenecut
-          crf=23
-          g=1500
+          crf=25
+          g=1800
           threads=1
           acodec=libopus
           ab=16k
@@ -58,11 +58,17 @@ jobs:
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
+          trim=11:$(jq -n $duration-9)
+          crop=1072:1072:840
+          fps=fps=source_fps:start_time=0:eof_action=pass
+
           FFREPORT=file=%p-%t.log:level=32 \
           ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
-          -ss 11 -to $(jq -n $duration-11) -vf \
-          trim=13:$(jq -n $duration-13),crop=544:540:416:0,fps=fps=25:start_time=0:eof_action=pass \
-          -ac 1 -fpre preset "../tmp/$(basename "$file" .mp4).mkv"
+          -t 20
+          -ss 8.5 -to $(jq -n $duration-7) \
+          -vf trim=$trim,crop=$crop,fps=$fps \
+          -ac 1 -fpre preset \
+          ../tmp/"$(basename "$file" .mp4)".mkv
 
           echo ::endgroup::
           done
@@ -71,8 +77,13 @@ jobs:
         working-directory: tmp
         run: |
           for file in *.mkv; do
-          mkvmerge "$file" -o "../output/$file"
+          mkvmerge "$file" -o ../output/"$file"
           done
+
+      - name: Archive logs
+        working-directory: input
+        run: |
+          tar acf logs.7z *.log
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
@@ -80,7 +91,7 @@ jobs:
           name: output
           path: |
             output
-            input/*.log
+            input/logs.7z
           retention-days: 5
 
 # git commit -am. && git push -qf && gh workflow run process.yml
