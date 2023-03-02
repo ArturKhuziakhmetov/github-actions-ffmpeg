@@ -13,6 +13,13 @@ jobs:
   create-cache:
     runs-on: ubuntu-latest
     steps:
+      
+      - name: Update 7zip
+        run: |
+          sudo add-apt-repository ppa:savoury1/utilities
+          sudo apt-fast -y update
+          sudo apt-fast -y upgrade 7zip
+          7z
 
       - name: Download
         run: |
