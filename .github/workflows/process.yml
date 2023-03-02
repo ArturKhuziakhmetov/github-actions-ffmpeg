@@ -30,8 +30,7 @@ jobs:
           sudo apt-fast install -y mkvtoolnix ffmpeg 7zip
 
       - name: Versions
-        run: |
-          mkvmerge -V; ffmpeg -version; 7zz
+        run: mkvmerge -V; ffmpeg -version; 7zz
 
       - name: Preset
         working-directory: input
@@ -69,6 +68,7 @@ jobs:
 
           FFREPORT=file=%p-%t.log:level=32 \
           ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
+          -t 20 \
           -ss 8.5 -to $(jq -n $duration-7) \
           -vf trim=$trim,crop=$crop,fps=$fps \
           -ac 1 -fpre preset \
@@ -81,7 +81,7 @@ jobs:
         working-directory: tmp
         run: |
           for file in *.mkv; do
-          mkvmerge "$file" -o "../output/$file"
+            mkvmerge "$file" -o "../output/$file"
           done
 
       - name: Archive logs
@@ -94,8 +94,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: Chessable LTR Giri French
-          path: |
-            output
+          path: output
           retention-days: 5
 
 # git commit -am. && git push -qf && gh workflow run process.yml
