@@ -28,7 +28,8 @@ jobs:
       - name: Unzip files
         working-directory: input
         run: |
-          for file in *.001; do 7z e "$file"; done
+          cat * > input.zip
+          unzip input.zip
 
       - name: List files
         working-directory: input
