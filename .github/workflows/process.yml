@@ -1,5 +1,5 @@
 name: Chessable LTR Giri French - PROCESS
-run-name: Full process
+run-name: Full process x2
 on: workflow_dispatch
 jobs:
   main:
@@ -16,7 +16,7 @@ jobs:
           enableCrossOsArchive: true
           fail-on-cache-miss: true
 
-      - name: Install ffmpeg + mkvtoolnix + 7zip (as 7zz)
+      - name: Install ffmpeg + mkvtoolnix
         run: |
           # Install ffmpeg + mkvtoolnix
           sig=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg
@@ -25,12 +25,10 @@ jobs:
           sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
-          sudo add-apt-repository ppa:savoury1/utilities
           sudo apt-fast update -y
-          sudo apt-fast install -y mkvtoolnix ffmpeg 7zip
 
       - name: Versions
-        run: mkvmerge -V; ffmpeg -version; 7zz
+        run: mkvmerge -V; ffmpeg -version
 
       - name: Preset
         working-directory: input
@@ -52,7 +50,7 @@ jobs:
           EOF
 
       - name: Make dirs
-        run: mkdir output tmp
+        run: mkdir -p output/info tmp
 
       - name: ffmpeg
         working-directory: input
@@ -64,12 +62,13 @@ jobs:
 
           trim=11:$(jq -n $duration-9)
           crop=1072:1072:840
+          scale=536:536:flags=sinc,
           fps=fps=source_fps:start_time=0:eof_action=pass
 
           FFREPORT=file=%p-%t.log:level=32 \
           ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
           -ss 8.5 -to $(jq -n $duration-7) \
-          -vf trim=$trim,crop=$crop,fps=$fps \
+          -vf trim=$trim,crop=$crop,scale=$scale,fps=$fps \
           -ac 1 -fpre preset \
           "../tmp/$(basename "$file" .mp4).mkv"
 
@@ -86,7 +85,7 @@ jobs:
       - name: Archive logs
         working-directory: input
         run: |
-          7zz a ../output/info/logs.7z *.log
+          tar cJvvf ../output/info/logs.tar.xz *.log
 
       - name: Upload artifacts
         if: always()
