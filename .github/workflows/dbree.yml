@@ -22,7 +22,7 @@ jobs:
           driver = webdriver.Chrome(options=chrome_options)
           driver.get("https://dbree.org/v/381638")
           time.sleep(10)
-          print(driver.get_cookies())
+          print(";".join(f'{d["name"]}={d["value"]}' for d in driver.get_cookies()))
           EOF
 
       - name: Run script
