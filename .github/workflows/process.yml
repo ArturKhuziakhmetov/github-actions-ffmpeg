@@ -9,14 +9,20 @@ jobs:
       - name: Install ffmpeg + mkvtoolnix
         run: |
           # Install ffmpeg + mkvtoolnix
+          echo ::group::Adding repos
           sig=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg
           sudo curl -so $sig https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
           echo deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu jammy main | \
           sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
+          echo ::endgroup::
+          echo ::group::Updating database
           sudo apt-fast -yqq update
+          echo ::endgroup::
+          echo ::group::Installing
           sudo apt-fast -yqq install mkvtoolnix ffmpeg
+          echo ::endgroup::
 
       - name: Versions
         run: mkvmerge -V; ffmpeg -version
@@ -62,7 +68,7 @@ jobs:
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
           trim=11:$(jq -n $duration-9)
-          crop=1072:1072:840
+          crop=1072:1072:840:exact=1
           scale=536:536:flags=sinc
           fps=fps=source_fps:start_time=0:eof_action=pass
 

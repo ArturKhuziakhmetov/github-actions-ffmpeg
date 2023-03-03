@@ -1,0 +1,70 @@
+# git commit -am. && git push -qf && gh workflow run dbree.yml
+
+name: dbree
+run-name: Stop-Em-Cold
+on: workflow_dispatch
+jobs:
+  page0:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          url='https://dbree.org/s/chessable%20stop&page=0'
+          pattern='//dbree.org/d/[/a-z0-9]*'
+          cookies='__ddgid_=kAHOdnGaV6D10pi0; __ddg2_=mOXFq2WdSyXYucNC; __ddg1_=nnug4u9pulSTAREh6xQ4; PHPSESSID=6o857uge2k1mavo2bk3lqf6nui'
+
+          mapfile -t ids < <(curl "$url" -qsb "$cookies" | grep -o "/[a-z]/[a-z0-9]*")
+          printf "%s\n" "${ids[@]}"
+
+          for id in "${ids[@]}"; do
+              url1=$(curl https://dbree.org"$id" -qsb "$cookies" | grep -om1 "$pattern")
+              url2=$(curl -qsb "$cookies" https:"$url1" -w '%{redirect_url}')
+              printf "\n%s\n" "$url2"
+              echo url = "$url2" >> urls
+          done
+
+          curl -qJORLZb "$cookies" --remote-name-all --create-dirs --output-dir zip -K urls
+
+      - name: List files
+        working-directory: zip
+        run: ls -Qs1
+
+      - name: Save cache
+        uses: actions/cache/save@v3
+        with:
+          path: zip
+          key: Stop-Em-Cold-0
+          enableCrossOsArchive: true
+
+  page1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          url='https://dbree.org/s/chessable%20stop&page=1'
+          pattern='//dbree.org/d/[/a-z0-9]*'
+          cookies='__ddgid_=kAHOdnGaV6D10pi0; __ddg2_=mOXFq2WdSyXYucNC; __ddg1_=nnug4u9pulSTAREh6xQ4; PHPSESSID=6o857uge2k1mavo2bk3lqf6nui'
+
+          mapfile -t ids < <(curl "$url" -qsb "$cookies" | grep -o "/[a-z]/[a-z0-9]*")
+          printf "%s\n" "${ids[@]}"
+
+          for id in "${ids[@]}"; do
+              url1=$(curl https://dbree.org"$id" -qsb "$cookies" | grep -om1 "$pattern")
+              url2=$(curl -qsb "$cookies" https:"$url1" -w '%{redirect_url}')
+              printf "\n%s\n" "$url2"
+              echo url = "$url2" >> urls
+          done
+
+          curl -qJORLZb "$cookies" --remote-name-all --create-dirs --output-dir zip -K urls
+
+      - name: List files
+        working-directory: zip
+        run: ls -Qs1
+
+      - name: Save cache
+        uses: actions/cache/save@v3
+        with:
+          path: zip
+          key: Stop-Em-Cold-1
+          enableCrossOsArchive: true
+
