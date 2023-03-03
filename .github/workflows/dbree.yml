@@ -4,7 +4,7 @@ name: dbree
 run-name: Stop-Em-Cold
 on: workflow_dispatch
 jobs:
-  selenium:
+  page0:
     runs-on: ubuntu-latest
     steps:
 
@@ -25,70 +25,82 @@ jobs:
           print(";".join(f'{d["name"]}={d["value"]}' for d in driver.get_cookies()))
           EOF
 
-      - name: Run script
-        run: python3 test.py
+      - name: Download
+        run: |
+          url='https://dbree.org/s/chessable%20stop&page=0'
+          pattern='//dbree.org/d/[/a-z0-9]*'
+          cookies=$(python3 test.py)
 
-  # page0:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download
-  #       run: |
-  #         url='https://dbree.org/s/chessable%20stop&page=0'
-  #         pattern='//dbree.org/d/[/a-z0-9]*'
-  #         cookies='__ddgid_=kAHOdnGaV6D10pi0; __ddg2_=mOXFq2WdSyXYucNC; __ddg1_=nnug4u9pulSTAREh6xQ4; PHPSESSID=6o857uge2k1mavo2bk3lqf6nui'
+          mapfile -t ids < <(curl "$url" -qsb "$cookies" | grep -o "/[a-z]/[a-z0-9]*")
+          printf "%s\n" "${ids[@]}"
 
-  #         mapfile -t ids < <(curl "$url" -qsb "$cookies" | grep -o "/[a-z]/[a-z0-9]*")
-  #         printf "%s\n" "${ids[@]}"
+          for id in "${ids[@]}"; do
+              url1=$(curl https://dbree.org"$id" -qsb "$cookies" | grep -om1 "$pattern")
+              url2=$(curl -qsb "$cookies" https:"$url1" -w '%{redirect_url}')
+              printf "\n%s\n" "$url2"
+              echo url = "$url2" >> urls
+          done
 
-  #         for id in "${ids[@]}"; do
-  #             url1=$(curl https://dbree.org"$id" -qsb "$cookies" | grep -om1 "$pattern")
-  #             url2=$(curl -qsb "$cookies" https:"$url1" -w '%{redirect_url}')
-  #             printf "\n%s\n" "$url2"
-  #             echo url = "$url2" >> urls
-  #         done
+          curl -qJORLZb "$cookies" --remote-name-all --create-dirs --output-dir zip -K urls
 
-  #         curl -qJORLZb "$cookies" --remote-name-all --create-dirs --output-dir zip -K urls
+      - name: List files
+        working-directory: zip
+        run: ls -Qs1
 
-  #     - name: List files
-  #       working-directory: zip
-  #       run: ls -Qs1
+      - name: Save cache
+        uses: actions/cache/save@v3
+        with:
+          path: zip
+          key: Stop-Em-Cold-0
+          enableCrossOsArchive: true
 
-  #     - name: Save cache
-  #       uses: actions/cache/save@v3
-  #       with:
-  #         path: zip
-  #         key: Stop-Em-Cold-0
-  #         enableCrossOsArchive: true
+  page1:
+    runs-on: ubuntu-latest
+    steps:
 
-  # page1:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Download
-  #       run: |
-  #         url='https://dbree.org/s/chessable%20stop&page=1'
-  #         pattern='//dbree.org/d/[/a-z0-9]*'
-  #         cookies='__ddgid_=kAHOdnGaV6D10pi0; __ddg2_=mOXFq2WdSyXYucNC; __ddg1_=nnug4u9pulSTAREh6xQ4; PHPSESSID=6o857uge2k1mavo2bk3lqf6nui'
+      - name: Install
+        run: pip install selenium
 
-  #         mapfile -t ids < <(curl "$url" -qsb "$cookies" | grep -o "/[a-z]/[a-z0-9]*")
-  #         printf "%s\n" "${ids[@]}"
+      - name: Create script
+        run: |
+          cat << "EOF" | tee test.py
+          import time
+          from selenium import webdriver
+          from selenium.webdriver.chrome.options import Options
+          chrome_options = Options()
+          chrome_options.add_argument("--headless")
+          driver = webdriver.Chrome(options=chrome_options)
+          driver.get("https://dbree.org/v/381638")
+          time.sleep(10)
+          print(";".join(f'{d["name"]}={d["value"]}' for d in driver.get_cookies()))
+          EOF
 
-  #         for id in "${ids[@]}"; do
-  #             url1=$(curl https://dbree.org"$id" -qsb "$cookies" | grep -om1 "$pattern")
-  #             url2=$(curl -qsb "$cookies" https:"$url1" -w '%{redirect_url}')
-  #             printf "\n%s\n" "$url2"
-  #             echo url = "$url2" >> urls
-  #         done
+      - name: Download
+        run: |
+          url='https://dbree.org/s/chessable%20stop&page=1'
+          pattern='//dbree.org/d/[/a-z0-9]*'
+          cookies=$(python3 test.py)
 
-  #         curl -qJORLZb "$cookies" --remote-name-all --create-dirs --output-dir zip -K urls
+          mapfile -t ids < <(curl "$url" -qsb "$cookies" | grep -o "/[a-z]/[a-z0-9]*")
+          printf "%s\n" "${ids[@]}"
 
-  #     - name: List files
-  #       working-directory: zip
-  #       run: ls -Qs1
+          for id in "${ids[@]}"; do
+              url1=$(curl https://dbree.org"$id" -qsb "$cookies" | grep -om1 "$pattern")
+              url2=$(curl -qsb "$cookies" https:"$url1" -w '%{redirect_url}')
+              printf "\n%s\n" "$url2"
+              echo url = "$url2" >> urls
+          done
 
-  #     - name: Save cache
-  #       uses: actions/cache/save@v3
-  #       with:
-  #         path: zip
-  #         key: Stop-Em-Cold-1
-  #         enableCrossOsArchive: true
+          curl -qJORLZb "$cookies" --remote-name-all --create-dirs --output-dir zip -K urls
+
+      - name: List files
+        working-directory: zip
+        run: ls -Qs1
+
+      - name: Save cache
+        uses: actions/cache/save@v3
+        with:
+          path: zip
+          key: Stop-Em-Cold-1
+          enableCrossOsArchive: true
 
