@@ -15,7 +15,10 @@ jobs:
         run: |
           cat << "EOF" | tee test.py
           from selenium import webdriver
-          driver = webdriver.Chrome()
+          from selenium.webdriver.chrome.options import Options
+          chrome_options = Options()
+          chrome_options.add_argument("--headless")
+          driver = webdriver.Chrome(options=chrome_options)
           driver.get("https://dbree.org/v/381638")
           print(driver.get_cookies())
           EOF
