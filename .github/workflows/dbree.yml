@@ -19,8 +19,8 @@ jobs:
           chrome_options = Options()
           chrome_options.add_argument("--headless")
           driver = webdriver.Chrome(options=chrome_options)
-          driver.implicitly_wait(10)
           driver.get("https://dbree.org/v/381638")
+          wait = WebDriverWait(driver, 10)
           print(driver.get_cookies())
           EOF
 
