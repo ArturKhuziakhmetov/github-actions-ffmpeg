@@ -25,8 +25,8 @@ jobs:
           sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
-          sudo apt-fast -y update
-          sudo apt-fast -y install mkvtoolnix ffmpeg
+          sudo apt-fast -qq update
+          sudo apt-fast -qq install mkvtoolnix ffmpeg
 
       - name: Versions
         run: mkvmerge -V; ffmpeg -version
@@ -63,7 +63,7 @@ jobs:
 
           trim=11:$(jq -n $duration-9)
           crop=1072:1072:840
-          scale=536:536:flags=sinc,
+          scale=536:536:flags=sinc
           fps=fps=source_fps:start_time=0:eof_action=pass
 
           FFREPORT=file=%p-%t.log:level=32 \
