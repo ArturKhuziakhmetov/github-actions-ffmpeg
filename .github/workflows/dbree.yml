@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      - name: Install
+        run: pip install selenium
+
       - name: Create script
         run: |
           cat << "EOF" | tee test.py
