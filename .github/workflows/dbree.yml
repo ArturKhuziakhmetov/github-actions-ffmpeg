@@ -35,17 +35,16 @@ jobs:
 
       - name: Get links
         run: |
-          set -x
           u='${{ inputs.url }}'
           c=$(python3 test.py)
+          d=//dbree.org
           for n in {0..${{ inputs.num }}..10}; do
             echo ::group::Page: $n
-            curl -sb $c "${u%0}$n" \
-            | grep -o "/[a-z]/[a-z0-9]*" \
-            | xargs -i (curl -sb $c -w 'url = %{redirect_url}\n' \
-            "https:$(curl -sb $c https://dbree.org{} | \
-             grep -om1 '//dbree.org/d/[/a-z0-9]*')" \
-            | tee -a urls)
+            curl -sb $c "${u%0}$n" | grep -o "/[a-z]/[a-z0-9]*" | \
+            while read id; do
+              curl -sb $c -w 'url = %{redirect_url}\n' \
+              "https:$(curl -sb $c https:$d$id | grep -om1 "$d/d/[/a-z0-9]*")"
+            done | tee -a urls
             echo ::endgroup::
           done
           mkdir zip
