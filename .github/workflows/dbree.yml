@@ -15,7 +15,6 @@ jobs:
   all:
     runs-on: ubuntu-latest
     steps:
-
       - name: Install
         run: pip install selenium
 
@@ -36,28 +35,23 @@ jobs:
 
       - name: Get links
         run: |
-          set -x
-          url='${{ inputs.url }}'
-          num=$(curl -sb "$cookies" "${url%0}" | \
-                grep -om1 'Result[^<]*' | cut -d' ' -f6)
-          cookies=$(python3 test.py)
-
+          u='${{ inputs.url }}'
+          c=$(python3 test.py)
+          p=//dbree.org/d/[/a-z0-9]*
           for n in {0..${{ inputs.num }}..10}; do
-            mapfile -t ids < <(curl "${url%0}$n" -sb "$cookies" | \
-                               grep -o "/[a-z]/[a-z0-9]*")
-            for id in "${ids[@]}"; do
-              url1=$(curl https://dbree.org"$id" -qsb "$cookies" | \
-                     grep -om1 '//dbree.org/d/[/a-z0-9]*')
-              url2=$(curl -sb "$cookies" https:"$url1" -w '%{redirect_url}')
-              printf "%s\n" "$url2"
-              echo url = "$url2" >> urls
-            done
+            echo Page: $n
+            curl -sb $c "${u%0}$n" |\
+            grep -o "/[a-z]/[a-z0-9]*" |\
+            while read id; do
+              curl -sb $c -w 'url = %{redirect_url}\n' \
+              "https:$(curl -sb $c https://dbree.org$id | grep -om1 "$p")"
+            done | tee -a urls
           done
           mkdir zip
 
       - name: Download
         working-directory: zip
-        run: curl -JOZ --remote-name-all -K urls
+        run: curl -JOZ --remote-name-all -K ../urls
 
       - name: List files
         working-directory: zip
