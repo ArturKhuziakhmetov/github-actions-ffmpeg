@@ -36,6 +36,7 @@ jobs:
 
       - name: Get links
         run: |
+          set -x
           url=${{ inputs.url }}
           num=$(curl -sb "$cookies" "${url%0}" | \
                 grep -om1 'Result[^<]*' | cut -d' ' -f6)
@@ -54,7 +55,7 @@ jobs:
           done
           mkdir zip
 
-      - name: Get links
+      - name: Download
         working-directory: zip
         run: curl -JOZ --remote-name-all -K urls
 
