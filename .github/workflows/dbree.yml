@@ -35,6 +35,7 @@ jobs:
 
       - name: Get links
         run: |
+          set -x
           u='${{ inputs.url }}'
           c=$(python3 test.py)
           for n in {0..${{ inputs.num }}..10}; do
