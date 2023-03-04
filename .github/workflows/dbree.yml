@@ -37,15 +37,15 @@ jobs:
         run: |
           u='${{ inputs.url }}'
           c=$(python3 test.py)
-          p=//dbree.org/d/[/a-z0-9]*
           for n in {0..${{ inputs.num }}..10}; do
-            echo Page: $n
-            curl -sb $c "${u%0}$n" |\
-            grep -o "/[a-z]/[a-z0-9]*" |\
-            while read id; do
-              curl -sb $c -w 'url = %{redirect_url}\n' \
-              "https:$(curl -sb $c https://dbree.org$id | grep -om1 "$p")"
-            done | tee -a urls
+            echo ::group::Page: $n
+            curl -sb $c "${u%0}$n" \
+            | grep -o "/[a-z]/[a-z0-9]*" \
+            | xargs -i curl -sb $c -w 'url = %{redirect_url}\n' \
+            "https:$(curl -sb $c https://dbree.org{} | \
+             grep -om1 '//dbree.org/d/[/a-z0-9]*')" \
+            | tee -a urls
+            echo ::endgroup::
           done
           mkdir zip
 
