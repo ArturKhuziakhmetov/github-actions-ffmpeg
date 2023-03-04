@@ -17,7 +17,7 @@ jobs:
         with:
           path: zip
           key: ${{ inputs.title }}
-          enableCrossOsArchive: true
+          fail-on-cache-miss: true
 
       - name: List files in archive
         run: 7z l zip/*001
@@ -34,4 +34,3 @@ jobs:
         with:
           path: input
           key: ${{ inputs.title }}-input
-          enableCrossOsArchive: true
