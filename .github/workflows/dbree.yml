@@ -37,7 +37,7 @@ jobs:
       - name: Get links
         run: |
           set -x
-          url='${{ inputs.url }}''
+          url='${{ inputs.url }}'
           num=$(curl -sb "$cookies" "${url%0}" | \
                 grep -om1 'Result[^<]*' | cut -d' ' -f6)
           cookies=$(python3 test.py)
