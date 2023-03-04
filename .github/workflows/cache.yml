@@ -36,13 +36,11 @@ jobs:
 
       - name: Unzip files
         working-directory: input
-        run: |
-          for file in *.001; do 7zz e "$file"; done
+        run: for file in *.001; do 7zz e "$file"; done
 
       - name: List files
         working-directory: input
-        run: |
-          ls -Qs1
+        run: ls -Qs1
 
       - name: Check sums
         if: ${{ inputs.sums }}

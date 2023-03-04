@@ -12,21 +12,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Restore cache
+      - name: Restore cached archive to zip
         uses: actions/cache/restore@v3
         with:
           path: zip
           key: ${{ inputs.title }}
           enableCrossOsArchive: true
 
-      - name: Make dirs
-        run: mkdir input
+      - name: List files in archive
+        run: 7z l zip/*001
 
-      - name: Unzip to input
+      - name: Unzip archive
+        run: 7z e -bb3 -oinput zip/*001
+
+      - name: List files in input
         working-directory: input
-        run: 7z e ../zip/*001
+        run: ls -Qs1
 
-      - name: Save cache
+      - name: Save input to cache
         uses: actions/cache/save@v3
         with:
           path: input
