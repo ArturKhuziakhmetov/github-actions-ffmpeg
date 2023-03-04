@@ -1,0 +1,34 @@
+# git commit -am. && git push -qf && gh workflow run unzip.yml -f title="Stop-Em-Cold"
+
+name: dbree
+run-name: ${{ inputs.title }}-unzip
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        required: true
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Restore cache
+        uses: actions/cache/restore@v3
+        with:
+          path: zip
+          key: ${{ inputs.title }}
+          enableCrossOsArchive: true
+
+      - name: Make dirs
+        run: mkdir input
+
+      - name: Unzip to input
+        working-directory: input
+        run: 7z e ../zip/*001
+
+      - name: Save cache
+        uses: actions/cache/save@v3
+        with:
+          path: input
+          key: ${{ inputs.title }}-input
+          enableCrossOsArchive: true

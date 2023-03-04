@@ -43,7 +43,7 @@ jobs:
             curl -sb $c "${u%0}$n" | grep -o "/[a-z]/[a-z0-9]*" | \
             while read id; do
               curl -sb $c -w 'url = %{redirect_url}\n' \
-              "https:$(curl -sb $c https:$d$id | grep -om1 "$d/d/[/a-z0-9]*")"
+              https:$(curl -sb $c https:$d$id | grep -om1 "$d/d/[/a-z0-9]*")
             done | tee -a urls
             echo ::endgroup::
           done
