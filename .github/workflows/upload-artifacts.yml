@@ -1,0 +1,33 @@
+# git commit -am. && git push -qf && gh workflow run upload-artifacts.yml -f title="Stop-Em-Cold" -f glob="[PBC]*"
+
+name: dbree-upload-artifacts
+run-name: ${{ inputs.title }}-upload-artifacts
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        required: true
+      glob:
+        required: true
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Restore cached input
+        uses: actions/cache/restore@v3
+        with:
+          path: input
+          key: ${{ inputs.title }}-input
+          fail-on-cache-miss: true
+
+      - name: List files in input
+        working-directory: input
+        run: ls -Qs1
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.title }}
+          path: input/${{ inputs.glob }}
+          retention-days: 1
