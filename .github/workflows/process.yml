@@ -1,7 +1,7 @@
 # git commit -am. && git push -qf && gh workflow run process.yml
 
 name: Process
-run-name: Stop-Em-Cold--t-30
+run-name: Stop-Em-Cold
 on: workflow_dispatch
 env:
   title: Stop-Em-Cold
@@ -20,10 +20,8 @@ jobs:
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
           echo ::endgroup::
-          echo ::group::Updating database
-          sudo apt-fast -yqq update
-          echo ::endgroup::
           echo ::group::Installing
+          sudo apt-fast -yqq update
           sudo apt-fast -yqq install mkvtoolnix ffmpeg
           echo ::endgroup::
 
@@ -72,7 +70,7 @@ jobs:
             crop=880:880:1040:0
             fps=fps=source_fps:start_time=0:eof_action=pass
             # scale=536:536:flags=sinc
-            t=30
+            # t=30
 
             FFREPORT=file=%p-%t.log:level=32 \
             ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
@@ -88,7 +86,9 @@ jobs:
         working-directory: tmp
         run: |
           for file in *.mkv; do
+            echo ::group::"$file"
             mkvmerge "$file" -o "../output/$file"
+            echo ::endgroup::
           done
 
       - name: Archive logs
