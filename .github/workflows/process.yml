@@ -1,7 +1,7 @@
 # git commit -am. && git push -qf && gh workflow run process.yml
 
 name: Process
-run-name: ${{ env.title }}--t-30
+run-name: Stop-Em-Cold--t-30
 on: workflow_dispatch
 env:
   title: Stop-Em-Cold
@@ -9,7 +9,6 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-
       - name: Install ffmpeg + mkvtoolnix
         run: |
           # Install ffmpeg + mkvtoolnix
