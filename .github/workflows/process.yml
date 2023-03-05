@@ -1,6 +1,10 @@
-name: Chessable LTR Giri French - PROCESS
-run-name: Full process x2
+# git commit -am. && git push -qf && gh workflow run process.yml
+
+name: Process
+run-name: ${{ env.title }}--t-30
 on: workflow_dispatch
+env:
+  title: Stop-Em-Cold
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -27,14 +31,11 @@ jobs:
       - name: Versions
         run: mkvmerge -V; ffmpeg -version
 
-      - name: Restore cache
+      - name: Restore cached input
         uses: actions/cache/restore@v3
         with:
-          path: |
-            input/*.mp4
-            input/*.mkv
-          key: 475acdf1-a121-054f-44f3-172632bd1adb
-          enableCrossOsArchive: true
+          path: input
+          key: ${{ env.title }}-input
           fail-on-cache-miss: true
 
       - name: Preset
@@ -63,23 +64,25 @@ jobs:
         working-directory: input
         run: |
           for file in *.mp4; do
-          echo ::group::"$file"
+            echo ::group::"$file"
+            duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
-          duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
+            ss=5
+            to=$(jq -n $duration-7)
+            trim=7:$(jq -n $duration-9)
+            crop=880:880:1040:0
+            fps=fps=source_fps:start_time=0:eof_action=pass
+            # scale=536:536:flags=sinc
+            t=30
 
-          trim=11:$(jq -n $duration-9)
-          crop=1072:1072:840:exact=1
-          scale=536:536:flags=sinc
-          fps=fps=source_fps:start_time=0:eof_action=pass
+            FFREPORT=file=%p-%t.log:level=32 \
+            ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
+            -ss $ss -to $to ${t+-t $t}\
+            -vf trim=$trim,crop=$crop,${scale+scale=$scale,}fps=$fps \
+            -ac 1 -fpre preset \
+            "../tmp/$(basename "$file" .mp4).mkv"
 
-          FFREPORT=file=%p-%t.log:level=32 \
-          ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
-          -ss 8.5 -to $(jq -n $duration-7) \
-          -vf trim=$trim,crop=$crop,scale=$scale,fps=$fps \
-          -ac 1 -fpre preset \
-          "../tmp/$(basename "$file" .mp4).mkv"
-
-          echo ::endgroup::
+            echo ::endgroup::
           done
 
       - name: mkvmerge
@@ -91,15 +94,12 @@ jobs:
 
       - name: Archive logs
         working-directory: input
-        run: |
-          tar cJvvf ../output/info/logs.tar.xz *.log
+        run: tar cJvvf ../output/info/logs.tar.xz *.log
 
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: Chessable LTR Giri French
+          name: ${{ env.title }}
           path: output
-          retention-days: 5
-
-# git commit -am. && git push -qf && gh workflow run process.yml
+          retention-days: 1
