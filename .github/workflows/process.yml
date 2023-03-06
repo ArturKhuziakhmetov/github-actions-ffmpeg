@@ -23,7 +23,7 @@ jobs:
           sudo add-apt-repository ppa:savoury1/ffmpeg5
           echo ::endgroup::
           echo ::group::Installing
-          sudo apt-fast -qq --allow-unauthenticated update
+          sudo apt-fast -qq --allow-insecure-repositories update
           sudo apt-fast -qq install mkvtoolnix ffmpeg
           echo ::endgroup::
 
