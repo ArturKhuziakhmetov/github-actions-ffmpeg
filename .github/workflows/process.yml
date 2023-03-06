@@ -13,10 +13,12 @@ jobs:
         run: |
           # Install ffmpeg + mkvtoolnix
           echo ::group::Adding repos
-          sig=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg
-          sudo curl -so $sig https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
-          echo deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu jammy main | \
-          sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
+          # sig=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg
+          # sudo curl -so $sig https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
+          # echo deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu jammy main | \
+          # sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
+          # --allow-unauthenticated
+          sudo add-apt-repository -S deb https://mkvtoolnix.download/ubuntu jammy main
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
           echo ::endgroup::
@@ -34,6 +36,9 @@ jobs:
           path: input
           key: ${{ env.title }}-input
           fail-on-cache-miss: true
+
+      - name: Make dirs
+        run: mkdir -p output/info tmp
 
       - name: Preset
         working-directory: input
@@ -53,9 +58,6 @@ jobs:
           application=voip
           cutoff=12000
           EOF
-
-      - name: Make dirs
-        run: mkdir -p output/info tmp
 
       - name: ffmpeg
         working-directory: input
@@ -93,7 +95,7 @@ jobs:
 
       - name: Archive logs
         working-directory: input
-        run: tar cJvvf ../output/info/logs.tar.xz *.log
+        run: tar cJvvf ../output/info/logs.txz *.log
 
       - name: Upload artifacts
         if: always()
