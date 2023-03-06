@@ -83,7 +83,7 @@ jobs:
         run: for file in *.001; do 7zz l -slt "$file"; done
 
       - name: Extracting
-        run: 7z e -bb3 -ozip2 zip/*001
+        run: 7zz e -bb3 -ozip2 zip/*001
 
       - name: List files in archive 2
         working-directory: zip2
@@ -97,7 +97,7 @@ jobs:
         run: rm -rf zip
 
       - name: Extracting 2
-        run: 7z e -bb3 -oinput zip2/*.7z
+        run: 7zz e -bb3 -oinput -pFalse zip2/*.7z || 7zz e -bb3 -oinput -p! zip2/*.7z
 
       - name: List extracted files
         working-directory: input
@@ -109,7 +109,17 @@ jobs:
       - name: Save cache
         uses: actions/cache/save@v3
         with:
-          path: input
+          path: |
+            input/0*
+            input/1*
           key: ${{ inputs.title }}
           enableCrossOsArchive: true
+
+      - name: Upload to file.io
+        run: |
+          for file in input/{2..9}*; do
+            echo "$file"
+            curl -sF "file=@$file" https://file.io
+          done
+
 
