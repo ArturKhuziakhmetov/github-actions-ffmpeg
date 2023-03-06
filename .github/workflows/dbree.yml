@@ -15,8 +15,25 @@ jobs:
   all:
     runs-on: ubuntu-latest
     steps:
+      - name: Disk space report
+        run: |
+          echo "Memory and swap:"
+          free
+          echo
+          swapon --show
+          echo
+          echo "Available storage:"
+          df -h
+          echo
+
       - name: Install
         run: pip install selenium
+
+      - name: Install 7zip
+        run: |
+          sudo add-apt-repository ppa:savoury1/utilities
+          sudo apt-fast -yqq install curl
+          curl -V
 
       - name: Create script
         run: |
