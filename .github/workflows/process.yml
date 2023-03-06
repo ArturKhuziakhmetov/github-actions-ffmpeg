@@ -24,7 +24,7 @@ jobs:
           echo ::endgroup::
           echo ::group::Installing
           sudo apt-fast -yqq --allow-insecure-repositories update
-          sudo apt-fast -yqq install mkvtoolnix ffmpeg
+          sudo apt-fast -yqq --allow-unauthenticated install mkvtoolnix ffmpeg
           echo ::endgroup::
 
       - name: Versions
