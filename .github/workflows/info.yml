@@ -15,4 +15,4 @@ jobs:
         run: compgen -c | sort | uniq
 
       - name: Folders
-        run: du -d1 /usr/share /usr/local/lib /opt | sort -nr | head -20
+        run: du -d1 /usr/share /usr/lib /usr/local/lib /opt /opt/hostedtoolcache | sort -nr | head -30
