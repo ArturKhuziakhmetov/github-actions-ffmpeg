@@ -24,15 +24,13 @@ jobs:
       - name: Disk space report after
         run: free; swapon --show; df -h
 
-      - name: Install selenium
-        run: pip install -q selenium
-
-      - name: Install curl
+      - name: Install software
         run: |
+          pip install -q selenium
           sudo add-apt-repository ppa:savoury1/utilities > /dev/null
           sudo apt-fast -yqq install curl 7zip > /dev/null
           curl -V
-          7zz
+          7zz | head -2
 
       - name: Create script
         run: |
