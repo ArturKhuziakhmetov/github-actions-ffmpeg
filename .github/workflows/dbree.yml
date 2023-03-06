@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Stop-Em-Cold" -f url="https://dbree.org/s/chessable%20stop&page=0" -f num=18
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1-2" -f url="https://dbree.org/s/l%20nimzo%20part%201%202&page=0" -f num=78
 
 name: dbree
 run-name: ${{ inputs.title }}
@@ -51,13 +51,14 @@ jobs:
 
       - name: Download
         working-directory: zip
-        run: curl -JOZ --remote-name-all -K ../urls
+        run: curl -JOZ --remote-name-all --no-clobber --parallel-max 100 -K ../urls
 
       - name: List files
         working-directory: zip
         run: ls -Qs1
 
       - name: Save cache
+        if: always()
         uses: actions/cache/save@v3
         with:
           path: zip

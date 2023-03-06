@@ -13,11 +13,6 @@ jobs:
         run: |
           # Install ffmpeg + mkvtoolnix
           echo ::group::Adding repos
-          # sig=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg
-          # sudo curl -so $sig https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
-          # echo deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu jammy main | \
-          # sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
-          # --allow-unauthenticated
           sudo add-apt-repository https://mkvtoolnix.download/ubuntu
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
