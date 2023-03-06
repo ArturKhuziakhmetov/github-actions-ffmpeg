@@ -18,7 +18,7 @@ jobs:
           # echo deb [signed-by=$sig] https://mkvtoolnix.download/ubuntu jammy main | \
           # sudo tee /etc/apt/sources.list.d/mkvtoolnix.download.list
           # --allow-unauthenticated
-          sudo add-apt-repository -S deb https://mkvtoolnix.download/ubuntu
+          sudo add-apt-repository https://mkvtoolnix.download/ubuntu
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
           echo ::endgroup::
