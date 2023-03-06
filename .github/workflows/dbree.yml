@@ -29,7 +29,7 @@ jobs:
           pip install -q selenium
           sudo add-apt-repository ppa:savoury1/utilities > /dev/null
           sudo apt-fast -yqq install curl 7zip > /dev/null
-          curl -V
+          curl -V | head -1
           7zz | head -2
 
       - name: Create script
@@ -57,7 +57,7 @@ jobs:
               while read id; do
                   curl -sb $c -w 'url = %{redirect_url}\n' \
                     https:$(curl -sb $c https://dbree.org$id | \
-                            grep -om1 "//dbree.org/d/[^']*")
+                            grep -om1 "//dbree.org/d/[^']*" || exit 1)
               done | tee -a urls
               echo ::endgroup::
           done
@@ -65,25 +65,21 @@ jobs:
 
       - name: Download
         working-directory: zip
-        run: curl -JOZ --remote-name-all --no-clobber --parallel-max 100 -K ../urls
+        run: curl -JOZk --remote-name-all --no-clobber --parallel-max 100 -K ../urls
 
       - name: List zip files
-        if: always()
         working-directory: zip
         run: ls -Qs1
 
       - name: List files in archive
-        if: always()
         working-directory: zip
         run: for file in *.001; do 7zz l "$file"; done
 
       - name: List files in archive verbose
-        if: always()
         working-directory: zip
         run: for file in *.001; do 7zz l -slt "$file"; done
 
       - name: Save cache
-        if: always()
         uses: actions/cache/save@v3
         with:
           path: zip
