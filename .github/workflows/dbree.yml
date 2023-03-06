@@ -15,25 +15,24 @@ jobs:
   all:
     runs-on: ubuntu-latest
     steps:
-      - name: Disk space report
-        run: |
-          echo "Memory and swap:"
-          free
-          echo
-          swapon --show
-          echo
-          echo "Available storage:"
-          df -h
-          echo
+      - name: Disk space report before
+        run: free; swapon --show; df -h
 
-      - name: Install
-        run: pip install selenium
+      - name: Removing unneeded files
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
 
-      - name: Install 7zip
+      - name: Disk space report after
+        run: free; swapon --show; df -h
+
+      - name: Install selenium
+        run: pip install -q selenium
+
+      - name: Install curl
         run: |
-          sudo add-apt-repository ppa:savoury1/utilities
-          sudo apt-fast -yqq install curl
+          sudo add-apt-repository ppa:savoury1/utilities > /dev/null
+          sudo apt-fast -yqq install curl 7zip > /dev/null
           curl -V
+          7zz
 
       - name: Create script
         run: |
@@ -70,9 +69,20 @@ jobs:
         working-directory: zip
         run: curl -JOZ --remote-name-all --no-clobber --parallel-max 100 -K ../urls
 
-      - name: List files
+      - name: List zip files
+        if: always()
         working-directory: zip
         run: ls -Qs1
+
+      - name: List files in archive
+        if: always()
+        working-directory: zip
+        run: for file in *.001; do 7zz l "$file"; done
+
+      - name: List files in archive verbose
+        if: always()
+        working-directory: zip
+        run: for file in *.001; do 7zz l -slt "$file"; done
 
       - name: Save cache
         if: always()
