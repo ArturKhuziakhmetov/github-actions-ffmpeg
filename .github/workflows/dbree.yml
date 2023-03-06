@@ -20,9 +20,8 @@ jobs:
 
       - name: Removing unneeded files
         run: |
-          sudo rm -rf /usr/share/dotnet &
           sudo rm -rf /usr/local/lib/android &
-          sudo rm -rf /opt/ghc &
+          sudo rm -rf /opt/hostedtoolcache &
           wait
 
       - name: Disk space report after
@@ -83,9 +82,34 @@ jobs:
         working-directory: zip
         run: for file in *.001; do 7zz l -slt "$file"; done
 
+      - name: Extracting
+        run: 7z e -bb3 -ozip2 zip/*001
+
+      - name: List files in archive 2
+        working-directory: zip2
+        run: for file in *.7z; do 7zz l "$file"; done
+
+      - name: List files in archive verbose 2
+        working-directory: zip2
+        run: for file in *.7z; do 7zz l -slt "$file"; done
+
+      - name: Removing zip
+        run: rm -rf zip
+
+      - name: Extracting 2
+        run: 7z e -bb3 -oinput zip2/*.7z
+
+      - name: List extracted files
+        working-directory: input
+        run: ls -Qs1
+
+      - name: Removing zip2
+        run: rm -rf zip2
+
       - name: Save cache
         uses: actions/cache/save@v3
         with:
-          path: zip
+          path: input
           key: ${{ inputs.title }}
           enableCrossOsArchive: true
+
