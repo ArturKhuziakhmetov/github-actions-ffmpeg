@@ -46,7 +46,7 @@ jobs:
       - name: Get links from url
         if: ${{ inputs.use-url }}
         run: |
-          logger -s "Getting links started" 2>> process.log
+          logger --no-act -s "Getting links started" 2>> process.log
           c=$(python3 test.py)
           u='${{ inputs.url }}'
           for n in {0..${{ inputs.num }}..10}; do
@@ -76,14 +76,13 @@ jobs:
           mkdir zip
           sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
           touch PREPARATION-FINISHED
-          logger -s "Preparation finished" 2>> process.log
+          logger --no-act -s "Preparation finished" 2>> process.log
 
       - name: Download
-        working-directory: zip
         run: |
-          curl -JOZkf --remote-name-all --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5  --retry-all-errors -K ../urls -w '# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n'
-          touch ../DOWNLOAD-FINISHED
-          logger -s "Download finished" 2>> ../process.log
+          curl -JOZkf --remote-name-all --output-dir zip --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5 --retry-all-errors -K urls -w '%{stderr}# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n' 2>> process.log | tee download.log
+          touch DOWNLOAD-FINISHED
+          logger --no-act -s "Download finished" 2>> process.log
 
       - name: Extracting
         working-directory: zip
@@ -96,10 +95,15 @@ jobs:
           done
           ls -Qs1
           touch ../EXTRACTING-FINISHED
-          logger -s "Extracting finished" 2>> ../process.log
+          logger --no-act -s "Extracting finished" 2>> ../process.log
 
       - name: Wait
-        run: while :; do sleep 10; done
+        run: |
+          while :; do
+            sleep 300;
+            (( total += 5 ))
+            echo "Sleeping $total minutes..."
+          done
 
 
       # - name: Extracting 2 with password
