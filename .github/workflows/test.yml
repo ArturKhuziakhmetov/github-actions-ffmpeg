@@ -7,21 +7,14 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - name: Install software
-        run: sudo apt-get update && sudo apt-get install ssmtp
-
-      - name: Send email
+      - name: Ngrok
         run: |
-          ssmtp ak.mail.01@rambler.ru << "EOF"
-          From: Pratham Patel
-          Subject: Sent from the command line
+          sudo snap install ngrok
+          ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
+          ngrok http file:///.
 
-          Hi Abhishek,
-
-          I'm working on an article about sending an e-mail from the command line. This e-mail was used to send
-
-          Regards,
-          Pratham Patel
-          EOF
-
+      - name: Test
+        run: |
+          echo Test123 > test.txt
+          while :; do sleep 10; done
 
