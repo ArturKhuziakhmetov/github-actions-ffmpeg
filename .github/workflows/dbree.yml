@@ -15,25 +15,16 @@ jobs:
   all:
     runs-on: ubuntu-latest
     steps:
-      - name: Disk space report before
-        run: free; swapon --show; df -h
-
-      - name: Removing unneeded files
-        run: |
-          sudo rm -rf /usr/local/lib/android &
-          sudo rm -rf /opt/hostedtoolcache &
-          wait
-
-      - name: Disk space report after
-        run: free; swapon --show; df -h
+      # - name: Disk space report before
+      #   run: free; swapon --show; df -h
 
       - name: Install software
         run: |
+          sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
+          sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
+          sudo apt-fast -yqq install curl 7zip > /dev/null &
+          sudo snap install ngrok &
           pip install -q selenium
-          sudo add-apt-repository ppa:savoury1/utilities > /dev/null
-          sudo apt-fast -yqq install curl 7zip > /dev/null
-          curl -V | head -1
-          7zz | head -2
 
       - name: Create script
         run: |
@@ -70,58 +61,50 @@ jobs:
         working-directory: zip
         run: curl -JOZk --remote-name-all --no-clobber --parallel-max 100 -K ../urls
 
-      - name: List zip files
-        working-directory: zip
-        run: ls -Qs1
-
-      - name: List files in archive
-        working-directory: zip
-        run: for file in *.001; do 7zz l "$file"; done
-
-      - name: List files in archive verbose
-        working-directory: zip
-        run: for file in *.001; do 7zz l -slt "$file"; done
-
       - name: Extracting
-        run: 7zz e -bb3 -ozip2 zip/*001
-
-      - name: List files in archive 2
-        working-directory: zip2
-        run: for file in *.7z; do 7zz l "$file"; done
-
-      - name: List files in archive verbose 2
-        working-directory: zip2
-        run: for file in *.7z; do 7zz l -slt "$file"; done
-
-      - name: Removing zip
-        run: rm -rf zip
-
-      - name: Extracting 2 with password
+        working-directory: zip
         run: |
-          7zz e -bb3 -oinput -pFalse zip2/*.7z || \
-          7zz e -bb3 -oinput -p! zip2/*.7z
-
-      - name: List extracted files
-        working-directory: input
-        run: ls -Qs1
-
-      - name: Removing zip2
-        run: rm -rf zip2
-
-      - name: Save cache
-        uses: actions/cache/save@v3
-        with:
-          path: |
-            input/0*
-            input/1*
-          key: ${{ inputs.title }}
-          enableCrossOsArchive: true
-
-      - name: Upload to file.io
-        run: |
-          for file in input/{2..9}*; do
-            echo "$file"
-            curl -sF "file=@$file" https://file.io
+          ls -Qs1
+          7zz e -bb3 *001
+          for file in *.7z; do
+              7zz l "$file"
+              7zz l -slt "$file"
           done
+          ls -Qs1
+
+      - name: Ngrok
+        run: |
+          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD/zip &
+          cat ngrok.log
+          while :; do sleep 1; done
+
+
+      # - name: Extracting 2 with password
+      #   run: |
+      #     7zz e -bb3 -oinput -pFalse zip2/*.7z || \
+      #     7zz e -bb3 -oinput -p! zip2/*.7z
+
+      # - name: List extracted files
+      #   working-directory: input
+      #   run: ls -Qs1
+
+      # - name: Removing zip2
+      #   run: rm -rf zip2
+
+      # - name: Save cache
+      #   uses: actions/cache/save@v3
+      #   with:
+      #     path: |
+      #       input/0*
+      #       input/1*
+      #     key: ${{ inputs.title }}
+      #     enableCrossOsArchive: true
+
+      # - name: Upload to file.io
+      #   run: |
+      #     for file in input/{2..9}*; do
+      #       echo "$file"
+      #       curl -sF "file=@$file" https://file.io
+      #     done
 
 
