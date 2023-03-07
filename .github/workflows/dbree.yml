@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1-2" -f url="https://dbree.org/s/l%20nimzo%20part%201%202&page=0" -f num=78
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1-2" -F urls=@urls.txt -f use-urls=true
 
 name: dbree
 run-name: ${{ inputs.title }}
@@ -7,27 +7,27 @@ on:
     inputs:
       title:
         required: true
+      use-url:
+        type: boolean
       url:
         required: false
       num:
         required: false
+      use-urls:
+        type: boolean
+      urls:
+        required: false
+
 jobs:
   all:
     runs-on: ubuntu-latest
     steps:
-      # - name: Disk space report before
-      #   run: free; swapon --show; df -h
 
-      - name: Install software
+      - name: Preparing
         run: |
-          sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
           sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
           sudo apt-fast -yqq install curl 7zip > /dev/null &
-          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz &
           pip install -q selenium
-
-      - name: Create script
-        run: |
           cat << "EOF" | tee test.py
           import time
           from selenium import webdriver
@@ -37,97 +37,42 @@ jobs:
           driver = webdriver.Chrome(options=chrome_options)
           driver.get("https://dbree.org/v/381638")
           time.sleep(10)
-          print(";".join(f'{d["name"]}={d["value"]}'
-                for d in driver.get_cookies()))
+          print(";".join(f'{d["name"]}={d["value"]}' for d in driver.get_cookies()))
           EOF
+          mkdir zip
 
-      - name: Get links
+      - name: Get links from url
+        if: ${{ inputs.use-url }}
         run: |
-          u='${{ inputs.url }}'
           c=$(python3 test.py)
-          # for n in {0..${{ inputs.num }}..10}; do
-          #     echo ::group::Page: $n
-              # curl -sb $c "${u%0}$n" | grep -om1 "/v/[^']*" | \
+          u='${{ inputs.url }}'
+          for n in {0..${{ inputs.num }}..10}; do
+              echo ::group::Page: $n
+              curl -sb $c "${u%0}$n" | grep -om1 "/v/[^']*" | \
               while read id; do
                   curl -sb $c -w 'url = %{redirect_url}\n' \
                     https:$(curl -sb $c https://dbree.org$id | \
                             grep -om1 "//dbree.org/d/[^']*" || exit 1)
-              done << "EOF" | tee -a urls
-              /v/0c0c5c
-              /v/0fa6ca
-              /v/a6ee29
-              /v/0fa70f
-              /v/a843f9
-              /v/4de2b4
-              /v/fa8542
-              /v/a856af
-              /v/60fa85
-              /v/b458f8
-              /v/f2135b
-              /v/e8c945
-              /v/a8b90c
-              /v/b9cafa
-              /v/8bdd12
-              /v/bd7dcf
-              /v/7b1ae2
-              /v/fa928b
-              /v/60fa99
-              /v/99b586
-              /v/a92ae7
-              /v/0fa925
-              /v/960fa9
-              /v/fa9a4d
-              /v/fa9a63
-              /v/a52151
-              /v/a092dc
-              /v/460faa
-              /v/a05400
-              /v/0faa07
-              /v/75c60c
-              /v/60faa0
-              /v/aa1cce
-              /v/a6b871
-              /v/17360f
-              /v/faa6d5
-              /v/faa703
-              /v/60faa6
-              /v/6e3812
-              /v/e8e231
-              /v/0faacc
-              /v/0faad8
-              /v/0faad3
-              /v/faad86
-              /v/d70bbd
-              /v/0fab31
-              /v/60fab2
-              /v/d57b1d
-              /v/60fab3
-              /v/301bfb
-              /v/fab333
-              /v/0fab9a
-              /v/b35ffa
-              /v/ab98ee
-              /v/79060f
-              /v/9fe85f
-              /v/084fd7
-              /v/ac1001
-              /v/18c9bc
-              /v/8885eb
-              /v/1c4ee3
-              /v/fac15a
-              /v/c184cc
-              /v/60fac6
-              /v/75d2f2
-              /v/0835b5
-              /v/97131f
-              /v/7501b2
-              /v/ac7377
-              /v/60fac9
-              /v/8530d6
-              EOF
-          #     echo ::endgroup::
-          # done
-          mkdir zip
+              done | tee -a urls
+              echo ::endgroup::
+          done
+
+      - name: Get links from urls
+        if: ${{ inputs.use-urls }}
+        run: |
+          c=$(python3 test.py)
+          while read id; do
+              curl -sb $c -w 'url = %{redirect_url}\n' \
+                https:$(curl -sb $c https://dbree.org$id | \
+                        grep -om1 "//dbree.org/d/[^']*" || exit 1)
+          done << "EOF" | tee -a urls
+          ${{ inputs.urls }}
+          EOF
+
+      - name: Preparing download
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
+          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz &
 
       - name: Download
         working-directory: zip
