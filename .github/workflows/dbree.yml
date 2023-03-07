@@ -27,6 +27,7 @@ jobs:
         run: |
           curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz
           ./ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
+          sleep 5
           cat ngrok.log
 
       - name: Preparing
