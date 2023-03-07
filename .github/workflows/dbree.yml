@@ -96,8 +96,10 @@ jobs:
       - name: Removing zip
         run: rm -rf zip
 
-      - name: Extracting 2
-        run: 7zz e -bb3 -oinput -pFalse zip2/*.7z || 7zz e -bb3 -oinput -p! zip2/*.7z
+      - name: Extracting 2 with password
+        run: |
+          7zz e -bb3 -oinput -pFalse zip2/*.7z || \
+          7zz e -bb3 -oinput -p! zip2/*.7z
 
       - name: List extracted files
         working-directory: input

@@ -1,0 +1,27 @@
+# git commit -am. && git push -qf && gh workflow run test.yml
+
+name: Test
+run-name: Test ssmtp
+on: workflow_dispatch
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install software
+        run: sudo apt-get install ssmtp
+
+      - name: Send email
+        run: |
+          ssmtp ak.mail.01@rambler.ru << "EOF"
+          From: Pratham Patel
+          Subject: Sent from the command line
+
+          Hi Abhishek,
+
+          I'm working on an article about sending an e-mail from the command line. This e-mail was used to send
+
+          Regards,
+          Pratham Patel
+          EOF
+
+
