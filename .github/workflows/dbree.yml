@@ -23,15 +23,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-      - name: Ngrok
+      - name: Preparing
         run: |
           curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz
           ./ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
-          sleep 5
-          cat ngrok.log
-
-      - name: Preparing
-        run: |
           sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
           sudo apt-fast -yqq install curl 7zip > /dev/null &
           pip install -q selenium
@@ -46,10 +41,12 @@ jobs:
           time.sleep(10)
           print(";".join(f'{d["name"]}={d["value"]}' for d in driver.get_cookies()))
           EOF
+          cat ngrok.log
 
       - name: Get links from url
         if: ${{ inputs.use-url }}
         run: |
+          logger -s "Getting links started" 2>> process.log
           c=$(python3 test.py)
           u='${{ inputs.url }}'
           for n in {0..${{ inputs.num }}..10}; do
@@ -78,10 +75,15 @@ jobs:
         run: |
           mkdir zip
           sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
+          touch PREPARATION-FINISHED
+          logger -s "Preparation finished" 2>> process.log
 
       - name: Download
         working-directory: zip
-        run: curl -JOZkf --remote-name-all --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5  --retry-all-errors -K ../urls -w '# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n'
+        run: |
+          curl -JOZkf --remote-name-all --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5  --retry-all-errors -K ../urls -w '# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n'
+          touch ../DOWNLOAD-FINISHED
+          logger -s "Download finished" 2>> ../process.log
 
       - name: Extracting
         working-directory: zip
@@ -93,9 +95,11 @@ jobs:
               7zz l -slt "$file"
           done
           ls -Qs1
+          touch ../EXTRACTING-FINISHED
+          logger -s "Extracting finished" 2>> ../process.log
 
       - name: Wait
-        run: wait
+        run: while :; do sleep 10; done
 
 
       # - name: Extracting 2 with password
