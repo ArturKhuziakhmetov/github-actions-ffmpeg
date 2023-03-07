@@ -75,7 +75,7 @@ jobs:
 
       - name: Download
         working-directory: zip
-        run: curl -JOZkf --remote-name-all --no-clobber --fail-early --remove-on-error --parallel-max 10 -K ../urls -w 'Downloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n'
+        run: curl -JOZkf --remote-name-all --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5 -K ../urls -w 'Downloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n'
 
       - name: Extracting
         working-directory: zip
