@@ -23,6 +23,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      - name: Ngrok
+        run: |
+          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz
+          ./ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD/zip &
+          cat ngrok.log
+
       - name: Preparing
         run: |
           sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
@@ -71,11 +77,10 @@ jobs:
         run: |
           mkdir zip
           sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
-          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz &
 
       - name: Download
         working-directory: zip
-        run: curl -JOZkf --remote-name-all --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5  --retry-all-errors -K ../urls -w 'Downloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n'
+        run: curl -JOZkf --remote-name-all --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5  --retry-all-errors -K ../urls -w '# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n'
 
       - name: Extracting
         working-directory: zip
@@ -88,11 +93,8 @@ jobs:
           done
           ls -Qs1
 
-      - name: Ngrok
-        run: |
-          ./ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD/zip &
-          cat ngrok.log
-          wait
+      - name: Wait
+        run: wait
 
 
       # - name: Extracting 2 with password
