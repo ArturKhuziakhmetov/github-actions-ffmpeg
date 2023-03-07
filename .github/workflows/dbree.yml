@@ -8,9 +8,9 @@ on:
       title:
         required: true
       url:
-        required: true
+        required: false
       num:
-        required: true
+        required: false
 jobs:
   all:
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
           sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
           sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
           sudo apt-fast -yqq install curl 7zip > /dev/null &
-          sudo snap install ngrok &
+          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz &
           pip install -q selenium
 
       - name: Create script
@@ -45,21 +45,93 @@ jobs:
         run: |
           u='${{ inputs.url }}'
           c=$(python3 test.py)
-          for n in {0..${{ inputs.num }}..10}; do
-              echo ::group::Page: $n
-              curl -sb $c "${u%0}$n" | grep -om1 "/v/[^']*" | \
+          # for n in {0..${{ inputs.num }}..10}; do
+          #     echo ::group::Page: $n
+              # curl -sb $c "${u%0}$n" | grep -om1 "/v/[^']*" | \
               while read id; do
                   curl -sb $c -w 'url = %{redirect_url}\n' \
                     https:$(curl -sb $c https://dbree.org$id | \
                             grep -om1 "//dbree.org/d/[^']*" || exit 1)
-              done | tee -a urls
-              echo ::endgroup::
-          done
+              done << "EOF" | tee -a urls
+              /v/0c0c5c
+              /v/0fa6ca
+              /v/a6ee29
+              /v/0fa70f
+              /v/a843f9
+              /v/4de2b4
+              /v/fa8542
+              /v/a856af
+              /v/60fa85
+              /v/b458f8
+              /v/f2135b
+              /v/e8c945
+              /v/a8b90c
+              /v/b9cafa
+              /v/8bdd12
+              /v/bd7dcf
+              /v/7b1ae2
+              /v/fa928b
+              /v/60fa99
+              /v/99b586
+              /v/a92ae7
+              /v/0fa925
+              /v/960fa9
+              /v/fa9a4d
+              /v/fa9a63
+              /v/a52151
+              /v/a092dc
+              /v/460faa
+              /v/a05400
+              /v/0faa07
+              /v/75c60c
+              /v/60faa0
+              /v/aa1cce
+              /v/a6b871
+              /v/17360f
+              /v/faa6d5
+              /v/faa703
+              /v/60faa6
+              /v/6e3812
+              /v/e8e231
+              /v/0faacc
+              /v/0faad8
+              /v/0faad3
+              /v/faad86
+              /v/d70bbd
+              /v/0fab31
+              /v/60fab2
+              /v/d57b1d
+              /v/60fab3
+              /v/301bfb
+              /v/fab333
+              /v/0fab9a
+              /v/b35ffa
+              /v/ab98ee
+              /v/79060f
+              /v/9fe85f
+              /v/084fd7
+              /v/ac1001
+              /v/18c9bc
+              /v/8885eb
+              /v/1c4ee3
+              /v/fac15a
+              /v/c184cc
+              /v/60fac6
+              /v/75d2f2
+              /v/0835b5
+              /v/97131f
+              /v/7501b2
+              /v/ac7377
+              /v/60fac9
+              /v/8530d6
+              EOF
+          #     echo ::endgroup::
+          # done
           mkdir zip
 
       - name: Download
         working-directory: zip
-        run: curl -JOZk --remote-name-all --no-clobber --parallel-max 100 -K ../urls
+        run: curl -JOZkf --remote-name-all --no-clobber --fail-early --remove-on-error --parallel-max 100 -K ../urls
 
       - name: Extracting
         working-directory: zip
@@ -74,7 +146,7 @@ jobs:
 
       - name: Ngrok
         run: |
-          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD/zip &
+          ./ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD/zip &
           cat ngrok.log
           while :; do sleep 1; done
 
