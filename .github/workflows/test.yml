@@ -11,7 +11,7 @@ jobs:
         run: |
           sudo snap install ngrok
           mkdir tmp
-          ngrok http file:///tmp --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log &
+          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD/tmp &
 
       - name: Test
         run: |
