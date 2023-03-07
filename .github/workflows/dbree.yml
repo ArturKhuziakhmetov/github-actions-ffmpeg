@@ -80,7 +80,7 @@ jobs:
 
       - name: Download
         run: |
-          curl -JOZkf --remote-name-all --output-dir zip --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5 --retry-all-errors -K urls -w '%{stderr}# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n' 2>> process.log | tee download.log
+          curl -JOZkf --remote-name-all --output-dir zip --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5 --retry-all-errors -K urls -w '# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n' |& tee -a process.log
           touch DOWNLOAD-FINISHED
           logger --no-act -s "Download finished" 2>> process.log
 
