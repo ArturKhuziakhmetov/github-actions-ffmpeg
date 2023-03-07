@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install software
-        run: sudo apt-get install ssmtp
+        run: sudo apt-get update && sudo apt-get install ssmtp
 
       - name: Send email
         run: |
