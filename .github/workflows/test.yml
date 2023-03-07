@@ -10,7 +10,8 @@ jobs:
       - name: Ngrok
         run: |
           sudo snap install ngrok
-          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} file:///.
+          ngrok authtoken ${{ secrets.NGROK_AUTHTOKEN }}
+          ngrok http file:///.
 
       - name: Test
         run: |
