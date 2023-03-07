@@ -11,10 +11,11 @@ jobs:
         run: |
           sudo snap install ngrok
           mkdir tmp
-          ngrok http file:///tmp --authtoken ${{ secrets.NGROK_AUTHTOKEN }} &
+          ngrok http file:///tmp --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log &
 
       - name: Test
         run: |
           echo Test123 > tmp/test.txt
+          cat ngrok.log
           while :; do sleep 1; done
 
