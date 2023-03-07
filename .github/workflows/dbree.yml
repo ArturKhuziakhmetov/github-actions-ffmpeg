@@ -70,7 +70,7 @@ jobs:
                         grep -om1 "//dbree.org/d/[^']*" || exit 1)
           done << "EOF" | tee -a urls
           ${{ inputs.urls }}EOF
-          [[ $(tail -1 urls) == "url = " ]] && exit 1
+          # [[ $(tail -1 urls) == "url = " ]] && exit 1
 
       - name: Preparing download
         run: |
