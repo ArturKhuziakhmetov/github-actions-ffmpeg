@@ -1,7 +1,7 @@
 # git commit -am. && git push -qf && gh workflow run test.yml
 
 name: Test
-run-name: Test ssmtp
+run-name: Test ngrok
 on: workflow_dispatch
 jobs:
   main:
@@ -10,8 +10,7 @@ jobs:
       - name: Ngrok
         run: |
           sudo snap install ngrok
-          ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
-          ngrok http file:///.
+          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }}file:///.
 
       - name: Test
         run: |
