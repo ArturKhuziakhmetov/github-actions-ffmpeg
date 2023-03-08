@@ -41,22 +41,6 @@ jobs:
       - name: List files
         run: ls -Qs1
 
-      # - name: Save cache
-      #   uses: actions/cache/save@v3
-      #   with:
-      #     path: |
-      #       input/*.mp4
-      #       input/*.mkv
-      #     key: ${{ inputs.id }}
-      #     enableCrossOsArchive: true
-
-      # - name: Restore cached input
-      #   uses: actions/cache/restore@v3
-      #   with:
-      #     path: input
-      #     key: ${{ env.title }}-input
-      #     fail-on-cache-miss: true
-
       - name: Preset
         run: |
           cat << "EOF" | tee preset
@@ -80,7 +64,7 @@ jobs:
 
       - name: ffmpeg
         run: |
-          for file in *.mp4; do
+          for file in *.mp4 *.bin; do
             echo ::group::"$file"
             duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
@@ -112,12 +96,12 @@ jobs:
           done
 
       - name: Archive logs
-        run: tar cJvvf ../output/info/logs.txz *.log
+        run: tar cJvvf output/info/logs.txz *.log
 
       - name: Upload artifacts
         if: always()
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ env.title }}
+          name: ${{ inputs.title }}
           path: output
           retention-days: 1
