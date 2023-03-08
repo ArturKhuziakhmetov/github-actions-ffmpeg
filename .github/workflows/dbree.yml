@@ -68,7 +68,7 @@ jobs:
               # curl -sb $c -w 'url = %{redirect_url}\n' \
               #   https:$(curl -sb $c https://dbree.org$id | \
               #           grep -om1 "//dbree.org/d/[^']*" || exit 1)
-              echo $uri
+              echo https:$uri
           done << "EOF" | tee -a urls process.log
           ${{ inputs.urls }}EOF
 
