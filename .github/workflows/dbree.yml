@@ -29,7 +29,7 @@ jobs:
           # ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD
           # curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz
           # sudo add-apt-repository ppa:savoury1/utilities > /dev/null && sudo apt-fast -yqq install curl 7zip > /dev/null &
-          pip install selenium
+          pip install -q selenium
           cat << "EOF" | tee test.py
           import time
           from selenium import webdriver
@@ -69,6 +69,8 @@ jobs:
               [[ -z $uri ]] && exit 2
               uri=h
               until [[ $uri = https://www2* ]]; do
+                  (( count++ ))
+                  echo $count
                   uri=$(curl -sb $c -w '%{redirect_url}' https:$uri0)
               done
               # curl -sb $c -w 'url = %{redirect_url}\n' https:$uri
