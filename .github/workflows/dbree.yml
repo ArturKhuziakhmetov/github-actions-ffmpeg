@@ -66,9 +66,10 @@ jobs:
           c=$(python3 test.py)
           while read id; do
               uri0=$(curl -sb $c https://dbree.org$id | grep -om1 "//dbree.org/d/[^']*")
-              [[ -z $uri ]] && exit 2
-              uri=h
-              until [[ $uri = https://www2* ]]; do
+              [[ -z $uri0 ]] && exit 2
+              uri=$(curl -sb $c -w '%{redirect_url}' https:$uri0)
+              until [[ $uri == https://www2* ]]; do
+                  sleep 1
                   (( count++ ))
                   echo $count
                   uri=$(curl -sb $c -w '%{redirect_url}' https:$uri0)
