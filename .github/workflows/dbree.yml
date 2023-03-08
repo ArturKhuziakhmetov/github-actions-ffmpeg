@@ -64,16 +64,18 @@ jobs:
         if: ${{ inputs.use-urls }}
         run: |
           c=$(python3 test.py)
+          echo "$c"
           while read id; do
               uri0=$(curl -sb $c https://dbree.org$id | grep -om1 "//dbree.org/d/[^']*")
               [[ -z $uri0 ]] && exit 2
               uri=$(curl -sb $c -w '%{redirect_url}' https:$uri0)
-              until [[ $uri == https://www2* ]]; do
+              until [[ "$uri" == https://www2* ]]; do
                   sleep 1
                   (( count++ ))
-                  echo $count
+                  echo $count "$uri"
                   uri=$(curl -sb $c -w '%{redirect_url}' https:$uri0)
               done
+              echo $uri
               # curl -sb $c -w 'url = %{redirect_url}\n' https:$uri
           done << "EOF" | tee -a urls process.log
           ${{ inputs.urls }}EOF
