@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-aonode-urls
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-urls
 
 name: dbree
 run-name: ${{ inputs.title }}
@@ -20,13 +20,25 @@ jobs:
           sudo snap install ngrok
           ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
           mkdir zip
-          cat << "EOF" > urls
+          cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
           sleep 5
           cat ngrok.log
 
       - name: Download
-        run: aria2c --input-file=urls --dir=zip --force-sequential=true --split=8 --max-connection-per-server=8 --max-concurrent-downloads=1 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=true --summary-interval=30 --download-result=full --disk-cache=1024M
+        run: |
+        while read url0; do
+            unset url2
+            url1=$(curl -qsb dbree-cookies $url0 | rg -om1 "//dbree.org/d/[^']*")
+            url2=$(curl -qsb dbree-cookies -w '%{redirect_url}' https:$url1)
+            until [[ $url2 == https://www2* ]]; do
+                sleep 1
+                url1=$(curl -qsb dbree-cookies $url0 | rg -om1 "//dbree.org/d/[^']*")
+                url2=$(curl -qsb dbree-cookies -w '%{redirect_url}' https:$url1)
+            done
+            echo $url2 >> process.log
+            aria2c --dir=zip --split=8 --max-connection-per-server=8 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=true --summary-interval=30 --download-result=full --disk-cache=1024M "$url2"
+        done < dbree-urls
 
       - name: Extracting
         working-directory: zip
