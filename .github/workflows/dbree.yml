@@ -29,11 +29,11 @@ jobs:
         run: |
           while read url0; do
               unset url2
-              url1=$(curl -qsb dbree-cookies $url0 | rg -om1 "//dbree.org/d/[^']*")
+              url1=$(curl -qsb dbree-cookies $url0 | grep -om1 "//dbree.org/d/[^']*")
               url2=$(curl -qsb dbree-cookies -w '%{redirect_url}' https:$url1)
               until [[ $url2 == https://www2* ]]; do
                   sleep 1
-                  url1=$(curl -qsb dbree-cookies $url0 | rg -om1 "//dbree.org/d/[^']*")
+                  url1=$(curl -qsb dbree-cookies $url0 | grep -om1 "//dbree.org/d/[^']*")
                   url2=$(curl -qsb dbree-cookies -w '%{redirect_url}' https:$url1)
               done
               echo $url2 >> process.log
