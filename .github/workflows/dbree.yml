@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-urls
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-urls -F cookies=@dbree-cookies
 
 name: dbree
 run-name: ${{ inputs.title }}
@@ -8,6 +8,8 @@ on:
       title:
         required: true
       urls:
+        required: true
+      cookies:
         required: true
 
 jobs:
@@ -22,7 +24,9 @@ jobs:
           mkdir zip
           cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
-          sleep 5
+          cat << "EOF" > dbree-cookies
+          ${{ inputs.cookies }}EOF
+          sleep 3
           cat ngrok.log
 
       - name: Download
