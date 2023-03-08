@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1-2" -F urls=@urls.txt -f use-urls=true
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-aonode-urls
 
 name: dbree
 run-name: ${{ inputs.title }}
@@ -7,157 +7,39 @@ on:
     inputs:
       title:
         required: true
-      use-url:
-        type: boolean
-      url:
-        required: false
-      num:
-        required: false
-      use-urls:
-        type: boolean
       urls:
-        required: false
+        required: true
 
 jobs:
-  all:
+  main:
     runs-on: ubuntu-latest
     steps:
 
-      # - name: Preparing
-      #   run: |
-      #     # sudo snap install ngrok
-      #     # ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD
-      #     # curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz
-      #     # sudo add-apt-repository ppa:savoury1/utilities > /dev/null && sudo apt-fast -yqq install curl 7zip > /dev/null &
-      #     pip install -q selenium
-      #     cat << "EOF" | tee test.py
-      #     import time
-      #     from selenium import webdriver
-      #     from selenium.webdriver.chrome.options import Options
-      #     chrome_options = Options()
-      #     chrome_options.add_argument("--headless")
-      #     driver = webdriver.Chrome(options=chrome_options)
-      #     driver.get("https://dbree.org/v/381638")
-      #     time.sleep(10)
-      #     print(";".join(f'{d["name"]}={d["value"]}' for d in driver.get_cookies()))
-      #     EOF
-      #     # cat ngrok.log
-
-      # - name: Get links from url
-      #   if: ${{ inputs.use-url }}
-      #   run: |
-      #     logger --no-act -s "Getting links started" 2>> process.log
-      #     c=$(python3 test.py)
-      #     u='${{ inputs.url }}'
-      #     for n in {0..${{ inputs.num }}..10}; do
-      #         echo ::group::Page: $n
-      #         curl -sb $c "${u%0}$n" | grep -om1 "/v/[^']*" | \
-      #         while read id; do
-      #             curl -sb $c -w 'url = %{redirect_url}\n' \
-      #               https:$(curl -sb $c https://dbree.org$id | \
-      #                       grep -om1 "//dbree.org/d/[^']*" || exit 1)
-      #         done | tee -a urls
-      #         echo ::endgroup::
-      #     done
-
-      # - name: Get links from urls
-      #   if: ${{ inputs.use-urls }}
-      #   run: |
-      #     set -x
-      #     c=$(python3 test.py)
-      #     echo "$c"
-      #     while read id; do
-      #         uri0=$(curl -sb $c https://dbree.org$id | grep -om1 "//dbree.org/d/[^']*")
-      #         [[ -z $uri0 ]] && exit 2
-      #         uri=$(curl -sb $c -w '%{redirect_url}' https:$uri0)
-      #         until [[ "$uri" == https://www2* ]]; do
-      #             sleep 1
-      #             (( count++ ))
-      #             echo $count "$uri"
-      #             uri=$(curl -sb $c -w '%{redirect_url}' https:$uri0)
-      #         done
-      #         echo $uri
-      #         # curl -sb $c -w 'url = %{redirect_url}\n' https:$uri
-      #     done << "EOF" | tee -a urls process.log
-      #     ${{ inputs.urls }}EOF
-      #     [[ -z $uri ]] && exit 3
-
-      # - name: Preparing download
-      #   run: |
-      #     mkdir zip
-      #     # sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
-      #     # touch PREPARATION-FINISHED
-      #     # logger --no-act -s "Preparation finished" 2>> process.log
-
-      - name: Download
+      - name: Preparing
         run: |
+          sudo snap install ngrok
+          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
           mkdir zip
-
           cat << "EOF" > urls
           ${{ inputs.urls }}EOF
+          cat ngrok.log
 
-          aria2c --input-file=urls --dir=zip --force-sequential=true --split=8 --max-connection-per-server=8 --max-concurrent-downloads=1 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=true --summary-interval=30 --download-result=full --disk-cache=1024M
+      - name: Download
+        run: aria2c --input-file=urls --dir=zip --force-sequential=true --split=8 --max-connection-per-server=8 --max-concurrent-downloads=1 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=true --summary-interval=30 --download-result=full --disk-cache=1024M
 
-     - name: Save cache
-        uses: actions/cache/save@v3
-        with:
-          path: zip
-          key: ${{ inputs.title }}-001
+      - name: Extracting
+        working-directory: zip
+        run: |
+          7z e *001
+          for file in *.7z; do
+              7z l "$file"
+              7z l -slt "$file"
+          done
 
-      # - name: Download with curl
-      #   run: |
-      #     # curl -JOZkf --remote-name-all --output-dir zip --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5 --retry-all-errors -K urls -w '# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n' |& tee -a process.log
-      #     # touch DOWNLOAD-FINISHED
-      #     # logger --no-act -s "Download finished" 2>> process.log
-
-      # - name: Extracting
-      #   working-directory: zip
-      #   run: |
-      #     ls -Qs1
-      #     7z e -bb3 *001
-      #     for file in *.7z; do
-      #         7z l "$file"
-      #         7z l -slt "$file"
-      #     done
-      #     ls -Qs1
-      #     touch ../EXTRACTING-FINISHED
-      #     logger --no-act -s "Extracting finished" 2>> ../process.log
-
-      # - name: Wait
-      #   run: |
-      #     while :; do
-      #       sleep 300;
-      #       (( total += 5 ))
-      #       echo "Sleeping $total minutes..."
-      #     done
-
-
-      # - name: Extracting 2 with password
-      #   run: |
-      #     7z e -bb3 -oinput -pFalse zip2/*.7z || \
-      #     7z e -bb3 -oinput -p! zip2/*.7z
-
-      # - name: List extracted files
-      #   working-directory: input
-      #   run: ls -Qs1
-
-      # - name: Removing zip2
-      #   run: rm -rf zip2
-
-      # - name: Save cache
-      #   uses: actions/cache/save@v3
-      #   with:
-      #     path: |
-      #       input/0*
-      #       input/1*
-      #     key: ${{ inputs.title }}
-      #     enableCrossOsArchive: true
-
-      # - name: Upload to file.io
-      #   run: |
-      #     for file in input/{2..9}*; do
-      #       echo "$file"
-      #       curl -sF "file=@$file" https://file.io
-      #     done
-
-
+      - name: Wait
+        run: |
+          while :; do
+            sleep 60;
+            (( total++ ))
+            echo "Sleeping $total minutes..."
+          done
