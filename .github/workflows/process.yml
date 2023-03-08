@@ -1,42 +1,63 @@
-# git commit -am. && git push -qf && gh workflow run process.yml
+# git commit -am. && git push -qf && gh workflow run process.yml -f title="Nimzo-Semi-Tarrasch-2" -f id=3f312898-dd1e-254a-eff7-c54436b7ee6c
 
 name: Process
-run-name: Stop-Em-Cold
-on: workflow_dispatch
-env:
-  title: Stop-Em-Cold
+run-name: Nimzo-Semi-Tarrasch-2
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        required: true
+      id:
+        required: true
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - name: Install ffmpeg + mkvtoolnix
+
+      - name: Install
         run: |
-          # Install ffmpeg + mkvtoolnix
-          echo ::group::Adding repos
-          sudo add-apt-repository https://mkvtoolnix.download/ubuntu
-          sudo add-apt-repository ppa:savoury1/ffmpeg4
-          sudo add-apt-repository ppa:savoury1/ffmpeg5
-          echo ::endgroup::
-          echo ::group::Installing
-          sudo apt-fast -yqq --allow-insecure-repositories update
-          sudo apt-fast -yqq --allow-unauthenticated install mkvtoolnix ffmpeg
-          echo ::endgroup::
-
-      - name: Versions
-        run: mkvmerge -V; ffmpeg -version
-
-      - name: Restore cached input
-        uses: actions/cache/restore@v3
-        with:
-          path: input
-          key: ${{ env.title }}-input
-          fail-on-cache-miss: true
+          sudo add-apt-repository https://mkvtoolnix.download/ubuntu && \
+          sudo add-apt-repository ppa:savoury1/ffmpeg4 && \
+          sudo add-apt-repository ppa:savoury1/ffmpeg5 && \
+          sudo apt-fast -yqq --allow-insecure-repositories update && \
+          sudo apt-fast -yqq --allow-unauthenticated install mkvtoolnix ffmpeg &
 
       - name: Make dirs
         run: mkdir -p output/info tmp
 
+      - name: Download
+        run: |
+          curl -qZJ --remote-name-all \
+          $(curl --referer https://www.sendbig.com \
+          --header 'Content-Type: application/json' \
+          --data '{identifier:"${{ inputs.id }}"}' \
+          https://s1.sendbig.com/api/Archive/viewArchive | \
+          jq -j '.data.files | sort_by(.fileSize) | reverse[] |
+          "https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)/${{ inputs.id }}/20138 "')
+
+      - name: Extract
+        run: unrar e -v *.001
+
+      - name: List files
+        run: ls -Qs1
+
+      # - name: Save cache
+      #   uses: actions/cache/save@v3
+      #   with:
+      #     path: |
+      #       input/*.mp4
+      #       input/*.mkv
+      #     key: ${{ inputs.id }}
+      #     enableCrossOsArchive: true
+
+      # - name: Restore cached input
+      #   uses: actions/cache/restore@v3
+      #   with:
+      #     path: input
+      #     key: ${{ env.title }}-input
+      #     fail-on-cache-miss: true
+
       - name: Preset
-        working-directory: input
         run: |
           cat << "EOF" | tee preset
           vcodec=libx264
@@ -54,8 +75,10 @@ jobs:
           cutoff=12000
           EOF
 
+      - name: Versions
+        run: mkvmerge -V; ffmpeg -version
+
       - name: ffmpeg
-        working-directory: input
         run: |
           for file in *.mp4; do
             echo ::group::"$file"
@@ -64,17 +87,17 @@ jobs:
             ss=5
             to=$(jq -n $duration-7)
             trim=7:$(jq -n $duration-9)
-            crop=880:880:1040:0
+            crop=592:592:688:0
             fps=fps=source_fps:start_time=0:eof_action=pass
             # scale=536:536:flags=sinc
-            # t=30
+            t=30
 
             FFREPORT=file=%p-%t.log:level=32 \
             ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
             -ss $ss -to $to ${t+-t $t}\
             -vf trim=$trim,crop=$crop,${scale+scale=$scale,}fps=$fps \
             -ac 1 -fpre preset \
-            "../tmp/$(basename "$file" .mp4).mkv"
+            "tmp/$(basename "$file" .mp4).mkv"
 
             echo ::endgroup::
           done
@@ -89,7 +112,6 @@ jobs:
           done
 
       - name: Archive logs
-        working-directory: input
         run: tar cJvvf ../output/info/logs.txz *.log
 
       - name: Upload artifacts
