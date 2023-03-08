@@ -25,10 +25,8 @@ jobs:
 
       - name: Preparing
         run: |
-          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz
-          ./ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
-          sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
-          sudo apt-fast -yqq install curl 7zip > /dev/null &
+          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz && ./ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
+          # sudo add-apt-repository ppa:savoury1/utilities > /dev/null && sudo apt-fast -yqq install curl 7zip > /dev/null &
           pip install -q selenium
           cat << "EOF" | tee test.py
           import time
@@ -65,12 +63,14 @@ jobs:
         run: |
           c=$(python3 test.py)
           while read id; do
-              curl -sb $c -w 'url = %{redirect_url}\n' \
-                https:$(curl -sb $c https://dbree.org$id | \
-                        grep -om1 "//dbree.org/d/[^']*" || exit 1)
-          done << "EOF" | tee -a urls
+              uri=$(curl -sb $c https://dbree.org$id | grep -om1 "//dbree.org/d/[^']*")
+              [[ -z $uri ]] && exit 1
+              # curl -sb $c -w 'url = %{redirect_url}\n' \
+              #   https:$(curl -sb $c https://dbree.org$id | \
+              #           grep -om1 "//dbree.org/d/[^']*" || exit 1)
+              echo $uri
+          done << "EOF" | tee -a urls process.log
           ${{ inputs.urls }}EOF
-          # [[ $(tail -1 urls) == "url = " ]] && exit 1
 
       - name: Preparing download
         run: |
@@ -81,7 +81,8 @@ jobs:
 
       - name: Download
         run: |
-          curl -JOZkf --remote-name-all --output-dir zip --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5 --retry-all-errors -K urls -w '# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n' |& tee -a process.log
+          # curl -JOZkf --remote-name-all --output-dir zip --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5 --retry-all-errors -K urls -w '# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n' |& tee -a process.log
+          aria2c --input-file=urls --dir=zip --split=8 --max-connection-per-server=16 --max-concurrent-downloads=100 --log=download.log --file-allocation=falloc --show-console-readout=false --download-result=full --disk-cache=1024M
           touch DOWNLOAD-FINISHED
           logger --no-act -s "Download finished" 2>> process.log
 
