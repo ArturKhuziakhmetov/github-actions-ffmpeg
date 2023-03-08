@@ -81,7 +81,7 @@ jobs:
         run: |
           # curl -JOZkf --remote-name-all --output-dir zip --no-clobber --fail-early --remove-on-error --parallel-max 100 --retry 5 --retry-all-errors -K urls -w '# %{urlnum}\n%{filename_effective}\n%{url_effective}\nDownloaded bytes %{size_download}\nAverage speed %{speed_download} bytes/sec.\nTotal time %{time_total} secs.\n' |& tee -a process.log
 
-          aria2c --input-file=urls --dir=zip --force-sequential=true --split=8 --max-connection-per-server=16 --max-concurrent-downloads=6 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=true --download-result=full --disk-cache=1024M
+          aria2c --input-file=urls --dir=zip --force-sequential=true --split=8 --max-connection-per-server=8 --max-concurrent-downloads=3 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=true --summary-interval=30 --download-result=full --disk-cache=1024M
 
           touch DOWNLOAD-FINISHED
           logger --no-act -s "Download finished" 2>> process.log
