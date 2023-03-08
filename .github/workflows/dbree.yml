@@ -90,10 +90,10 @@ jobs:
         working-directory: zip
         run: |
           ls -Qs1
-          7zz e -bb3 *001
+          7z e -bb3 *001
           for file in *.7z; do
-              7zz l "$file"
-              7zz l -slt "$file"
+              7z l "$file"
+              7z l -slt "$file"
           done
           ls -Qs1
           touch ../EXTRACTING-FINISHED
@@ -110,8 +110,8 @@ jobs:
 
       # - name: Extracting 2 with password
       #   run: |
-      #     7zz e -bb3 -oinput -pFalse zip2/*.7z || \
-      #     7zz e -bb3 -oinput -p! zip2/*.7z
+      #     7z e -bb3 -oinput -pFalse zip2/*.7z || \
+      #     7z e -bb3 -oinput -p! zip2/*.7z
 
       # - name: List extracted files
       #   working-directory: input
