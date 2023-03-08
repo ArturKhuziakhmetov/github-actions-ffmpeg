@@ -46,8 +46,10 @@ jobs:
           while read url0; do
               unset url1 url2
               until [[ $url2 == https://www2* ]]; do
-                  sleep 1
-                  url1=$(curl -qsb $cookies $url0 | grep -om1 "//dbree.org/d/[^']*")
+                  until [[ -n $url1 ]]; do
+                      sleep 1
+                      url1=$(curl -qsb $cookies $url0 | grep -om1 "//dbree.org/d/[^']*")
+                  done
                   url2=$(curl -qsb $cookies -w '%{redirect_url}' https:$url1)
               done
               aria2c --dir=zip --split=8 --max-connection-per-server=16 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=false --summary-interval=10 --disk-cache=1024M $url2
