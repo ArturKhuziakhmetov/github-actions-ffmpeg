@@ -36,6 +36,7 @@ jobs:
           print(";".join(f'{d["name"]}={d["value"]}' for d in driver.get_cookies()))
           EOF
 
+          sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
           mkdir zip
           cat ngrok.log
 
