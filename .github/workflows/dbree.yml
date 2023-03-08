@@ -22,6 +22,7 @@ jobs:
           mkdir zip
           cat << "EOF" > urls
           ${{ inputs.urls }}EOF
+          sleep 5
           cat ngrok.log
 
       - name: Download
