@@ -25,7 +25,8 @@ jobs:
 
       - name: Preparing
         run: |
-          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz && ./ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
+          curl -s https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz | tar xz
+          ./ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD
           # sudo add-apt-repository ppa:savoury1/utilities > /dev/null && sudo apt-fast -yqq install curl 7zip > /dev/null &
           pip install -q selenium
           cat << "EOF" | tee test.py
