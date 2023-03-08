@@ -74,14 +74,14 @@ jobs:
             crop=592:592:688:0
             fps=fps=source_fps:start_time=0:eof_action=pass
             # scale=536:536:flags=sinc
-            t=30
+            # t=30
 
             FFREPORT=file=%p-%t.log:level=32 \
             ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
             -ss $ss -to $to ${t+-t $t}\
             -vf trim=$trim,crop=$crop,${scale+scale=$scale,}fps=$fps \
             -ac 1 -fpre preset \
-            "tmp/$(basename "$file" .mp4).mkv"
+            "tmp/${file%.*}.mkv"
 
             echo ::endgroup::
           done
