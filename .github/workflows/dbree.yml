@@ -20,7 +20,7 @@ jobs:
           cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
 
-          cat << "EOF" > get-cookies.py
+          cat << "EOF" > "get-cookies.py"
           import time
           from selenium import webdriver
           from selenium.webdriver.chrome.options import Options
@@ -32,7 +32,6 @@ jobs:
           print(";".join(f'{d["name"]}={d["value"]}' for d in driver.get_cookies()))
           EOF
 
-          pip install -q selenium
           sudo snap install ngrok
           ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
 
@@ -40,6 +39,7 @@ jobs:
           sudo apt-fast -yqq install curl > /dev/null &
 
           sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
+          pip install -q selenium
           mkdir zip
           until [[ -f ngrok.log ]]; do sleep 1; done
           cat ngrok.log
