@@ -19,7 +19,6 @@ jobs:
 
       - name: Preparing
         run: |
-          echo '${{ inputs.cookies }}'
           cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
 
@@ -41,7 +40,7 @@ jobs:
       - name: Download
         run: |
           set -x
-          echo 'echo "$3" > path.txt' > hook.sh
+          echo 'echo "$3" > path.txt' > zip/hook.sh
           cookies=$(python get-cookies.py)
           while read url0; do
               unset url1 url2
