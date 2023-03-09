@@ -20,8 +20,8 @@ jobs:
           sudo snap install ngrok
           ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
 
-          sudo add-apt-repository ppa:savoury1/utilities && \
-          sudo apt-fast -yqq install curl &
+          sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
+          sudo apt-fast -yqq install curl > /dev/null &
 
           cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
@@ -43,6 +43,7 @@ jobs:
           mkdir zip
           until [[ -f ngrok.log ]]; do sleep 1; done
           cat ngrok.log
+          ls -Qs1
 
       - name: Download
         run: |
