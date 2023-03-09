@@ -19,7 +19,6 @@ jobs:
 
       - name: Preparing
         run: |
-          set -x
           echo '${{ inputs.cookies }}'
           cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
@@ -38,12 +37,11 @@ jobs:
           mkdir zip
           until [[ -f ngrok.log ]]; do sleep 1; done
           cat ngrok.log
-          ls -Qs1
 
       - name: Download
         run: |
-          hook(){ printf -v path "$3";}
           set -x
+          echo 'echo "$3" > path.txt' > hook.sh
           cookies=$(python get-cookies.py)
           while read url0; do
               unset url1 url2
@@ -55,8 +53,9 @@ jobs:
                   url2=$(curl -qsb $cookies -w '%{redirect_url}' https:$url1)
               done
 
-              aria2c --dir=zip --split=8 --max-connection-per-server=16 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=false --summary-interval=10 --disk-cache=1024M --on-download-complete=hook $url2
+              aria2c --dir=zip --split=8 --max-connection-per-server=16 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=false --summary-interval=10 --disk-cache=1024M --on-download-complete=hook.sh $url2
 
+              read path < path.txt
               size=$(wc -c "$path")
               name=$(basename "$path")
               json=$(jq -c --arg name "$name" --arg size $size '.files[0].fileName=$name|.files[0].fileSize=($size|tonumber)' <<< '{"password":"","files":[{"blob":{"$path":""},"imageData":null,"uploadPercentage":0,"uploadedBytes":0,"chunksArray":[{}],"chunkSize":2147483648,"fileId":-1,"currentChunk":0,"progressNumber":100,"isProcessingFile":false,"sessionId":"4eb9cf79-26e8-021e-a462-20ace549dd7f","totalUploaded":0,"didFinishUploading":false,"fileType":"","chunkProgressArray":[{"totalUploadedOfChunk":0}],"uploadedChunkIndexes":[],"chunkIndexesToUpload":[0],"toBeUploaded":false,"uploading":false,"uploadedBytesArray":[],"currentUploadedBytes":0,"totalChunks":1,"listIndex":1}],"expiryDays":7,"maximumNumberOfDownloads":0,"deferDays":0,"archiveId":313269,"shouldSendReminder":true,"emailReminderCount":2,"snap":false,"max":false}')
