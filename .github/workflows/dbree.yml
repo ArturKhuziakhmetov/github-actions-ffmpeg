@@ -17,17 +17,9 @@ jobs:
 
       - name: Preparing
         run: |
-          set -x
-          sudo snap install ngrok
-          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
-
-          sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
-          sudo apt-fast -yqq install curl > /dev/null &
-
           cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
 
-          pip install -q selenium
           cat << "EOF" > get-cookies.py
           import time
           from selenium import webdriver
@@ -39,6 +31,13 @@ jobs:
           time.sleep(10)
           print(";".join(f'{d["name"]}={d["value"]}' for d in driver.get_cookies()))
           EOF
+
+          pip install -q selenium
+          sudo snap install ngrok
+          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
+
+          sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
+          sudo apt-fast -yqq install curl > /dev/null &
 
           sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
           mkdir zip
