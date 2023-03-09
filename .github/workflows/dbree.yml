@@ -23,7 +23,7 @@ jobs:
           cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
 
-          cat << "EOF" > get-cookies.py
+          cat << "EOF" | tee get-cookies.py
           ${{ inputs.cookies }}
           EOF
 
@@ -67,19 +67,19 @@ jobs:
 
           done < dbree-urls
 
-      # - name: Extracting
-      #   working-directory: zip
-      #   run: |
-      #     7z e *001
-      #     for file in *.7z; do
-      #         7z l "$file"
-      #         7z l -slt "$file"
-      #     done
+# - name: Extracting
+#   working-directory: zip
+#   run: |
+#     7z e *001
+#     for file in *.7z; do
+#         7z l "$file"
+#         7z l -slt "$file"
+#     done
 
-      # - name: Wait
-      #   run: |
-      #     while :; do
-      #       sleep 60;
-      #       (( total++ ))
-      #       echo "Sleeping $total minutes..."
-      #     done
+# - name: Wait
+#   run: |
+#     while :; do
+#       sleep 60;
+#       (( total++ ))
+#       echo "Sleeping $total minutes..."
+#     done
