@@ -41,6 +41,7 @@ jobs:
 
           sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
           mkdir zip
+          until [[ -f ngrok.log ]]; do sleep 1; done
           cat ngrok.log
 
       - name: Download
