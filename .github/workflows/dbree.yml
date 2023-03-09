@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=dbree-urls -F get-cookies=get-cookies.py
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=dbree-urls -F cookies=get-cookies.py
 
 name: dbree
 run-name: ${{ inputs.title }}
@@ -9,7 +9,7 @@ on:
         required: true
       urls:
         required: true
-      get-cookies:
+      cookies:
         required: true
 
 jobs:
@@ -23,7 +23,7 @@ jobs:
           ${{ inputs.urls }}EOF
 
           cat << "EOF" > get-cookies.py
-          ${{ inputs.get-cookies }}EOF
+          ${{ inputs.cookies }}EOF
 
           sudo snap install ngrok
           ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
