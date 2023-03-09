@@ -17,6 +17,7 @@ jobs:
 
       - name: Preparing
         run: |
+          set -x
           sudo snap install ngrok
           ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
 
