@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1"
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=dbree-urls
 
 name: dbree
 run-name: ${{ inputs.title }}
@@ -19,6 +19,9 @@ jobs:
         run: |
           sudo snap install ngrok
           ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
+
+          sudo add-apt-repository ppa:savoury1/utilities && \
+          sudo apt-fast -yqq install curl &
 
           cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
@@ -42,6 +45,7 @@ jobs:
 
       - name: Download
         run: |
+          hook(){ printf -v path "$3";}
           set -x
           cookies=$(python get-cookies.py)
           while read url0; do
@@ -53,22 +57,32 @@ jobs:
                   done
                   url2=$(curl -qsb $cookies -w '%{redirect_url}' https:$url1)
               done
-              aria2c --dir=zip --split=8 --max-connection-per-server=16 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=false --summary-interval=10 --disk-cache=1024M $url2
+
+              aria2c --dir=zip --split=8 --max-connection-per-server=16 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=false --summary-interval=10 --disk-cache=1024M --on-download-complete=hook $url2
+
+              size=$(wc -c "$path")
+              name=$(basename "$path")
+              json=$(jq -c --arg name "$name" --arg size $size '.files[0].fileName=$name|.files[0].fileSize=($size|tonumber)' <<< '{"password":"","files":[{"blob":{"$path":""},"imageData":null,"uploadPercentage":0,"uploadedBytes":0,"chunksArray":[{}],"chunkSize":2147483648,"fileId":-1,"currentChunk":0,"progressNumber":100,"isProcessingFile":false,"sessionId":"4eb9cf79-26e8-021e-a462-20ace549dd7f","totalUploaded":0,"didFinishUploading":false,"fileType":"","chunkProgressArray":[{"totalUploadedOfChunk":0}],"uploadedChunkIndexes":[],"chunkIndexesToUpload":[0],"toBeUploaded":false,"uploading":false,"uploadedBytesArray":[],"currentUploadedBytes":0,"totalChunks":1,"listIndex":1}],"expiryDays":7,"maximumNumberOfDownloads":0,"deferDays":0,"archiveId":313269,"shouldSendReminder":true,"emailReminderCount":2,"snap":false,"max":false}')
+
+              read sid id <<< $(curl https://s1.sendbig.com/api/Files/negotiate --referer https://www.sendbig.com/ --json "$json" | jq -j '"\(.files[0].serverIdentifier) \(.files[0].id)"')
+
+              curl https://"$sid".sendbig.com/api/Files/advancedStreamUpload --referer https://www.sendbig.com/ -F fileName="$name" -F totalChunks=1 -F chunkSize=2147483648 -F fileId=$id -F fileSize=$size -F fileType="" -F archivePassword="" -F sessionId=4eb9cf79-26e8-021e-a462-20ace549dd7f -F uploadedChunkIndexesCSV="" -F currentChunk=0 -F chunkFile=@"$path"
+
           done < dbree-urls
 
-      - name: Extracting
-        working-directory: zip
-        run: |
-          7z e *001
-          for file in *.7z; do
-              7z l "$file"
-              7z l -slt "$file"
-          done
+      # - name: Extracting
+      #   working-directory: zip
+      #   run: |
+      #     7z e *001
+      #     for file in *.7z; do
+      #         7z l "$file"
+      #         7z l -slt "$file"
+      #     done
 
-      - name: Wait
-        run: |
-          while :; do
-            sleep 60;
-            (( total++ ))
-            echo "Sleeping $total minutes..."
-          done
+      # - name: Wait
+      #   run: |
+      #     while :; do
+      #       sleep 60;
+      #       (( total++ ))
+      #       echo "Sleeping $total minutes..."
+      #     done

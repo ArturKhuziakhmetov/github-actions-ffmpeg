@@ -28,7 +28,7 @@ jobs:
       - name: Download
         run: |
           curl -qZJ --remote-name-all \
-          $(curl --referer https://www.sendbig.com \
+          $(curl -qs --referer https://www.sendbig.com \
           --header 'Content-Type: application/json' \
           --data '{identifier:"${{ inputs.id }}"}' \
           https://s1.sendbig.com/api/Archive/viewArchive | \
