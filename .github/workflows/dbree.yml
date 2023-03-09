@@ -19,11 +19,13 @@ jobs:
 
       - name: Preparing
         run: |
+          set -x
           cat << "EOF" > dbree-urls
           ${{ inputs.urls }}EOF
 
           cat << "EOF" > get-cookies.py
-          ${{ inputs.cookies }}EOF
+          ${{ inputs.cookies }}
+          EOF
 
           sudo snap install ngrok
           ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
