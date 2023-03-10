@@ -1,5 +1,6 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-urls -F cookies=@get-cookies.py
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F ids=@sendbig-session-ids
 
+# -F urls=@dbree-urls -F cookies=@get-cookies.py
 # -f sessionId=eee39d92-35a4-1b3c-5233-8cc45e19ad1a -f archiveId=314206
 
 name: dbree
@@ -10,33 +11,67 @@ on:
       title:
         required: true
       urls:
-        required: true
+        required: false
       cookies:
-        required: true
-      # sessionId:
-      #   required: true
-      # archiveId:
-      #   required: true
+        required: false
+      ids:
+        required: false
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
 
-      # - name: Preparing
-      #   run: |
+      - name: preparing
+        run: |
+          sudo snap install ngrok
+          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
+          until [[ -f ngrok.log ]]; do sleep 1; done
+          cat ngrok.log
 
-      #     # sudo snap install ngrok
-      #     # ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
+          # sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
+          # sudo apt-fast -yqq install curl > /dev/null
 
-      #     # sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
-      #     # sudo apt-fast -yqq install curl > /dev/null
+          sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
+          mkdir zip
 
-      #     # sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
-      #     # until [[ -f ngrok.log ]]; do sleep 1; done
-      #     # cat ngrok.log
 
-      - name: Download
+      - name: from-sendbig
+        working-directory: zip
+        run: |
+          while read id; do
+
+            curl --referer https://www.sendbig.com -H 'Content-Type: application/json' -d {identifier:"$id"} https://s1.sendbig.com/api/Archive/viewArchive | jq -r --arg id $id '.data.files|sort_by(.fileSize)|reverse[]|"url = https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)/$id/20138"' >> urls
+
+          done << "EOF"
+          ${{ inputs.ids }}EOF
+
+          cat urls
+
+          curl -qZJ --remote-name-all -K urls
+
+
+      - name: extracting
+        working-directory: zip
+        run: |
+          7z e *001
+          # for file in *.7z; do
+          #     7z l "$file"
+          #     7z l -slt "$file"
+          # done
+
+
+      - name: wait
+        run: |
+          while :; do
+            sleep 60;
+            (( total++ ))
+            echo "Sleeping $total minutes..."
+          done
+
+
+      - name: from-dbree-to-sendbig
+        if: ${{ false }}
         run: |
           mkdir zip
 
@@ -81,19 +116,3 @@ jobs:
           done < <(tail -n +51 dbree-urls | head -n 10)
           wait
 
-# - name: Extracting
-#   working-directory: zip
-#   run: |
-#     7z e *001
-#     for file in *.7z; do
-#         7z l "$file"
-#         7z l -slt "$file"
-#     done
-
-# - name: Wait
-#   run: |
-#     while :; do
-#       sleep 60;
-#       (( total++ ))
-#       echo "Sleeping $total minutes..."
-#     done

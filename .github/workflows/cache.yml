@@ -28,8 +28,8 @@ jobs:
           # Download
           curl -qZJ --remote-name-all --create-dirs --output-dir input \
           $(curl --referer https://www.sendbig.com \
-          --header 'Content-Type: application/json' \
-          --data '{identifier:"${{ inputs.id }}"}' \
+          -H 'Content-Type: application/json' \
+          -d '{identifier:"${{ inputs.id }}"}' \
           https://s1.sendbig.com/api/Archive/viewArchive | \
           jq -j '.data.files | sort_by(.fileSize) | reverse[] |
           "https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)/${{ inputs.id }}/20138 "')
