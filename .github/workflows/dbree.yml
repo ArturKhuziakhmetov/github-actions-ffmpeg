@@ -1,4 +1,6 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-urls -F cookies=@get-cookies.py -f sessionId=eee39d92-35a4-1b3c-5233-8cc45e19ad1a -f archiveId=314206
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-urls -F cookies=@get-cookies.py
+
+# -f sessionId=eee39d92-35a4-1b3c-5233-8cc45e19ad1a -f archiveId=314206
 
 name: dbree
 run-name: ${{ inputs.title }}
@@ -11,10 +13,10 @@ on:
         required: true
       cookies:
         required: true
-      sessionId:
-        required: true
-      archiveId:
-        required: true
+      # sessionId:
+      #   required: true
+      # archiveId:
+      #   required: true
 
 jobs:
   main:
@@ -29,22 +31,34 @@ jobs:
           cat << "EOF" > get-cookies.py
           ${{ inputs.cookies }}EOF
 
-          sudo snap install ngrok
-          ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
+          # sudo snap install ngrok
+          # ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
 
           sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
           sudo apt-fast -yqq install curl > /dev/null &
 
-          sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
+          # sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
           pip install -q selenium
           mkdir zip
-          until [[ -f ngrok.log ]]; do sleep 1; done
-          cat ngrok.log
+          # until [[ -f ngrok.log ]]; do sleep 1; done
+          # cat ngrok.log
 
       - name: Download
         run: |
           set -x
+
+          json='{"password":"","files":[{"blob":{"$path":""},"fileName":"start","imageData":null,"uploadPercentage":0,"uploadedBytes":0,"chunksArray":[{}],"chunkSize":2147483648,"fileSize":1,"fileId":-1,"currentChunk":0,"progressNumber":100,"isProcessingFile":false,"sessionId":"","totalUploaded":0,"didFinishUploading":false,"fileType":"","chunkProgressArray":[{"totalUploadedOfChunk":0}],"uploadedChunkIndexes":[],"chunkIndexesToUpload":[0],"toBeUploaded":false,"uploading":false,"uploadedBytesArray":[],"currentUploadedBytes":0,"totalChunks":1,"listIndex":0}],"expiryDays":7,"maximumNumberOfDownloads":0,"deferDays":0,"archiveId":0,"shouldSendReminder":true,"emailReminderCount":2,"snap":false,"max":false}'
+
+          read sessionId archiveId <<< $(curl https://s1.sendbig.com/api/Files/negotiate --referer https://www.sendbig.com/ -H 'Authorization: Bearer ${{ secrets.SENDBIG }}' --json "$json" | jq -j '.data|"\(.sessionId) \(.files[0].archiveId)"')
+
+          echo $sessionId $archiveId
+
+          json=$(jq -c --arg sessionId=$sessionId --arg archiveId=$archiveId '.files[0].sessionId=$sessionId|.archiveId=($archiveId|tonumber)' <<< "$json")
+
+          echo $json
+
           cookies=$(python get-cookies.py)
+
           while read url0; do
               unset url1 url2
               until [[ $url2 == https://www2* ]]; do
@@ -60,7 +74,7 @@ jobs:
               path=$(tac download.log | grep -om1 'zip/.*')
               name=$(basename "$path")
               size=$(stat -c%s "$path")
-              json=$(jq -c --arg name "$name" --arg size $size '.files[0].fileName=$name|.files[0].fileSize=($size|tonumber)' <<< '{"password":"","files":[{"blob":{"$path":""},"imageData":null,"uploadPercentage":0,"uploadedBytes":0,"chunksArray":[{}],"chunkSize":2147483648,"fileId":-1,"currentChunk":0,"progressNumber":100,"isProcessingFile":false,"sessionId":"${{ inputs.sessionId }}","totalUploaded":0,"didFinishUploading":false,"fileType":"","chunkProgressArray":[{"totalUploadedOfChunk":0}],"uploadedChunkIndexes":[],"chunkIndexesToUpload":[0],"toBeUploaded":false,"uploading":false,"uploadedBytesArray":[],"currentUploadedBytes":0,"totalChunks":1,"listIndex":1}],"expiryDays":7,"maximumNumberOfDownloads":0,"deferDays":0,"archiveId":${{ inputs.archiveId }},"shouldSendReminder":true,"emailReminderCount":2,"snap":false,"max":false}')
+              json=$(jq -c --arg name "$name" --arg size $size '.files[0].fileName=$name|.files[0].fileSize=($size|tonumber)' <<< "$json")
 
               read sid id <<< $(curl https://s1.sendbig.com/api/Files/negotiate --referer https://www.sendbig.com/ -H 'Authorization: Bearer ${{ secrets.SENDBIG }}' --json "$json" | jq -j '.data.files[0]|"\(.serverIdentifier) \(.id)"')
 
