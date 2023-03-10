@@ -42,7 +42,7 @@ jobs:
           set -x
           while read id; do
 
-            curl -qs --referer https://www.sendbig.com -H 'Content-Type: application/json' -d {"identifier":"$id"} https://s1.sendbig.com/api/Archive/viewArchive | jq -r --arg id $id '.data.files|sort_by(.fileSize)|reverse[]|"url = https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)/$id/20138"' >> urls
+            curl -qs --referer https://www.sendbig.com -H 'Content-Type: application/json' -d {identifier:\"$id\"} https://s1.sendbig.com/api/Archive/viewArchive | jq -r --arg id $id '.data.files|sort_by(.fileSize)|reverse[]|"url = https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)/$id/20138"' >> urls
 
           done << "EOF"
           ${{ inputs.ids }}EOF
