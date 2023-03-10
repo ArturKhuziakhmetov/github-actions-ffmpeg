@@ -27,6 +27,7 @@ jobs:
           sudo snap install ngrok
           ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
           until [[ -f ngrok.log ]]; do sleep 1; done
+          sleep 1
           cat ngrok.log
 
           # sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
@@ -42,7 +43,7 @@ jobs:
           set -x
           while read id; do
 
-            curl -qs --referer https://www.sendbig.com -H 'Content-Type: application/json' -d '{identifier:"c01f0f9e-e4c7-b3c4-444e-7ea9f9ce0b4c"}' https://s1.sendbig.com/api/Archive/viewArchive | jq -r '(.data.files[]|"url = https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)")+"/\(.data.sessionIdentifier)/20138"' >> urls
+            curl -qs --referer https://www.sendbig.com -H 'Content-Type: application/json' -d '{identifier:\"$id\"}' https://s1.sendbig.com/api/Archive/viewArchive | jq -r '(.data.files[]|"url = https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)")+"/\(.data.sessionIdentifier)/20138"' >> urls
 
           done << "EOF"
           ${{ inputs.ids }}EOF
