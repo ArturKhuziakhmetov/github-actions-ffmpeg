@@ -52,6 +52,8 @@ jobs:
 
           curl -qZJ --remote-name-all --parallel-max 100 -K urls
 
+          ls -Qs1
+
 
       - name: extracting
         working-directory: zip
@@ -64,12 +66,7 @@ jobs:
 
 
       - name: wait
-        run: |
-          while :; do
-            sleep 60;
-            (( total++ ))
-            echo "Sleeping $total minutes..."
-          done
+        run: sleep 1000
 
 
       - name: from-dbree-to-sendbig
