@@ -49,7 +49,7 @@ jobs:
 
           cat urls
 
-          curl -qZJ --remote-name-all -K urls
+          curl -qZJ --remote-name-all --parallel-max 100 -K urls
 
 
       - name: extracting
