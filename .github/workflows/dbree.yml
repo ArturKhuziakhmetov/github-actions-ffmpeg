@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-urls -F cookies=@get-cookies.py
+# git commit -am. && git push -qf && gh workflow run dbree.yml -f title="Nimzo-Semi-Tarrasch-1" -F urls=@dbree-urls -F cookies=@get-cookies.py -f id=eee39d92-35a4-1b3c-5233-8cc45e19ad1a
 
 name: dbree
 run-name: ${{ inputs.title }}
@@ -10,6 +10,8 @@ on:
       urls:
         required: true
       cookies:
+        required: true
+      id:
         required: true
 
 jobs:
@@ -56,13 +58,13 @@ jobs:
               path=$(tac download.log | grep -om1 'zip/.*')
               name=$(basename "$path")
               size=$(stat -c%s "$path")
-              json=$(jq -c --arg name "$name" --arg size $size '.files[0].fileName=$name|.files[0].fileSize=($size|tonumber)' <<< '{"password":"","files":[{"blob":{"$path":""},"imageData":null,"uploadPercentage":0,"uploadedBytes":0,"chunksArray":[{}],"chunkSize":2147483648,"fileId":-1,"currentChunk":0,"progressNumber":100,"isProcessingFile":false,"sessionId":"4eb9cf79-26e8-021e-a462-20ace549dd7f","totalUploaded":0,"didFinishUploading":false,"fileType":"","chunkProgressArray":[{"totalUploadedOfChunk":0}],"uploadedChunkIndexes":[],"chunkIndexesToUpload":[0],"toBeUploaded":false,"uploading":false,"uploadedBytesArray":[],"currentUploadedBytes":0,"totalChunks":1,"listIndex":1}],"expiryDays":7,"maximumNumberOfDownloads":0,"deferDays":0,"archiveId":313269,"shouldSendReminder":true,"emailReminderCount":2,"snap":false,"max":false}')
+              json=$(jq -c --arg name "$name" --arg size $size '.files[0].fileName=$name|.files[0].fileSize=($size|tonumber)' <<< '{"password":"","files":[{"blob":{"$path":""},"imageData":null,"uploadPercentage":0,"uploadedBytes":0,"chunksArray":[{}],"chunkSize":2147483648,"fileId":-1,"currentChunk":0,"progressNumber":100,"isProcessingFile":false,"sessionId":"${{ inputs.id }}","totalUploaded":0,"didFinishUploading":false,"fileType":"","chunkProgressArray":[{"totalUploadedOfChunk":0}],"uploadedChunkIndexes":[],"chunkIndexesToUpload":[0],"toBeUploaded":false,"uploading":false,"uploadedBytesArray":[],"currentUploadedBytes":0,"totalChunks":1,"listIndex":1}],"expiryDays":7,"maximumNumberOfDownloads":0,"deferDays":0,"archiveId":0,"shouldSendReminder":true,"emailReminderCount":2,"snap":false,"max":false}')
 
-              read sid id <<< $(curl https://s1.sendbig.com/api/Files/negotiate --referer https://www.sendbig.com/ --json "$json" | jq -j '.data.files[0]|"\(.serverIdentifier) \(.id)"')
+              read sid id <<< $(curl https://s1.sendbig.com/api/Files/negotiate --referer https://www.sendbig.com/ -H 'Authorization: Bearer ${{ secrets.SENDBIG }}' --json "$json" | jq -j '.data.files[0]|"\(.serverIdentifier) \(.id)"')
 
-              curl https://"$sid".sendbig.com/api/Files/advancedStreamUpload --referer https://www.sendbig.com/ -F fileName="$name" -F totalChunks=1 -F chunkSize=2147483648 -F fileId=$id -F fileSize=$size -F fileType="" -F archivePassword="" -F sessionId=4eb9cf79-26e8-021e-a462-20ace549dd7f -F uploadedChunkIndexesCSV="" -F currentChunk=0 -F chunkFile=@"$path"
+              curl https://"$sid".sendbig.com/api/Files/advancedStreamUpload --referer https://www.sendbig.com/ -H 'Authorization: Bearer ${{ secrets.SENDBIG }}' -F fileName="$name" -F totalChunks=1 -F chunkSize=2147483648 -F fileId=$id -F fileSize=$size -F fileType="" -F archivePassword="" -F sessionId=${{ inputs.id }} -F uploadedChunkIndexesCSV="" -F currentChunk=0 -F chunkFile=@"$path"
 
-          done < dbree-urls
+          done < <(head -1 dbree-urls)
 
 # - name: Extracting
 #   working-directory: zip
