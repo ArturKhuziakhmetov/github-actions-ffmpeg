@@ -53,7 +53,7 @@ jobs:
 
           echo $sessionId $archiveId
 
-          json=$(jq -c --arg sessionId=$sessionId --arg archiveId=$archiveId '.files[0].sessionId=$sessionId|.archiveId=($archiveId|tonumber)' <<< "$json")
+          json=$(jq -c --arg sessionId $sessionId --arg archiveId $archiveId '.files[0].sessionId=$sessionId|.archiveId=($archiveId|tonumber)' <<< "$json")
 
           echo $json
 
