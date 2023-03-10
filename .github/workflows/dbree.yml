@@ -42,6 +42,7 @@ jobs:
           set -x
           printf '#!bash\necho "$3" > path.txt' > hook.sh
           chmod +x hook.sh
+          cat $PWD/hook.sh
           cookies=$(python get-cookies.py)
           while read url0; do
               unset url1 url2
@@ -53,7 +54,7 @@ jobs:
                   url2=$(curl -qsb $cookies -w '%{redirect_url}' https:$url1)
               done
 
-              aria2c --dir=zip --split=8 --max-connection-per-server=16 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=false --summary-interval=10 --disk-cache=1024M --on-download-complete=/$PWD/hook.sh $url2
+              aria2c --dir=zip --split=8 --max-connection-per-server=16 --log=download.log --log-level=notice --file-allocation=falloc --show-console-readout=false --summary-interval=10 --disk-cache=1024M --on-download-complete=$PWD/hook.sh $url2
 
               read path < path.txt
               size=$(wc -c "$path")
