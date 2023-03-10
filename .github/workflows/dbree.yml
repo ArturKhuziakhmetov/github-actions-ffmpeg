@@ -58,7 +58,7 @@ jobs:
               size=$(stat -c%s "$path")
               json=$(jq -c --arg name "$name" --arg size $size '.files[0].fileName=$name|.files[0].fileSize=($size|tonumber)' <<< '{"password":"","files":[{"blob":{"$path":""},"imageData":null,"uploadPercentage":0,"uploadedBytes":0,"chunksArray":[{}],"chunkSize":2147483648,"fileId":-1,"currentChunk":0,"progressNumber":100,"isProcessingFile":false,"sessionId":"4eb9cf79-26e8-021e-a462-20ace549dd7f","totalUploaded":0,"didFinishUploading":false,"fileType":"","chunkProgressArray":[{"totalUploadedOfChunk":0}],"uploadedChunkIndexes":[],"chunkIndexesToUpload":[0],"toBeUploaded":false,"uploading":false,"uploadedBytesArray":[],"currentUploadedBytes":0,"totalChunks":1,"listIndex":1}],"expiryDays":7,"maximumNumberOfDownloads":0,"deferDays":0,"archiveId":313269,"shouldSendReminder":true,"emailReminderCount":2,"snap":false,"max":false}')
 
-              read sid id <<< $(curl https://s1.sendbig.com/api/Files/negotiate --referer https://www.sendbig.com/ --json "$json" | jq -j '"\(.files[0].serverIdentifier) \(.files[0].id)"')
+              read sid id <<< $(curl https://s1.sendbig.com/api/Files/negotiate --referer https://www.sendbig.com/ --json "$json" | jq -j '.data.files[0]|"\(.serverIdentifier) \(.id)"')
 
               curl https://"$sid".sendbig.com/api/Files/advancedStreamUpload --referer https://www.sendbig.com/ -F fileName="$name" -F totalChunks=1 -F chunkSize=2147483648 -F fileId=$id -F fileSize=$size -F fileType="" -F archivePassword="" -F sessionId=4eb9cf79-26e8-021e-a462-20ace549dd7f -F uploadedChunkIndexesCSV="" -F currentChunk=0 -F chunkFile=@"$path"
 
