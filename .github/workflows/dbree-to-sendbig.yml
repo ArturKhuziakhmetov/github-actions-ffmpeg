@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree-to-sendbig.yml -F urls=@dbree-urls
+# git commit -am. && git push -qf && gh workflow run dbree-to-sendbig.yml -F urls=@dbree-urls -f pass=Immortal
 
 name: dbree
 on:
@@ -6,16 +6,19 @@ on:
     inputs:
       urls:
         required: true
+      pass:
+        required: false
 
 jobs:
   main:
     runs-on: ubuntu-latest
     steps:
 
-      - name: download from dbree
-        run: |
-          mkdir zip unzip
+      - run: mkdir zip unzip
 
+      - name: download from dbree
+        working-directory: zip
+        run: |
           pip install -q selenium
 
           cookies=$(python -c '
@@ -39,14 +42,18 @@ jobs:
                   url2=$(curl -qsb $cookies -w '%{redirect_url}' https:$url1)
               done
 
-              aria2c --dir=zip --split=8 --max-connection-per-server=16 --file-allocation=falloc --show-console-readout=false --summary-interval=0 --disk-cache=1024M $url2
+              echo "$url2"
+
+              aria2c --split=8 --max-connection-per-server=16 --file-allocation=falloc --show-console-readout=false --console-log-level=warn --summary-interval=0 --disk-cache=1024M "$url2" &
 
           done << "EOF"
           ${{ inputs.urls }}EOF
 
 
       - name: extracting
-        run: 7z e -ounzip zip/*001
+        run: |
+          7z l zip/*001
+          7z e -ounzip -p${{ inputs.pass }} zip/*001
 
 
       - name: upload to sendbig
