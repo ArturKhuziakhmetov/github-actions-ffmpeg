@@ -32,15 +32,17 @@ jobs:
           print(";".join("=".join((d["name"],d["value"])) for d in driver.get_cookies()))')
 
           while read url0; do
-              unset url1 url2
+          
+              # unset url1 url2
+              # until [[ $url2 == https://www2* ]]; do
+              #     until [[ -n $url1 ]]; do
+              #         sleep 1
+              #         url1=$(curl -qsb $cookies $url0 | grep -om1 "//dbree.org/d/[^']*")
+              #     done
+              #     url2=$(curl -qsb $cookies -w '%{redirect_url}' https:$url1)
+              # done
 
-              until [[ $url2 == https://www2* ]]; do
-                  until [[ -n $url1 ]]; do
-                      sleep 1
-                      url1=$(curl -qsb $cookies $url0 | grep -om1 "//dbree.org/d/[^']*")
-                  done
-                  url2=$(curl -qsb $cookies -w '%{redirect_url}' https:$url1)
-              done
+              url2=$(curl -qsb $cookies $url0 | grep -om1 "//dbree.org/d/[^']*")
 
               aria2c --split=8 --max-connection-per-server=16 --file-allocation=falloc --show-console-readout=false --console-log-level=warn --summary-interval=0 --disk-cache=1024M "$url2" &
 
