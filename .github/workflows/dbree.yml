@@ -24,15 +24,8 @@ jobs:
 
       - name: preparing
         run: |
-          sudo snap install ngrok
+          sudo snap install ngrok && \
           ngrok http --authtoken ${{ secrets.NGROK_AUTHTOKEN }} --log ngrok.log file://$PWD &
-          until [[ -f ngrok.log ]]; do sleep 1; done
-          sleep 1
-          cat ngrok.log
-
-          # sudo add-apt-repository ppa:savoury1/utilities > /dev/null && \
-          # sudo apt-fast -yqq install curl > /dev/null
-
           sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
           mkdir zip
 
@@ -40,7 +33,6 @@ jobs:
       - name: from-sendbig
         working-directory: zip
         run: |
-          set -x
           while read id; do
 
             curl -qs --referer https://www.sendbig.com -H 'Content-Type: application/json' -d {identifier:\"$id\"} https://s1.sendbig.com/api/Archive/viewArchive | jq -r '(.data.files[]|"url = https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)")+"/\(.data.sessionIdentifier)/20138"' >> urls
@@ -52,7 +44,9 @@ jobs:
 
           curl -qZJ --remote-name-all --parallel-max 100 -K urls
 
-          ls -Qs1
+          tree -siFL 1
+
+          cat ngrok.log
 
 
       - name: extracting
@@ -65,8 +59,7 @@ jobs:
           # done
 
 
-      - name: wait
-        run: sleep 1000
+      - run: sleep 1000
 
 
       - name: from-dbree-to-sendbig
