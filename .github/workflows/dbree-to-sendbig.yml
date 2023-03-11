@@ -42,7 +42,8 @@ jobs:
               #     url2=$(curl -qsb $cookies -w '%{redirect_url}' https:$url1)
               # done
 
-              url2=https:$(curl -qsb $cookies $url0 | grep -om1 "//dbree.org/d/[^']*")
+              url1=$(curl -qsb $cookies $url0 | grep -om1 "//dbree.org/d/[^']*")
+              url2=$(curl -qsb $cookies -w '%{redirect_url}' https:$url1)
 
               aria2c --split=8 --max-connection-per-server=16 --file-allocation=falloc --show-console-readout=false --console-log-level=warn --summary-interval=0 --disk-cache=1024M "$url2" &
 
