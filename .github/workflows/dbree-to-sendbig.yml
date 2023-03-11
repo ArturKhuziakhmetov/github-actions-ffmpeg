@@ -1,6 +1,5 @@
 # git commit -am. && git push -qf && gh workflow run dbree-to-sendbig.yml -F urls=@dbree-urls -f pass=Immortal
 
-name: dbree
 on:
   workflow_dispatch:
     inputs:
@@ -49,6 +48,8 @@ jobs:
           done << "EOF"
           ${{ inputs.urls }}EOF
 
+          wait
+
 
       - name: extracting
         run: |
@@ -82,5 +83,7 @@ jobs:
 
               } &
           done
+
+          wait
 
           echo "https://www.sendbig.com/view-files/?Id=$sessionId"
