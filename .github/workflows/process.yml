@@ -61,7 +61,7 @@ jobs:
 
       - name: Versions
         run: |
-          until type ffmpeg &> /dev/null; do sleep 1; done
+          until type mkvmerge ffmpeg &> /dev/null; do sleep 1; done
           mkvmerge -V; ffmpeg -version
 
       - name: ffmpeg
