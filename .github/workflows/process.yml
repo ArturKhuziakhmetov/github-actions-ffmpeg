@@ -73,7 +73,7 @@ jobs:
             ss=9
             to=$(jq -n $duration-0)
             trim=10:$(jq -n $duration-2)
-            crop=1008:1008:40:36
+            crop=1008:1008:40:36:exact=1
             fps=fps=source_fps:start_time=0:eof_action=pass
             # scale=536:536:flags=sinc
             t=20
