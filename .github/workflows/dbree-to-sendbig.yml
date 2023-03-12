@@ -55,7 +55,7 @@ jobs:
       - name: extracting
         run: |
           7z l zip/*001
-          7z e -ounzip -p${{ inputs.pass }} zip/*001
+          7z x -ounzip -p${{ inputs.pass }} zip/*001
 
 
       - name: upload to sendbig
@@ -74,6 +74,7 @@ jobs:
           for file in *; do
             [[ -d "$file" ]] && 7z a -r -sdel "$file".zip "$file"
           done
+          tree -sF
 
           for file in *; do
 
