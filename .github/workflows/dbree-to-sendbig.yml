@@ -78,6 +78,8 @@ jobs:
 
           for file in *; do
 
+            sleep 1
+
             size=$(stat -c%s "$file")
 
             json=$(jq -c --arg file "$file" --arg size $size '.files[0].fileName=$file|.files[0].fileSize=($size|tonumber)' <<< "$json")
