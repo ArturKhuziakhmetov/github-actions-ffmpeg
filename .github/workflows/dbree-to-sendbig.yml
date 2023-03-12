@@ -82,7 +82,10 @@ jobs:
 
             json=$(jq -c --arg file "$file" --arg size $size '.files[0].fileName=$file|.files[0].fileSize=($size|tonumber)' <<< "$json")
 
-            read sid id <<< $(curl -qs https://s1.sendbig.com/api/Files/negotiate --referer https://www.sendbig.com/ -H 'Authorization: Bearer ${{ secrets.SENDBIG }}' -H 'Content-Type: application/json' -d "$json" | jq -j '.data.files[0]|"\(.serverIdentifier) \(.id)"')
+            resp=$(curl -qs https://s1.sendbig.com/api/Files/negotiate --referer https://www.sendbig.com/ -H 'Authorization: Bearer ${{ secrets.SENDBIG }}' -H 'Content-Type: application/json' -d "$json")
+            echo "$resp"
+
+            read sid id <<< $(jq -j '.data.files[0]|"\(.serverIdentifier) \(.id)"' <<< "$resp")
 
             echo fileId: $id fileSile: $size fileName: "$file"
 
