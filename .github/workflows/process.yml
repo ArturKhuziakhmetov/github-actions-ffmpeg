@@ -61,7 +61,7 @@ jobs:
 
       - name: Versions
         run: |
-          until type mkvmerge &> /dev/null; do sleep 1; done
+          until type ffmpeg &> /dev/null; do sleep 1; done
           mkvmerge -V; ffmpeg -version
 
       - name: ffmpeg
@@ -70,13 +70,13 @@ jobs:
             echo ::group::"$file"
             duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
-            ss=5
-            to=$(jq -n $duration-7)
-            trim=7:$(jq -n $duration-9)
-            crop=1024:1024:32:24
+            ss=9
+            to=$(jq -n $duration-0)
+            trim=10:$(jq -n $duration-2)
+            crop=1008:1008:40:36
             fps=fps=source_fps:start_time=0:eof_action=pass
             # scale=536:536:flags=sinc
-            t=30
+            t=20
 
             FFREPORT=file=%p-%t.log:level=32 \
             ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
