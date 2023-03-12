@@ -60,7 +60,9 @@ jobs:
           EOF
 
       - name: Versions
-        run: mkvmerge -V; ffmpeg -version
+        run: |
+          until type mkvmerge1 &> /dev/null; do sleep 1; done
+          mkvmerge -V; ffmpeg -version
 
       - name: ffmpeg
         run: |
