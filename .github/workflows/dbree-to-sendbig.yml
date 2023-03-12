@@ -56,11 +56,16 @@ jobs:
         run: |
           7z l zip/*001
           7z x -ounzip -p${{ inputs.pass }} zip/*001
+          tree -sF
 
 
       - name: upload to sendbig
         working-directory: unzip
         run: |
+          [[ $(ls -1 | wc -l) == 1 ]] && for dir in *; do cd "$dir"; done
+          for file in *; do
+            [[ -d "$file" ]] && 7z a -r -sdel "$file".zip "$file"
+          done
           tree -sF
 
           json='{"password":"","files":[{"blob":{"$path":""},"fileName":"${{ inputs.title }}","imageData":null,"uploadPercentage":0,"uploadedBytes":0,"chunksArray":[{}],"chunkSize":2147483648,"fileSize":1,"fileId":-1,"currentChunk":0,"progressNumber":100,"isProcessingFile":false,"sessionId":"","totalUploaded":0,"didFinishUploading":false,"fileType":"","chunkProgressArray":[{"totalUploadedOfChunk":0}],"uploadedChunkIndexes":[],"chunkIndexesToUpload":[0],"toBeUploaded":false,"uploading":false,"uploadedBytesArray":[],"currentUploadedBytes":0,"totalChunks":1,"listIndex":0}],"expiryDays":7,"maximumNumberOfDownloads":0,"deferDays":0,"archiveId":0,"shouldSendReminder":true,"emailReminderCount":2,"snap":false,"max":false}'
@@ -70,11 +75,6 @@ jobs:
           json=$(jq -c --arg sessionId $sessionId --arg archiveId $archiveId '.files[0].sessionId=$sessionId|.archiveId=($archiveId|tonumber)' <<< "$json")
 
           echo "sessionId: $sessionId archiveId: $archiveId"
-
-          for file in *; do
-            [[ -d "$file" ]] && 7z a -r -sdel "$file".zip "$file"
-          done
-          tree -sF
 
           for file in *; do
 
