@@ -27,7 +27,8 @@ jobs:
 
       - name: Download
         run: |
-          curl -qZJ --remote-name-all \
+          # curl -qZJ --remote-name-all \
+          aria2c --split=8 --max-connection-per-server=16 --min-split-size=2M --max-concurrent-downloads=50 --file-allocation=falloc --show-console-readout=false --console-log-level=warn --summary-interval=0 --disk-cache=1024M \
           $(curl -qsS --referer https://www.sendbig.com \
           -H 'Content-Type: application/json' \
           -d '{identifier:"${{ inputs.id }}"}' \
@@ -77,7 +78,7 @@ jobs:
             fps=fps=source_fps:start_time=0:eof_action=pass
             # scale=536:536:flags=sinc
             extra=,setdar=1
-            t=20
+            # t=20
 
             FFREPORT=file=%p-%t.log:level=32 \
             ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
