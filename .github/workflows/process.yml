@@ -1,7 +1,7 @@
-# git commit -am. && git push -qf && gh workflow run process.yml -f title='1.e4! Tactical Repertoire for White with IM Tor Fredrik Kaasen' -f id=a8fcf57b-c078-9efc-4cf0-0b50fb5655de
+# git commit -am. && git push -qf && gh workflow run process.yml -f title='Lifetime Repertoires - Wesley So_s 1. e4 (Part 1)' -f id=2203e3a3-a3c8-bb77-9ba7-ed7953c8113c
 
 name: Process
-run-name: 1.e4! Tactical Repertoire for White with IM Tor Fredrik Kaasen
+run-name: Lifetime Repertoires - Wesley So_s 1. e4 (Part 1)
 on:
   workflow_dispatch:
     inputs:
@@ -28,7 +28,7 @@ jobs:
       - name: Download
         run: |
           curl -qZJ --remote-name-all \
-          $(curl -qs --referer https://www.sendbig.com \
+          $(curl -qsS --referer https://www.sendbig.com \
           -H 'Content-Type: application/json' \
           -d '{identifier:"${{ inputs.id }}"}' \
           https://s1.sendbig.com/api/Archive/viewArchive | \
@@ -48,7 +48,7 @@ jobs:
           preset=veryfast
           tune=animation
           x264opts=no-scenecut
-          crf=25
+          crf=23
           g=1800
           threads=1
           acodec=libopus
@@ -70,18 +70,19 @@ jobs:
             echo ::group::"$file"
             duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
-            ss=9
-            to=$(jq -n $duration-0)
-            trim=11:$(jq -n $duration-2)
-            crop=1072:1072:4:8:exact=1
-            fps=fps=30:start_time=0:eof_action=pass
-            scale=536:536:flags=sinc
-            # t=20
+            ss=5
+            to=$(jq -n $duration-7)
+            trim=7:$(jq -n $duration-9)
+            crop=400:480:316:0
+            fps=fps=source_fps:start_time=0:eof_action=pass
+            # scale=536:536:flags=sinc
+            extra=,setdar=1
+            t=20
 
             FFREPORT=file=%p-%t.log:level=32 \
             ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
             -ss $ss -to $to ${t+-t $t}\
-            -vf trim=$trim,crop=$crop,${scale+scale=$scale,}fps=$fps \
+            -vf trim=$trim,crop=$crop,${scale+scale=$scale,}fps=$fps$extra \
             -ac 1 -fpre preset \
             "tmp/${file%.*}.mkv"
 
