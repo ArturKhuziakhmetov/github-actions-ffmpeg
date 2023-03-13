@@ -28,7 +28,7 @@ jobs:
       - name: Download
         run: |
           # curl -qZJ --remote-name-all \
-          aria2c --split=1 --max-connection-per-server=100 --max-concurrent-downloads=100 --file-allocation=none --show-console-readout=false --console-log-level=warn --summary-interval=0 --disk-cache=1024M \
+          aria2c --split=1 --max-connection-per-server=16 --max-concurrent-downloads=100 --file-allocation=none --show-console-readout=false --console-log-level=warn --summary-interval=0 --disk-cache=1024M \
           $(curl -qsS --referer https://www.sendbig.com \
           -H 'Content-Type: application/json' \
           -d '{identifier:"${{ inputs.id }}"}' \
