@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf && gh workflow run dbree-to-sendbig.yml -F urls=@dbree-urls -f pass=Immortal -f title='1.e4! Tactical Repertoire for White with IM Tor Fredrik Kaasen'
+# git commit -am. && git push -qf && gh workflow run dbree-to-sendbig.yml -F urls=@dbree-urls -f pass=Immortal -f title='Lifetime Repertoires - Wesley So's 1. e4 (Part 1)'
 
 name: dbree-to-sendbig
 run-name: ${{ inputs.title }}
