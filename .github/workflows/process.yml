@@ -31,10 +31,9 @@ jobs:
           -H 'Content-Type: application/json' \
           -d '{identifier:"${{ inputs.id }}"}' \
           https://s1.sendbig.com/api/Archive/viewArchive | \
-          jq -r '.data.files | sort_by(.fileSize) | reverse[] |
-          "https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)/${{ inputs.id }}/20138 "' | \
-          aria2c --input-file=- --split=1 --max-connection-per-server=16 --max-concurrent-downloads=100 --file-allocation=none --show-console-readout=true --console-log-level=notice --summary-interval=0 --disk-cache=1024M
-          
+          jq -r '.data.files[] | select(.uploadFinished) |           "https://\(.serverIdentifier).sendbig.com/api/Files/download/\(.id)/${{ inputs.id }}/20138 "' | \
+          aria2c --input-file=- --split=1 --max-connection-per-server=16 --max-concurrent-downloads=100 --file-allocation=none --show-console-readout=false --console-log-level=notice --summary-interval=0 --disk-cache=1024M
+
           # curl -qZJ --remote-name-all \
           # $(curl -qsS --referer https://www.sendbig.com \
           # -H 'Content-Type: application/json' \
@@ -56,7 +55,7 @@ jobs:
           preset=veryfast
           tune=animation
           x264opts=no-scenecut
-          crf=23
+          crf=24
           g=1800
           threads=1
           acodec=libopus
