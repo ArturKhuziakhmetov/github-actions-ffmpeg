@@ -14,7 +14,6 @@ on:
         required: true
 
 jobs:
-  f:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 16
@@ -37,6 +36,7 @@ jobs:
           {
             curl -sO https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | grep -oPm1 "(?<=<version>)[^<]+")-x86_64.AppImage
             7z e *.AppImage 'usr/lib/*' usr/bin/mkvmerge -bso0 -bsp0
+            chmod 755 mkvmerge
           } &
 
           mkdir -p output/info tmp
