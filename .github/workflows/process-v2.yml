@@ -73,7 +73,7 @@ jobs:
 
           wait %1
 
-          ./rclone copy "koofr:input/$file" . -v
+          ./rclone copy "koofr:input/$file" . --fast-list -v
 
           if [[ -v use_magick ]]; then
             read x y <<< $(magick "$file[0]" -crop 128x128+16+16 -border 16 +repage -threshold 30% -fill white -floodfill +16+16 black -trim -format "%X %Y" info:-)
@@ -92,7 +92,7 @@ jobs:
 
           vf=${trim:+trim=${trim::-1},}${crop:+crop=$crop,}${scale:+scale=$scale:flags=area,}${fps:+fps=fps=$fps:start_time=0:eof_action=pass,}
 
-          FFREPORT=file=output/info/%p-%t-${{ github.job }}.log:level=32 \
+          "FFREPORT=file=output/info/%p-%t-$file.log:level=32" \
           ./ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
           ${ss:+-ss $ss }${to:+-to $to }${t:+-t $t }${vf:+-vf ${vf::-1} }\
           -ac 1 -fpre preset "tmp/${file%.*}.mkv"
@@ -101,8 +101,4 @@ jobs:
 
           mkvmerge -o "output/${file%.*}.mkv" "tmp/${file%.*}.mkv"
 
-          ./rclone copy output "koofr:output" --no-update-modtime -v
-
-      - name: Log
-        run: cat output/info/*
-
+          ./rclone copy output "koofr:output" --no-update-modtime --fast-list -v
