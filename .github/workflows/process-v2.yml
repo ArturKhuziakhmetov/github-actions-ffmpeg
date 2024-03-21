@@ -47,6 +47,7 @@ jobs:
           cat << "EOF" | tee output/info/params.txt
           ${{ inputs.params }}EOF
 
+          fps=source_fps
           source output/info/params.txt
 
           cat << EOF > preset
@@ -64,7 +65,7 @@ jobs:
           cutoff=12000
           EOF
 
-          cp preset output/info
+          cp preset output/info/preset.txt
 
           cat << "EOF" > rclone.conf
           ${{ secrets.RCLONE_CONF }}EOF
