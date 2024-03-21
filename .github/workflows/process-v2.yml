@@ -36,9 +36,10 @@ jobs:
 
           # mkvmerge
           {
-            curl -sO https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | grep -oPm1 "(?<=<version>)[^<]+")-x86_64.AppImage
-            7z e *.AppImage 'usr/lib/*' usr/bin/mkvmerge -bso0 -bsp0
-            chmod 755 mkvmerge
+            sudo curl -sO --output-dir /usr/share/keyrings https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
+            echo deb [arch=amd64 signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ jammy main > deb
+            sudo mv deb /etc/apt/sources.list.d/mkvtoolnix.download.list
+            (sudo apt update && sudo apt install mkvtoolnix) &> /dev/null
           } &
 
           mkdir -p output/info tmp
@@ -98,7 +99,7 @@ jobs:
 
           wait %3
 
-          ./mkvmerge -o "output/${file%.*}.mkv" "tmp/${file%.*}.mkv"
+          mkvmerge -o "output/${file%.*}.mkv" "tmp/${file%.*}.mkv"
 
           ./rclone copy output "koofr:output" --no-update-modtime -v
 
