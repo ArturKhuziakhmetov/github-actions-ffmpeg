@@ -31,7 +31,7 @@ jobs:
           } &
 
           # ffmpeg
-          curl -s https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz | tar -xJ --strip=1 --wildcards '*./ffprobe' '*ffmpeg' &
+          curl -s https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz | tar -xJ --strip=1 --wildcards '*ffprobe' '*ffmpeg' &
 
           # mkvmerge
           {
