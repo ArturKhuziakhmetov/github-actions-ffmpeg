@@ -1,5 +1,4 @@
-# git commit -am. && git push -qf;
-# gh workflow run process-v2.yml -F params=@$DL/params.sh -F input=@$DL/input -f title=
+# git commit -am. && git push -qf; gh workflow run process-v2.yml -f params=$(base64 -w0 $DL/params.sh) -F input=@$DL/input -f title=
 
 name: Process-v2
 run-name: ${{ inputs.title }}
@@ -44,10 +43,8 @@ jobs:
 
           mkdir -p output/info tmp
 
-          cat << "EOF" | tee output/info/params.txt
-          ${{ inputs.params }}EOF
-
           fps=source_fps
+          echo "${{ inputs.params }}" | base64 -d | tee output/info/params.txt
           source output/info/params.txt
 
           cat << EOF > preset
@@ -67,10 +64,7 @@ jobs:
 
           cp preset output/info/preset.txt
 
-          # cat << "EOF" > rclone.conf
-          # ${{ secrets.RCLONE_CONF }}EOF
-
-          echo ${{ secrets.RCLONE_CONF }} | base64 -d > rclone.conf
+          echo "${{ secrets.RCLONE_CONF }}" | base64 -d > rclone.conf
 
           file="${{ matrix.input }}"
 
