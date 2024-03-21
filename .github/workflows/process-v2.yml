@@ -14,7 +14,7 @@ on:
         required: true
 
 jobs:
-  job:
+  process:
     name: ${{ matrix.input }}
     runs-on: ubuntu-latest
     strategy:
@@ -67,8 +67,10 @@ jobs:
 
           cp preset output/info/preset.txt
 
-          cat << "EOF" > rclone.conf
-          ${{ secrets.RCLONE_CONF }}EOF
+          # cat << "EOF" > rclone.conf
+          # ${{ secrets.RCLONE_CONF }}EOF
+
+          echo ${{ secrets.RCLONE_CONF }} | base64 -d > rclone.conf
 
           file="${{ matrix.input }}"
 
@@ -101,9 +103,8 @@ jobs:
           ls -l tmp
 
           wait %3
-
           mkvmerge -o "output/${file%.*}.mkv" "tmp/${file%.*}.mkv"
 
-          ls -l output
-
           ./rclone copy output "koofr:output" --no-update-modtime --fast-list -v
+
+          ls -l output
