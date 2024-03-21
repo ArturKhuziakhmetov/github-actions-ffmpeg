@@ -1,0 +1,93 @@
+# git commit -am. && git push -qf; gh workflow run programs-cache.yml
+
+name: Programs cache
+run-name: ${{ github.run_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      test:
+        type: boolean
+env:
+  BIN: /home/runner/.local/bin
+  LD_LIBRARY_PATH: /home/runner/.local/bin
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Download programs
+        run: |
+          mkdir -p $BIN
+
+          # curl
+          curl -sL $(curl -sL https://api.github.com/repos/stunnel/static-curl/releases/latest | jq -j '[.assets[] | select(.name | startswith("curl-linux-x86_64")) | .browser_download_url][0]') | tar -xJC $BIN
+          echo curl
+
+          # rclone
+          {
+            cat << "EOF" > $BIN/rclone.conf
+            ${{ secrets.RCLONE_CONF }}EOF
+            curl -sO https://downloads.rclone.org/rclone-current-linux-amd64.zip
+            unzip -jqd $BIN rclone-current-linux-amd64.zip */rclone
+            echo rclone
+          } &
+
+          # ffmpeg
+          {
+          curl -s https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz | tar -xJC $BIN --strip=1 --wildcards '*ffprobe' '*ffmpeg' 
+          echo ffmpeg
+          } &
+
+          # 7z
+          {
+          curl -sL $(curl -sL https://api.github.com/repos/ip7z/7zip/releases/latest | jq -j '.assets[] | select(.name | endswith("linux-x64.tar.xz")) | .browser_download_url') |  tar -xJC $BIN --xform "s/zs//" 7zzs 
+          echo 7z
+          } &
+
+          # mkvmerge
+          {
+            curl -sO https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | grep -oPm1 "(?<=<version>)[^<]+")-x86_64.AppImage
+            7z e *.AppImage 'usr/lib/*' usr/bin/mkvmerge -bso0 -bsp0
+            LD_LIBRARY_PATH=. ldd mkvmerge | grep -o "\./.* " | sudo xargs mv -t $BIN
+            mv mkvmerge $BIN
+            echo mkvmerge
+          } &
+
+          wait
+
+      - name: Check programs
+        run: |
+          ls -l $BIN
+          curl -V
+          ffmpeg -version
+          mkvmerge -V
+          rclone version
+          7z | head -2
+
+      - uses: actions/cache/save@v4
+        with:
+          key: programs-${{ github.run_id }}
+          path: ${{ env.BIN }}
+
+  test:
+    if: inputs.test
+    needs: cache
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/cache/restore@v4
+        with:
+          key: programs-
+          restore-keys: programs-
+          path: ${{ env.BIN }}
+
+      - name: Check programs
+        run: |
+          ls -l $BIN
+          curl -V
+          ffmpeg -version
+          mkvmerge -V
+          rclone version
+          7z | head -2
+

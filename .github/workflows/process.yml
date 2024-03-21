@@ -1,0 +1,155 @@
+# git commit -am. && git push -qf;
+# gh workflow run process.yml -F params=@$DL/params.sh -f id= -f title=
+
+name: Process
+run-name: ${{ inputs.title }}
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        required: true
+      id:
+        required: true
+      params:
+        required: true
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      data: ${{ steps.data.outputs.data }}
+    steps:
+      - name: Check ffmpeg version
+        id: versions
+        run: |
+          echo "ffmpeg=$(curl -sSr 0-31 https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz.md5)" >> $GITHUB_OUTPUT
+
+      - name: Check cache version
+        id: check
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            /home/runner/.local/bin
+            /usr/share/keyrings/gpg-pub-moritzbunkus.gpg
+            /etc/apt/sources.list.d/mkvtoolnix.download.list
+          key: install-${{ steps.versions.outputs.ffmpeg }}
+          lookup-only: true
+
+      - name: Install
+        if: ${{ ! steps.check.outputs.cache-hit }}
+        run: |
+          sudo curl -sSO --output-dir /usr/share/keyrings https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
+          echo deb [arch=amd64 signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ jammy main > deb
+          sudo mv deb /etc/apt/sources.list.d/mkvtoolnix.download.list
+
+          mkdir -p ~/.local/bin
+          curl -sS https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz |\
+          tar -xJv --strip=1 --wildcards -C ~/.local/bin */ffprobe */ffmpeg
+
+      - uses: actions/cache/save@v4
+        if: ${{ ! steps.check.outputs.cache-hit }}
+        with:
+          path: |
+            /home/runner/.local/bin
+            /usr/share/keyrings/gpg-pub-moritzbunkus.gpg
+            /etc/apt/sources.list.d/mkvtoolnix.download.list
+          key: install-${{ steps.versions.outputs.ffmpeg }}
+
+      - name: Get data
+        id: data
+        run: |
+          data=$(curl -sS --referer https://www.sendbig.com -H "Content-Type: application/json" -d '{identifier:"${{ inputs.id }}"}' https://s1.sendbig.com/api/Archive/viewArchive | jq -c '[.data.files | sort_by(.fileSize) | reverse[] | select(.name != "extras.7z") | [.name, .serverIdentifier, .id]]')
+          echo "data=$data" >> $GITHUB_OUTPUT
+          echo "$data"
+
+  do:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 16
+      matrix:
+        data: ${{ fromJson(needs.prepare.outputs.data) }}
+    steps:
+
+      - name: Prepare cache restore
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            /home/runner/.local/bin
+            /usr/share/keyrings/gpg-pub-moritzbunkus.gpg
+            /etc/apt/sources.list.d/mkvtoolnix.download.list
+          key: install-
+          restore-keys: install-
+
+      - name: Prepare
+        run: |
+          sudo apt-fast update -yqq > /dev/null && \
+          _MAXNUM=50 apt-fast install -yqq mkvtoolnix > /dev/null &
+
+          curl -w 'File: "%{filename_effective}"\nSize: %{size_download}\nSpeed: %{speed_download}b/s\nTime: %{time_total}s\n' -sSo "${{ matrix.data[0] }}" "https://${{ matrix.data[1] }}.sendbig.com/api/Files/download/${{ matrix.data[2] }}/${{ inputs.id }}/0"
+
+          wait
+          ffmpeg -version
+          mkvmerge --version
+
+      - name: Process
+        run: |
+          mkdir -p output/info tmp
+
+          cat << "EOF" | tee output/info/params.txt
+          ${{ inputs.params }}EOF
+
+          source output/info/params.txt
+
+          cat << EOF > preset
+          vcodec=libx264
+          preset=veryfast
+          tune=animation
+          x264opts=no-scenecut
+          crf=$crf
+          g=$g
+          acodec=libopus
+          ab=16k
+          apply_phase_inv=0
+          frame_duration=60
+          application=voip
+          cutoff=12000
+          EOF
+
+          cp preset output/info
+
+          file="${{ matrix.data[0] }}"
+
+          if [[ -v use_magick ]]; then
+            read x y <<< $(magick "$file[0]" -crop 128x128+16+16 -border 16 +repage -threshold 30% -fill white -floodfill +16+16 black -trim -format "%X %Y" info:-)
+            crop+=:$((dx+x)):$((dy+y))
+          fi
+
+          if (( to < 0 || trimB < 0 )); then
+            duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
+            (( to < 0 )) && to=$(jq -n $duration+$to)
+            (( trimB < 0 )) && trimB=$(jq -n $duration+$trimB)
+          fi
+
+          trim=${trimA:+start=$trimA:}${trimB:+end=$trimB:}
+
+          vf=${trim:+trim=${trim::-1},}${crop:+crop=$crop,}${scale:+scale=$scale:flags=area,}${fps:+fps=fps=$fps:start_time=0:eof_action=pass,}
+
+          FFREPORT=file=output/info/%p-%t-${{ matrix.data[2] }}.log:level=32 \
+          ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
+          ${ss:+-ss $ss }${to:+-to $to }${t:+-t $t }${vf:+-vf ${vf::-1} }\
+          -ac 1 -fpre preset "tmp/${file%.*}.mkv"
+
+          mkvmerge -o "output/${file%.*}.mkv" "tmp/${file%.*}.mkv"
+
+      - name: Log
+        run: cat output/info/*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.title }}
+          path: output
+          retention-days: 7

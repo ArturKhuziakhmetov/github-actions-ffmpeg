@@ -1,0 +1,48 @@
+# Compress remote. Each /file or /folder in separate 7z archive.
+# IMPORTANT: You should manually delete rermote originals after compressing.
+
+# git commit -am. && git push -qf; gh workflow run rclone-compress.yml -f path='blomp:' -f include='*'
+
+name: rclone-(re)compress
+run-name: rclone-(re)compress
+on:
+  workflow_dispatch:
+    inputs:
+      path:
+        required: true
+      include:
+        default: '*'
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Preparing
+        run: |
+          sudo rm -rf /usr/local/lib/android /opt/hostedtoolcache &
+          mkdir download upload
+          cd ~
+          cat << "EOF" > .rclone.conf
+          ${{ secrets.RCLONE_CONF }}EOF
+          mkdir -p .local/bin; cd $_
+          curl -s https://www.7-zip.org/a/7z2301-linux-x64.tar.xz | tar xJ 7zzs &
+          curl -sO https://downloads.rclone.org/rclone-current-linux-amd64.zip
+          unzip -jq *.zip */rclone
+
+      - name: Download 
+        run: rclone copy "${{ inputs.path }}" download --include "${{ inputs.include }}" -v
+
+      - name: List downloaded files
+        run: tree -sF --du download
+
+      - name: Compress
+        working-directory: download
+        run: for d in *; do 7zzs a "../upload/$d.7z" "$d" -mx; done
+
+      - name: List compressed files
+        run: tree -sF --du upload
+
+      - name: Upload
+        run: rclone copy upload "${{ inputs.path }}" -v
+

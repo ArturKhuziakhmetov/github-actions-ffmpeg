@@ -1,0 +1,18 @@
+# git commit -am. && git push -qf; 
+# gh workflow run test.yml -F script=@$DL/test.sh
+
+name: Test
+run-name: Run script
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        required: true
+jobs:
+  script:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run script
+        run: |
+          # script
+          ${{ inputs.script }}

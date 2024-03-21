@@ -1,0 +1,21 @@
+# git commit -am "dev" && git push -qf && gh workflow run info.yml
+
+name: Info
+run-name: Env and programs
+on: workflow_dispatch
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Env
+        run: env | sort | uniq
+
+      - name: Programs
+        run: compgen -c | sort | uniq
+
+      - name: Disk space report 
+        run: free; swapon --show; df -h
+
+      - name: Folders
+        run: du -d1 /usr/share /usr/lib /usr/local/lib /opt /opt/hostedtoolcache | sort -nr | head -30
