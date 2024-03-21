@@ -92,7 +92,7 @@ jobs:
 
           vf=${trim:+trim=${trim::-1},}${crop:+crop=$crop,}${scale:+scale=$scale:flags=area,}${fps:+fps=fps=$fps:start_time=0:eof_action=pass,}
 
-          "FFREPORT=file=output/info/%p-%t-$file.log:level=32" \
+          FFREPORT=file=output/info/%p-%t-"$file".log:level=32 \
           ./ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
           ${ss:+-ss $ss }${to:+-to $to }${t:+-t $t }${vf:+-vf ${vf::-1} }\
           -ac 1 -fpre preset "tmp/${file%.*}.mkv"
