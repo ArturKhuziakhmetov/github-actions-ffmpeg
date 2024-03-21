@@ -24,16 +24,16 @@ jobs:
 
       - name: Process
         run: |
-          # rclone
+          # rclone (1)
           {
             curl -sO https://downloads.rclone.org/rclone-current-linux-amd64.zip
             unzip -jq rclone-current-linux-amd64.zip */rclone
           } &
 
-          # ffmpeg
+          # ffmpeg (2)
           curl -s https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz | tar -xJ --strip=1 --wildcards '*ffprobe' '*ffmpeg' &
 
-          # mkvmerge
+          # mkvmerge (3)
           {
             sudo curl -sO --output-dir /usr/share/keyrings https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
             echo deb [arch=amd64 signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ jammy main > deb
@@ -43,8 +43,11 @@ jobs:
 
           mkdir -p output/info tmp
 
-          fps=source_fps
           echo "${{ inputs.params }}" | base64 -d | tee output/info/params.txt
+          echo "${{ secrets.RCLONE_CONF }}" | base64 -d > rclone.conf
+          file="${{ matrix.input }}"
+
+          fps=source_fps
           source output/info/params.txt
 
           cat << EOF > preset
@@ -64,12 +67,7 @@ jobs:
 
           cp preset output/info/preset.txt
 
-          echo "${{ secrets.RCLONE_CONF }}" | base64 -d > rclone.conf
-
-          file="${{ matrix.input }}"
-
           wait %1
-
           ./rclone copy "koofr:input/$file" . --fast-list -v
 
           if [[ -v use_magick ]]; then
