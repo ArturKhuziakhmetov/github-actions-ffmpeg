@@ -98,8 +98,12 @@ jobs:
           ${ss:+-ss $ss }${to:+-to $to }${t:+-t $t }${vf:+-vf ${vf::-1} }\
           -ac 1 -fpre preset "tmp/${file%.*}.mkv"
 
+          ls -l tmp
+
           wait %3
 
           mkvmerge -o "output/${file%.*}.mkv" "tmp/${file%.*}.mkv"
+
+          ls -l output
 
           ./rclone copy output "koofr:output" --no-update-modtime --fast-list -v
