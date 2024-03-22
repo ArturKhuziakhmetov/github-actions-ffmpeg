@@ -1,5 +1,5 @@
 # git commit -am. && git push -qf; 
-# gh workflow run test.yml -F script=@$DL/test.sh
+# gh workflow run test.yml -F script=@temp/test.sh
 
 name: Test
 run-name: Run script
@@ -15,4 +15,5 @@ jobs:
       - name: Run script
         run: |
           # script
+          echo "${{ secrets.RCLONE_CONF }}" | base64 -d > rclone.conf
           ${{ inputs.script }}
