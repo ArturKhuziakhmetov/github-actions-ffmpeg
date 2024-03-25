@@ -22,18 +22,15 @@ jobs:
         input: ${{ fromJson(inputs.input) }}
     steps:
 
+      - uses: actions/cache/restore@latest
+        with:
+          key: programs-
+          restore-keys: programs-
+          path: ${{ env.BIN }}
+
       - name: Process
         run: |
-          # rclone (1)
-          {
-            curl -sO https://downloads.rclone.org/rclone-current-linux-amd64.zip
-            unzip -jq rclone-current-linux-amd64.zip '*/rclone'
-          } &
-
-          # ffmpeg (2)
-          curl -s https://johnvansickle.com/ffmpeg/builds/ffmpeg-git-amd64-static.tar.xz | tar -xJ --strip=1 --wildcards '*ffprobe' '*ffmpeg' &
-
-          # mkvmerge (3)
+          # mkvmerge
           {
             sudo curl -sO --output-dir /usr/share/keyrings https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
             echo deb [arch=amd64 signed-by=/usr/share/keyrings/gpg-pub-moritzbunkus.gpg] https://mkvtoolnix.download/ubuntu/ jammy main > deb
@@ -44,7 +41,6 @@ jobs:
           mkdir -p output/info tmp
 
           echo "${{ inputs.params }}" | base64 -d | tee output/info/params.txt
-          echo "${{ secrets.RCLONE_CONF }}" | base64 -d > rclone.conf
           file="${{ matrix.input }}"
           log="output/info/$file.log"
 
@@ -68,18 +64,15 @@ jobs:
 
           cp preset output/info/preset.txt
 
-          wait %1
-          ./rclone copy "koofr:input/$file" . --fast-list -v
+          rclone copy "koofr:input/$file" . --fast-list -v
 
           if [[ -v use_magick ]]; then
             read x y <<< $(magick "$file[0]" -crop 128x128+16+16 -border 16 +repage -threshold 30% -fill white -floodfill +16+16 black -trim -format "%X %Y" info:-)
             crop+=:$((dx+x)):$((dy+y))
           fi
 
-          wait %2
-
           if (( to < 0 || trimB < 0 )); then
-            duration=$(./ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
+            duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
             (( to < 0 )) && to=$(jq -n $duration+$to)
             (( trimB < 0 )) && trimB=$(jq -n $duration+$trimB)
           fi
@@ -89,16 +82,16 @@ jobs:
           vf=${trim:+trim=${trim::-1},}${crop:+crop=$crop,}${scale:+scale=$scale:flags=area,}${fps:+fps=fps=$fps:start_time=0:eof_action=pass,}
 
           FFREPORT=file="$log":level=32 \
-          ./ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
+          ffmpeg -y -hide_banner -nostdin -nostats -benchmark -i "$file" \
           ${ss:+-ss $ss }${to:+-to $to }${t:+-t $t }${vf:+-vf ${vf::-1} }\
           -ac 1 -fpre preset "tmp/${file%.*}.mkv"
 
           stat -c"%s %n" tmp/*.mkv | tee -a "$log"
 
-          wait %3
+          wait
           mkvmerge -o "output/${file%.*}.mkv" "tmp/${file%.*}.mkv" -v | tee -a "$log"
 
           stat -c"%s %n" output/*.mkv | tee -a "$log"
 
-          ./rclone copy output "koofr:output" --no-update-modtime --fast-list -v
+          rclone copy output "koofr:output" --no-update-modtime --fast-list -v
 
