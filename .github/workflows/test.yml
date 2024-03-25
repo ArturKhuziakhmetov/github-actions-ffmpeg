@@ -2,12 +2,14 @@
 # gh workflow run test.yml -F script=@temp/test.sh
 
 name: Test
-run-name: Run script
+run-name: ${{ inputs.title }}
 on:
   workflow_dispatch:
     inputs:
       script:
         required: true
+      title:
+        default: Run script
 jobs:
   script:
     runs-on: ubuntu-latest
