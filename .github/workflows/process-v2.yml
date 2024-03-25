@@ -22,7 +22,7 @@ jobs:
         input: ${{ fromJson(inputs.input) }}
     steps:
 
-      - uses: actions/cache/restore@latest
+      - uses: actions/cache/restore@v4
         with:
           key: programs-
           restore-keys: programs-
