@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf; gh workflow run process-v2.yml -f params=$(base64 -w0 temp/params.sh) -F input=@temp/input -f title=
+# git commit -am. ; git push -qf ; gh workflow run process-v2.yml -f params=$(base64 -w0 temp/params.sh) -F input=@temp/input -f title=
 
 name: Process-v2
 run-name: ${{ inputs.title }}
