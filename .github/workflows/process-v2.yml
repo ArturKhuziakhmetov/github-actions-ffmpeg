@@ -11,8 +11,6 @@ on:
         required: true
       params:
         required: true
-env:
-  BIN: /home/runner/.local/bin
 
 jobs:
   process:
@@ -28,7 +26,7 @@ jobs:
         with:
           key: programs-
           restore-keys: programs-
-          path: ${{ env.BIN }}
+          path: /home/runner/.local/bin
 
       - name: Process
         run: |
