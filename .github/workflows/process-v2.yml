@@ -11,6 +11,8 @@ on:
         required: true
       params:
         required: true
+env:
+  BIN: /home/runner/.local/bin
 
 jobs:
   process:
