@@ -1,4 +1,4 @@
-# git commit -am. && git push -qf; 
+# git commit -am. ; git push ; 
 # gh workflow run test.yml -F script=@temp/test.sh
 
 name: Test
