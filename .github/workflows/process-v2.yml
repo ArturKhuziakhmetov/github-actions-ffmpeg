@@ -32,6 +32,8 @@ jobs:
 
       - name: Process
         run: |
+          mkdir -p output/info tmp
+
           # mkvmerge
           {
             sudo curl -sO --output-dir /usr/share/keyrings https://mkvtoolnix.download/gpg-pub-moritzbunkus.gpg
@@ -39,8 +41,6 @@ jobs:
             sudo mv deb /etc/apt/sources.list.d/mkvtoolnix.download.list
             (sudo apt update && sudo apt install mkvtoolnix) &> /dev/null
           } &
-
-          mkdir -p output/info tmp
 
           echo "${{ inputs.params }}" | base64 -d | tee output/info/params.txt
           file="${{ matrix.input }}"
