@@ -39,7 +39,8 @@ jobs:
           shopt -s globstar; mv -n **/"$ifile" .
 
           ops=$( jq -r '
-            (. * .files[${{ strategy.job-index }}]) as {$duration, $vtrim} | .ops |
+            (. * .files[${{ strategy.job-index }}]) | del(.files) | 
+            . as {$duration, $vtrim} | .ops |
             if (.to and .to < 0) then .to += $duration end |
             if (.vf.trim.end and .vf.trim.end < 0) then .vf.trim.end += $duration end |
             .vf.trim.start = (.vf.trim.start // ((.ss // 0) + $vtrim)) |
