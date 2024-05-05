@@ -1,0 +1,61 @@
+# git commit -am.; git push -q; 
+# gh workflow run script.yml -F data=@- -F script=@scripts/.sh -f title=""
+
+name: script
+run-name: ${{ inputs.title }}
+on:
+  workflow_dispatch:
+    inputs:
+      matrix:
+        default: false
+      data:
+        required: true
+      script:
+        required: true
+      title:
+        required: false
+      cache:
+        default: true
+  
+jobs:
+
+  script-matrix:
+    if: inputs.matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: 
+        data: ${{ fromJson(inputs.data) }}
+    env:
+      data: ${{ matrix.data }}
+    steps:
+
+      - if: inputs.cache
+        uses: actions/cache/restore@v4
+        with:
+          key: programs-
+          restore-keys: programs-
+          path: /home/runner/.local/bin
+
+      - name: Script
+        run: |
+          # script
+          ${{ inputs.script }}
+
+  script:
+    if: !inputs.matrix
+    runs-on: ubuntu-latest
+    env:
+      data: ${{ inputs.data }}
+    steps:
+
+      - if: inputs.cache
+        uses: actions/cache/restore@v4
+        with:
+          key: programs-
+          restore-keys: programs-
+          path: /home/runner/.local/bin
+
+      - name: Script
+        run: |
+          # script
+          ${{ inputs.script }}

@@ -1,0 +1,68 @@
+# git commit -am.; git push -q; gh workflow run metadata.yml -f title="$title" 
+
+name: metadata
+run-name: ${{ inputs.title }}
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        required: true
+      include:
+        default: '*.m??'
+      t:
+        default: 20
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/cache/restore@v4
+        with:
+          key: programs-
+          restore-keys: programs-
+          path: /home/runner/.local/bin
+
+      - name: Download
+        run: |
+          rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . --include='${{ inputs.include }}' --stats-one-line --transfers=16 -v &
+          sudo apt install -yqq libfuse2 &> /dev/null 
+          wait
+
+      - name: Process
+        run: |
+          shopt -s globstar
+          mv **/${{ inputs.include }} .
+          mkdir -p output/{images,info,clip1,clip2,crop}
+
+          for file in ${{ inputs.include }}; do
+
+          basename=$(basename "$file")
+
+          duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
+
+          silence=$(ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null -)
+
+          ss=$(grep -m1 end silence | cut -c19-)
+          printf -v ss %.6f ${ss:-0}
+
+          to=$(grep start silence | tail -1 | cut -c21-)
+          printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
+
+          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 output/images/"$file".png
+
+          crop=$(magick output/images/"$file".png -crop "$(curl -sF "file=@\"output/images/$file.png\"" http://helpman.komtera.lt/predict | jq -r ' .results[0] as {$xc,$yc,$width,$height} | "%[fx:page.width*\($width)]x%[fx:page.height*\($height)]+%[fx:page.width*(\($xc)-\($width)/2)]+%[fx:page.height*(\($yc)-\($height)/2)]" ')" -write output/crop/"$file".png -format '%wx%h%X%Y' info:-)
+
+          ffprobe -v 24 -show_streams -show_format -of json "$file" | jq -r --arg ss $ss --arg to $to --arg crop $crop ' ( .streams[0] | { r_frame_rate, avg_frame_rate, width, height } ) + { $crop, $ss, $to } + ( .format | { duration, filename } ) | [.[]] | @tsv ' | tee -a output/info/metadata.txt
+
+          cat << EOF >> output/info/files.yaml
+          - file: "$file"
+            duration: $duration
+          EOF
+
+          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy output/clip1/"$file"
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy output/clip2/"$file"
+
+          done
+
+      - name: Upload
+        run: rclone copy output "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" --stats-one-line --no-update-modtime --transfers=16 -v

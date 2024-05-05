@@ -1,0 +1,119 @@
+# git commit -am.; git push -q; gh workflow run cache.yml -f test=true
+
+name: cache
+run-name: ${{ github.run_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      test:
+        type: boolean
+env:
+  path: /home/runner/.local/bin
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  cache:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Download programs
+        run: |
+          mkdir $path
+          cd $path
+
+          sudo apt install -yqq libfuse2 &> /dev/null &
+          gh alias set get 'release download -R $1 -p $2 -O $3'
+
+          # curl
+          gh get stunnel/static-curl '*linux-x86_64-[0-9]*' - | tar -xJ curl
+
+          # jq
+          gh get jqlang/jq jq-linux-amd64 jq &
+
+          # rclone
+          curl -s https://downloads.rclone.org/rclone-current-linux-amd64.deb | dpkg --fsys-tarfile - | tar -x --strip=3 ./usr/bin/rclone &
+
+          # ffmpeg
+          gh get BtbN/FFmpeg-Builds '*master*linux64-gpl.*' - | tar -xJ --strip=2 ffmpeg-master-latest-linux64-gpl/bin/{ffmpeg,ffprobe} &
+
+          # 7z
+          gh get ip7z/7zip '*linux-x64*' - | tar -xJ --xform "s/zs//" 7zzs &
+
+          # mkvmerge
+          curl -s https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | grep -oPm1 "(?<=<version>)[^<]+")-x86_64.AppImage -o mkvmerge &
+
+          # magick
+          gh get ImageMagick/ImageMagick '*gcc-x86_64.AppImage' magick &
+
+          # yq
+          gh get mikefarah/yq yq_linux_amd64 yq &
+
+          wait
+          chmod 755 *
+
+          echo "${{ secrets.RCLONE_CONF }}" | base64 -d | xz -d > rclone.conf
+
+          cat << 'EOF' > libx264.preset
+          vcodec=libx264
+          preset=veryfast
+          tune=animation
+          x264opts=no-scenecut
+          EOF
+
+          cat << 'EOF' > libaom.preset
+          vcodec=libaom-av1
+          cpu-used=8
+          EOF
+
+          cat << 'EOF' > libopus.preset
+          acodec=libopus
+          ab=16k
+          apply_phase_inv=0
+          frame_duration=60
+          application=voip
+          cutoff=12000
+          EOF
+
+
+      - name: Check programs
+        run: |
+          ls -l $path
+          curl -V | head -1
+          7z | head -2 | tail -1
+          rclone version | head -1
+          ffmpeg -version | head -1
+          mkvmerge -V
+          magick -version | head -1
+          jq -V
+          yq -V
+
+      - uses: actions/cache/save@v4
+        with:
+          key: programs-${{ github.run_id }}
+          path: ${{ env.path }}
+
+  test:
+    if: inputs.test
+    needs: cache
+    runs-on: ubuntu-latest
+    steps:
+
+      - uses: actions/cache/restore@v4
+        with:
+          key: programs-
+          restore-keys: programs-
+          path: ${{ env.path }}
+
+      - name: Check programs
+        run: |
+          sudo apt install -yqq libfuse2 &> /dev/null
+          ls -l $path
+          curl -V | head -1
+          7z | head -2 | tail -1
+          rclone version | head -1
+          ffmpeg -version | head -1
+          mkvmerge -V
+          magick -version | head -1
+          jq -V
+          yq -V
+

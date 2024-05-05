@@ -1,0 +1,26 @@
+# git commit -am.; git push -q; gh workflow run ping.yml
+
+name: ping
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 0' # weekly
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache/restore@v4
+        with:
+          key: programs-
+          restore-keys: programs-
+          path: /home/runner/.local/bin
+
+      - name: Ping blomp
+        run: |
+          rclone config dump | jq ' 
+            to_entries[] | 
+            select( (.key | startswith("blomp")) and .value.type == "alias" ) | 
+            "\(.key):\(.key)" ' > args
+          xargs -a args -n1 -P10 rclone touch
+          xargs -a args -n1 -P10 rclone lsf --format pt --separator "  " | sort
+
