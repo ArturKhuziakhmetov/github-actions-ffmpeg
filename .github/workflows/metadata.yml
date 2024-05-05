@@ -32,13 +32,21 @@ jobs:
         run: |
           shopt -s globstar
           mv **/${{ inputs.include }} .
-          mkdir -p output/{images,info,clip1,clip2,crop}
+          mkdir -p out/{info,images,start,end,crop}
 
           for file in ${{ inputs.include }}; do
 
-          basename=$(basename "$file")
+          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy out/start/"$file"
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy out/end/"$file"
+          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 out/images/"$file".png
 
-          duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
+          curl -sOF "file=@\"out/images/$file.png\"" http://helpman.komtera.lt/predict
+          source <(yq '.results[0]' -os predict)
+
+          crop=$(magick out/images/"$file".png -crop "%[fx:w*$width]x%[fx:h*$height]+%[fx:w*($xc-$width/2)]+%[fx:h*($yc-$height/2)]" -write out/crop/"$file".png -format '%wx%h%X%Y' info:-)
+
+          ffprobe -v 24 -show_streams -show_format -of json "$file" > vars
+          source <(yq '.streams[0] + .format' -os vars)
 
           silence=$(ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null -)
 
@@ -48,21 +56,15 @@ jobs:
           to=$(grep start silence | tail -1 | cut -c21-)
           printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 output/images/"$file".png
+          a=($r_frame_rate $avg_frame_rate $width $height $crop $ss $to $duration "$file")
+          { printf '%s\t' "${a[@]}"; echo; } | tee -a out/info/metadata.txt
 
-          crop=$(magick output/images/"$file".png -crop "$(curl -sF "file=@\"output/images/$file.png\"" http://helpman.komtera.lt/predict | jq -r ' .results[0] as {$xc,$yc,$width,$height} | "%[fx:page.width*\($width)]x%[fx:page.height*\($height)]+%[fx:page.width*(\($xc)-\($width)/2)]+%[fx:page.height*(\($yc)-\($height)/2)]" ')" -write output/crop/"$file".png -format '%wx%h%X%Y' info:-)
-
-          ffprobe -v 24 -show_streams -show_format -of json "$file" | jq -r --arg ss $ss --arg to $to --arg crop $crop ' ( .streams[0] | { r_frame_rate, avg_frame_rate, width, height } ) + { $crop, $ss, $to } + ( .format | { duration, filename } ) | [.[]] | @tsv ' | tee -a output/info/metadata.txt
-
-          cat << EOF >> output/info/files.yaml
+          cat << EOF >> out/info/files.yaml
           - file: "$file"
             duration: $duration
           EOF
 
-          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy output/clip1/"$file"
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy output/clip2/"$file"
-
           done
 
       - name: Upload
-        run: rclone copy output "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" --stats-one-line --no-update-modtime --transfers=16 -v
+        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" --stats-one-line --no-update-modtime --transfers=16 -v

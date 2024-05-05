@@ -34,7 +34,7 @@ jobs:
           ofile="${ifile%.*}.mkv"
           log="out/info/${ofile%.*}.log"
 
-          mkdir -p out/{images2,info} tmp
+          mkdir -p out/{info,images2,start2,end2} tmp
           sudo apt install -yqq libfuse2 &> /dev/null &
           shopt -s globstar; mv -n **/"$ifile" .
 
@@ -58,6 +58,8 @@ jobs:
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
           -i "$ifile" $ops -fpre preset "tmp/$ofile"
 
+          ffmpeg -v 24 -i "tmp/$ofile" -t 10 -c copy out/start2/"$ofile"
+          ffmpeg -v 24 -sseof -10 -i "tmp/$ofile" -c copy out/end2/"$ofile"
           ffmpeg -v 24 -an -i "tmp/$ofile" -frames 1 -update 1 "out/images2/$ofile".png
 
           cat preset *.log > "$log"
