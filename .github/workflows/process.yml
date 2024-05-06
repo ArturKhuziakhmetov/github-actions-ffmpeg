@@ -31,10 +31,12 @@ jobs:
       - name: Process
         run: |
           ifile="${{ matrix.file }}"
-          ofile="${ifile%.*}.mkv"
-          log="out/info/${ofile%.*}.log"
+          name=${ifile%.*}
+          ofile="tmp/$name.mkv"
+          ofile2="out/$name.mkv"
+          log="out/info/$name.log"
 
-          mkdir -p out/{info,images2,start2,end2} tmp
+          mkdir -p tmp out/{info,images2,start2,end2}
           sudo apt install -yqq libfuse2 &> /dev/null &
           shopt -s globstar; mv -n **/"$ifile" .
 
@@ -56,17 +58,18 @@ jobs:
 
           FFREPORT=file=%p.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
-          -i "$ifile" $ops -fpre preset "tmp/$ofile"
+          -i "$ifile" $ops -fpre preset "$ofile"
 
-          ffmpeg -v 24 -i "tmp/$ofile" -t 10 -c copy out/start2/"$ofile"
-          ffmpeg -v 24 -sseof -10 -i "tmp/$ofile" -c copy out/end2/"$ofile"
-          ffmpeg -v 24 -an -i "tmp/$ofile" -frames 1 -update 1 "out/images2/$ofile".png
+          ss=$(bc <<< $(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$ofile")-10)
+          ffmpeg -v 24 -i "$ofile" -t 10 -c copy "out/start2/$name.mkv"
+          ffmpeg -v 24 -i "$ofile" -ss $ss -c copy "out/end2/$name.mkv"
+          ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png"
 
           cat preset *.log > "$log"
           wait
-          { stat -c "%s %n" "tmp/$ofile"
-            mkvmerge -o "out/$ofile" "tmp/$ofile"
-            stat -c "%s %n" "out/$ofile"
+          { stat -c "%s %n" "$ofile"
+            mkvmerge -o "$ofile2" "$ofile"
+            stat -c "%s %n" "$ofile2"
           } | tee -a "$log"
 
       - name: Upload
