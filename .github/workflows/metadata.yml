@@ -18,8 +18,7 @@ jobs:
 
       - uses: actions/cache/restore@v4
         with:
-          key: programs-
-          restore-keys: programs-
+          key: bin
           path: /home/runner/.local/bin
 
       - name: Download
@@ -32,7 +31,7 @@ jobs:
         run: |
           shopt -s globstar
           mv **/${{ inputs.include }} .
-          mkdir -p out/{info,images,start,end,crop}
+          mkdir -p out/{info,images,start,end,crop,tmp}
 
           for file in ${{ inputs.include }}; do
 
@@ -45,8 +44,7 @@ jobs:
 
           crop=$(magick out/images/"$file".png -crop "%[fx:w*$width]x%[fx:h*$height]+%[fx:w*($xc-$width/2)]+%[fx:h*($yc-$height/2)]" -write out/crop/"$file".png -format '%wx%h%X%Y' info:-)
 
-          ffprobe -v 24 -show_streams -show_format -of json "$file" > vars
-          source <(yq '.streams[0] + .format' -os vars)
+          duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
           silence=$(ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null -)
 
@@ -56,15 +54,16 @@ jobs:
           to=$(grep start silence | tail -1 | cut -c21-)
           printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          a=($r_frame_rate $avg_frame_rate $width $height $crop $ss $to $duration "$file")
-          { printf '%s\t' "${a[@]}"; echo; } | tee -a out/info/metadata.txt
+          { printf '%s@' $crop $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file"); echo; } >> metadata
 
-          cat << EOF >> out/info/files.yaml
+          cat << EOF >> out/tmp/files.yaml
           - file: "$file"
             duration: $duration
           EOF
 
           done
+
+          column -ts@ -N crop,ss,to,duration,file,w,h,fps,afps -O 8,9,6,7 -R2,3,4 -E5 metadata | tee out/info/metadata.txt
 
       - name: Upload
         run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" --stats-one-line --no-update-modtime --transfers=16 -v

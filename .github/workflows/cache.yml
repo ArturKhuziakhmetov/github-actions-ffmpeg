@@ -87,9 +87,14 @@ jobs:
           jq -V
           yq -V
 
+
+      - name: Delete old cache
+        run: gh cache delete $(gh cache list --json id,key -q '.[]|select(.key=="bin")|.id')
+
+
       - uses: actions/cache/save@v4
         with:
-          key: programs-${{ github.run_id }}
+          key: bin
           path: ${{ env.path }}
 
   test:
@@ -100,9 +105,9 @@ jobs:
 
       - uses: actions/cache/restore@v4
         with:
-          key: programs-
-          restore-keys: programs-
+          key: bin
           path: ${{ env.path }}
+
 
       - name: Check programs
         run: |

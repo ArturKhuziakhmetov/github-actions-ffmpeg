@@ -21,8 +21,7 @@ jobs:
     steps:
       - uses: actions/cache/restore@v4
         with:
-          key: programs-
-          restore-keys: programs-
+          key: bin
           path: /home/runner/.local/bin
 
       - name: Download
