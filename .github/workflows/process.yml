@@ -33,9 +33,11 @@ jobs:
           name=${ifile%.*}
           ofile="tmp/$name.mkv"
           ofile2="out/$name.mkv"
-          log="out/info/$name.log"
+          log="out/logs/$name.log"
+          report="out/reports/$name.txt"
 
-          mkdir -p tmp out/{info,images2,start2,end2}
+          mkdir -p tmp out/{info,logs,images2,start2,end2,reports}
+
           sudo apt install -yqq libfuse2 &> /dev/null &
           shopt -s globstar; mv -n **/"$ifile" .
 
@@ -53,15 +55,15 @@ jobs:
           )
           
           echo $ops
-          echo ${{ vars.PRESET }} | base64 -d | tee preset out/info/preset.txt
+          echo ${{ vars.PRESET }} | base64 -d | tee preset out/info/preset
 
           FFREPORT=file=%p.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
           -i "$ifile" $ops -fpre preset "$ofile"
 
-          ss=$(bc <<< $(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$ofile")-10)
-          ffmpeg -v 24 -i "$ofile" -t 10 -c copy "out/start2/$name.mkv"
-          ffmpeg -v 24 -i "$ofile" -ss $ss -c copy "out/end2/$name.mkv"
+          ss=$(bc <<< $(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$ofile")-5)
+          ffmpeg -v 24 -i "$ofile" -t 5 -c copy "out/start2/$name.mkv"
+          ffmpeg -v 24 -vn -i "$ifile" -ss $ss -c copy "out/end2/$name.mkv"
           ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png"
 
           cat preset *.log > "$log"
@@ -70,6 +72,9 @@ jobs:
             mkvmerge -o "$ofile2" "$ofile"
             stat -c "%s %n" "$ofile2"
           } | tee -a "$log"
+
+          ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[(.streams[0] | .width, .height, .r_frame_rate), (.format | .duration, .size, .bit_rate), "->", ""] | @tsv' > "$report"
+          ffprobe -v 24 -show_streams -show_format -of json "$ofile2" | jq -r '[(.streams[0] | .width, .height, .r_frame_rate), (.format | .duration, .size, .bit_rate, "\"\(.filename)\"")] | @tsv' >> "$report"
 
       - name: Upload
         run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" -v --no-update-modtime
