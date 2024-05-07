@@ -39,10 +39,10 @@ jobs:
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy out/end/"$file"
           ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 out/images/"$file".png
 
-          curl -sOF "file=@\"out/images/$file.png\"" http://helpman.komtera.lt/predict
-          source <(yq '.results[0]' -os predict)
+          # curl -sOF "file=@\"out/images/$file.png\"" http://helpman.komtera.lt/predict
+          # source <(yq '.results[0]' -os predict)
 
-          crop=$(magick out/images/"$file".png -crop "%[fx:w*$width]x%[fx:h*$height]+%[fx:w*($xc-$width/2)]+%[fx:h*($yc-$height/2)]" -write out/crop/"$file".png -format '%wx%h%X%Y' info:-)
+          # crop=$(magick out/images/"$file".png -crop "%[fx:w*$width]x%[fx:h*$height]+%[fx:w*($xc-$width/2)]+%[fx:h*($yc-$height/2)]" -write out/crop/"$file".png -format '%wx%h%X%Y' info:-)
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
@@ -54,7 +54,7 @@ jobs:
           to=$(grep start silence | tail -1 | cut -c21-)
           printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          { printf '%s@' $crop $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file"); echo; } >> metadata
+          { printf '%s@' $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file"); echo; } >> metadata
 
           cat << EOF >> out/tmp/files.yaml
           - file: "$file"

@@ -73,8 +73,13 @@ jobs:
             stat -c "%s %n" "$ofile2"
           } | tee -a "$log"
 
-          ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[(.streams[0] | .width, .height, .r_frame_rate), (.format | .duration, .size, .bit_rate), "->", ""] | @tsv' > "$report"
-          ffprobe -v 24 -show_streams -show_format -of json "$ofile2" | jq -r '[(.streams[0] | .width, .height, .r_frame_rate), (.format | .duration, .size, .bit_rate, "\"\(.filename)\"")] | @tsv' >> "$report"
+          { ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
+              (.streams[0] | .width, .height, .r_frame_rate),
+              (.format | .duration, .size, .bit_rate), "->", ""] | @tsv'
+            ffprobe -v 24 -show_streams -show_format -of json "$ofile2" | jq -r '[
+              (.streams[0] | .width, .height, .r_frame_rate), 
+              (.format | .duration, .size, .bit_rate, "\"\(.filename[4:])\"")] | @tsv'
+          } | tee "$report"
 
       - name: Upload
         run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" -v --no-update-modtime
