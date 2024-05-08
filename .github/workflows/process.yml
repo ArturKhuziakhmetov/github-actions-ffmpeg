@@ -48,7 +48,7 @@ jobs:
 
           ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png"
           ffmpeg -v 24 -i "$ofile" -t 5 -c copy "out/start2/$name.mkv"
-          ss=$(grep -oe '-to [0-9.]*' <<< "${{ matrix.ops }}" | { read _ b ; bc <<< ${b:-${{ matrix.duration }}}-5" ;})
+          ss=$(grep -oe '-to [0-9.]*' <<< "${{ matrix.ops }}" | { read _ b ; bc <<< "${b:-${{ matrix.duration }}} - 5" ;})
           ffmpeg -v 24 -vn -i "$ifile" -ss $ss -c copy "out/end2/$name.mkv"
 
           sed 2,4d *.log > "out/logs/$name.log"
