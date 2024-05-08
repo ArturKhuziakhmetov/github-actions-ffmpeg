@@ -1,3 +1,5 @@
+# git commit -am.; git push -q; yq --from-file "jobs\scripts\yq-01.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title"
+
 # git commit -am.; git push -q; yq '.files|=(sort_by(.duration)|reverse)' -oj -I0 "jobs/$title.yaml" | gh workflow run process.yml -F data=@- -f title="$title"
 
 name: process
@@ -16,7 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix: 
-        include: ${{ fromJson(inputs.data).files }}
+        include: ${{ fromJson(inputs.data) }}
+
+        # include: ${{ fromJson(inputs.data).files }}
 
     steps:
       - uses: actions/cache/restore@v4
@@ -41,25 +45,29 @@ jobs:
           sudo apt install -yqq libfuse2 &> /dev/null &
           shopt -s globstar; mv -n **/"$ifile" .
 
-          ops=$( jq -r '
-            (. * .files[${{ strategy.job-index }}]) | del(.files) | 
-            . as {$duration, $vtrim} | .ops |
-            if (.to and .to < 0) then .to += $duration end |
-            if (.vf.trim.end and .vf.trim.end < 0) then .vf.trim.end += $duration end |
-            .vf.trim.start = (.vf.trim.start // ((.ss // 0) + $vtrim)) |
-            .vf.trim.end = (.vf.trim.end // ((.to // $duration) - $vtrim)) |
-            .vf[] |= ([ to_entries[] | "\(.key)=\(.value)" ] | join(":")) |
-            .vf   |= ([ to_entries[] | "\(.key)=\(.value)" ] | join(",")) |
-            to_entries[] | "-" + .key, .value' << 'EOF'
-            ${{ inputs.data }}EOF
-          )
+          # ops=$( jq -r '
+          #   (. * .files[${{ strategy.job-index }}]) | del(.files) | 
+          #   . as {$duration, $vtrim} | .ops |
+          #   if (.to and .to < 0) then .to += $duration end |
+          #   if (.vf.trim.end and .vf.trim.end < 0) then .vf.trim.end += $duration end |
+          #   .vf.trim.start = (.vf.trim.start // ((.ss // 0) + $vtrim)) |
+          #   .vf.trim.end = (.vf.trim.end // ((.to // $duration) - $vtrim)) |
+          #   .vf[] |= ([ to_entries[] | "\(.key)=\(.value)" ] | join(":")) |
+          #   .vf   |= ([ to_entries[] | "\(.key)=\(.value)" ] | join(",")) |
+          #   to_entries[] | "-" + .key, .value' << 'EOF'
+          #   ${{ inputs.data }}EOF
+          # )
           
-          echo $ops
+          # echo $ops
+
+          echo ${{ matrix.ops }}
           echo ${{ vars.PRESET }} | base64 -d | tee preset out/info/preset
 
           FFREPORT=file=%p.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
-          -i "$ifile" $ops -fpre preset "$ofile"
+          -i "$ifile" ${{ matrix.ops }} -fpre preset "$ofile"
+
+          # -i "$ifile" $ops -fpre preset "$ofile"
 
           ss=$(bc <<< $(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$ofile")-5)
           ffmpeg -v 24 -i "$ofile" -t 5 -c copy "out/start2/$name.mkv"

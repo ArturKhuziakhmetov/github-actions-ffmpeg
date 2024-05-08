@@ -41,7 +41,6 @@ jobs:
 
           # curl -sOF "file=@\"out/images/$file.png\"" http://helpman.komtera.lt/predict
           # source <(yq '.results[0]' -os predict)
-
           # crop=$(magick out/images/"$file".png -crop "%[fx:w*$width]x%[fx:h*$height]+%[fx:w*($xc-$width/2)]+%[fx:h*($yc-$height/2)]" -write out/crop/"$file".png -format '%wx%h%X%Y' info:-)
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
@@ -63,7 +62,7 @@ jobs:
 
           done
 
-          column -ts@ -N crop,ss,to,duration,file,w,h,fps,afps -O 8,9,6,7 -R2,3,4 -E5 metadata | tee out/info/metadata.txt
+          column -ts@ -N ss,to,duration,file,w,h,fps,afps -O 7,8,5,6 -R1,2,3 -E4 metadata | tee out/info/metadata.txt
 
       - name: Upload
         run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" --stats-one-line --no-update-modtime --transfers=16 -v
