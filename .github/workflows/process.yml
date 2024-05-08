@@ -25,7 +25,7 @@ jobs:
           path: /home/runner/.local/bin
 
       - name: Download
-        run: rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . --include="${{ matrix.file }}" -v
+        run: rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . --include="${{ matrix.file }}" -v --no-check-certificate
 
       - name: Process
         run: |
@@ -65,4 +65,4 @@ jobs:
           } | tee "out/reports/$name.txt"
 
       - name: Upload
-        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" -v --no-update-modtime
+        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" -v --no-update-modtime --no-check-certificate
