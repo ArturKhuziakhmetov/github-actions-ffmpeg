@@ -1,4 +1,4 @@
-# git commit -am.; git push -q; yq --from-file "jobs\scripts\yq-01.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title"
+# git commit -am.; git push -q; yq --from-file "scripts\job.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title"
 
 name: process
 run-name: ${{ inputs.title }}
@@ -33,8 +33,6 @@ jobs:
           name=${ifile%.*}
           ofile="tmp/$name.mkv"
           ofile2="out/$name.mkv"
-          log="out/logs/$name.log"
-          report="out/reports/$name.txt"
 
           mkdir -p tmp out/{info,logs,images2,start2,end2,reports}
 
@@ -53,12 +51,10 @@ jobs:
           ffmpeg -v 24 -vn -i "$ifile" -ss $ss -c copy "out/end2/$name.mkv"
           ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png"
 
-          cat preset *.log > "$log"
+          sed 2,4d *.log > "out/logs/$name.log"
+
           wait
-          { stat -c "%s %n" "$ofile"
-            mkvmerge -o "$ofile2" "$ofile"
-            stat -c "%s %n" "$ofile2"
-          } | tee -a "$log"
+          mkvmerge "$ofile" -o "$ofile2"
 
           { ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
               (.streams[0] | .width, .height, .r_frame_rate),
@@ -66,7 +62,7 @@ jobs:
             ffprobe -v 24 -show_streams -show_format -of json "$ofile2" | jq -r '[
               (.streams[0] | .width, .height, .r_frame_rate), 
               (.format | .duration, .size, .bit_rate, "\"\(.filename[4:])\"")] | @tsv'
-          } | tee "$report"
+          } | tee "out/reports/$name.txt"
 
       - name: Upload
         run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" -v --no-update-modtime
