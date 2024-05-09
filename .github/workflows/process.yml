@@ -70,7 +70,7 @@ jobs:
 
 
       - name: Process
-        if: !inputs.try
+        if: ${{ !inputs.try }}
         run: |
           sudo apt install -yqq libfuse2 &> /dev/null &
 
