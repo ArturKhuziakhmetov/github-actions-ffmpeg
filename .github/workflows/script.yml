@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       matrix:
+        type: boolean
         default: false
       data:
         required: true
@@ -15,6 +16,7 @@ on:
       title:
         required: false
       cache:
+        type: boolean
         default: true
   
 jobs:

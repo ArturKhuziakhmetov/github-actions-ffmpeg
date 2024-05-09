@@ -12,6 +12,7 @@ on:
       t:
         default: 10
       try:
+        type: boolean
         default: false
 
 jobs:
@@ -70,7 +71,7 @@ jobs:
 
 
       - name: Process
-        if: ${{ !inputs.try }}
+        if: !inputs.try
         run: |
           sudo apt install -yqq libfuse2 &> /dev/null &
 
