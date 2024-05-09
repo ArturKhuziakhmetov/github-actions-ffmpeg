@@ -25,8 +25,9 @@ jobs:
     steps:
       - name: Variables
         run: |
+          name=${ifile%.*}
           {
-            echo "name=${ifile%.*}"
+            echo "name=$name"
             echo "ofile=tmp/$name.mkv"
             echo "ofile2=out/$name.mkv"
           } >> "$GITHUB_ENV"
@@ -55,19 +56,17 @@ jobs:
       - name: Try process
         if: inputs.t > 0
         run: |
-          echo "${{ matrix.ops }}"
           cat preset
+          echo "${{ matrix.ops }}"
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
           -i "$ifile" ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile2"
 
-          ffmpeg -v 24 -i "$ofile2" -frames 1 -update 1 "out/images2/$name.png"
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -copyts -i "$ifile" ${{ matrix.ops }} -fpre preset "out/end2/$name.mkv"
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -copyts \
+          -i "$ifile" ${{ matrix.ops }} -fpre preset "out/end2/$name.mkv"
 
           mv "$ofile2" "out/begin2/$name.mkv"
-          mv preset out/info
-          sed 2,4d ffmpeg.log > "out/logs/$name.log"
 
 
       - name: Process
@@ -75,17 +74,13 @@ jobs:
         run: |
           sudo apt install -yqq libfuse2 &> /dev/null &
 
-          echo "${{ matrix.ops }}"
           cat preset
+          echo "${{ matrix.ops }}"
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
           -i "$ifile" ${{ matrix.ops }} -fpre preset "$ofile"
 
-          mv preset out/info
-          sed 2,4d ffmpeg.log > "out/logs/$name.log"
-
-          ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png"
           ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv"
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv"
 
@@ -95,6 +90,11 @@ jobs:
 
       - name: Report
         run: |
+          mv preset out/info
+          sed 2,4d ffmpeg.log > "out/logs/$name.log"
+
+          ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png"
+
           { 
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
               (.streams[0] | .width, .height, .r_frame_rate),
