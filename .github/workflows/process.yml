@@ -1,4 +1,4 @@
-# git commit -am.; git push -q; yq --from-file "scripts\job.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title" -f t=10
+# git commit -am.; git push -q; yq --from-file "scripts\job.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title" -f try=true
 
 name: process
 run-name: ${{ inputs.title }}
@@ -10,7 +10,9 @@ on:
       data:
         required: true
       t:
-        default: 0
+        default: 10
+      try:
+        type: boolean
 
 jobs:
   process:
@@ -54,7 +56,7 @@ jobs:
 
 
       - name: Try process
-        if: inputs.t > 0
+        if: inputs.try
         run: |
           cat preset
           echo "${{ matrix.ops }}"
@@ -68,7 +70,7 @@ jobs:
 
 
       - name: Process
-        if: inputs.t == 0
+        if: !inputs.try
         run: |
           sudo apt install -yqq libfuse2 &> /dev/null &
 
