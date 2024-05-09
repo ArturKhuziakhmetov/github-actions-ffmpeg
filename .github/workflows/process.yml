@@ -1,4 +1,4 @@
-# git commit -am.; git push -q; yq --from-file "scripts\job.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title"
+# git commit -am.; git push -q; yq --from-file "scripts\job.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title" -f t=10
 
 name: process
 run-name: ${{ inputs.title }}
@@ -9,6 +9,8 @@ on:
         required: true
       data:
         required: true
+      t:
+        default: 0
 
 jobs:
   process:
@@ -17,52 +19,91 @@ jobs:
     strategy:
       matrix: 
         include: ${{ fromJson(inputs.data) }}
+    env:
+      ifile: ${{ matrix.file }}
 
     steps:
+      - name: Variables
+        run: |
+          {
+            echo "name=${ifile%.*}"
+            echo "ofile=tmp/$name.mkv"
+            echo "ofile2=out/$name.mkv"
+          } >> "$GITHUB_ENV"
+
+
       - uses: actions/cache/restore@v4
         with:
           key: bin
           path: /home/runner/.local/bin
 
+
       - name: Download
-        run: rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . --include="${{ matrix.file }}" -v --no-check-certificate
+        run: |
+          rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . \
+          --include="${{ matrix.file }}" -v &
+
+          mkdir -p tmp out/{info,logs,images2,begin2,end2,reports}
+
+          echo ${{ vars.PRESET }} | base64 -d > preset 
+
+          shopt -s globstar
+          wait
+          mv -n **/"$ifile" .
+
+
+      - name: Try process
+        if: inputs.t > 0
+        run: |
+          echo "${{ matrix.ops }}"
+          cat preset
+
+          FFREPORT=file=ffmpeg.log:level=32 \
+          ffmpeg -hide_banner -nostdin -nostats -benchmark \
+          -i "$ifile" ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile2"
+
+          ffmpeg -v 24 -i "$ofile2" -frames 1 -update 1 "out/images2/$name.png"
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -copyts -i "$ifile" ${{ matrix.ops }} -fpre preset "out/end2/$name.mkv"
+
+          mv "$ofile2" "out/begin2/$name.mkv"
+          mv preset out/info
+          sed 2,4d ffmpeg.log > "out/logs/$name.log"
+
 
       - name: Process
+        if: inputs.t == 0
         run: |
-          ifile="${{ matrix.file }}"
-          name=${ifile%.*}
-          ofile="tmp/$name.mkv"
-          ofile2="out/$name.mkv"
-
-          mkdir -p tmp out/{info,logs,images2,start2,end2,reports}
-
           sudo apt install -yqq libfuse2 &> /dev/null &
-          shopt -s globstar; mv -n **/"$ifile" .
 
           echo "${{ matrix.ops }}"
-          echo ${{ vars.PRESET }} | base64 -d | tee preset out/info/preset
+          cat preset
 
-          FFREPORT=file=%p.log:level=32 \
+          FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
           -i "$ifile" ${{ matrix.ops }} -fpre preset "$ofile"
 
-          ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png"
-          ffmpeg -v 24 -i "$ofile" -t 5 -c copy "out/start2/$name.mkv"
-          ss=$(grep -oe '-to [0-9.]*' <<< "${{ matrix.ops }}" | { read _ b ; bc <<< "${b:-${{ matrix.duration }}} - 5" ;})
-          ffmpeg -v 24 -vn -i "$ifile" -ss $ss -c copy "out/end2/$name.mkv"
+          mv preset out/info
+          sed 2,4d ffmpeg.log > "out/logs/$name.log"
 
-          sed 2,4d *.log > "out/logs/$name.log"
+          ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png"
+          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv"
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv"
 
           wait
           mkvmerge "$ofile" -o "$ofile2"
 
-          { ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
+
+      - name: Report
+        run: |
+          { 
+            ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
               (.streams[0] | .width, .height, .r_frame_rate),
-              (.format | .duration, .size, .bit_rate), "->", ""] | @tsv'
+              (.format | .duration, .size, .bit_rate), "*", ""] | @tsv'
             ffprobe -v 24 -show_streams -show_format -of json "$ofile2" | jq -r '[
               (.streams[0] | .width, .height, .r_frame_rate), 
               (.format | .duration, .size, .bit_rate, "\"\(.filename[4:])\"")] | @tsv'
           } | tee "out/reports/$name.txt"
 
+
       - name: Upload
-        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" -v --no-update-modtime --no-check-certificate
+        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" -v --no-update-modtime

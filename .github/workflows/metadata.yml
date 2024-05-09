@@ -31,11 +31,11 @@ jobs:
         run: |
           shopt -s globstar
           mv **/${{ inputs.include }} .
-          mkdir -p out/{info,images,start,end,crop,tmp}
+          mkdir -p out/{info,images,begin,end,crop,tmp}
 
           for file in ${{ inputs.include }}; do
 
-          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy out/start/"$file"
+          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy out/begin/"$file"
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy out/end/"$file"
           ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 out/images/"$file".png
 
