@@ -1,6 +1,5 @@
 # git commit -am.; git push -q; gh workflow run cache.yml -f test=true
 
-name: cache
 run-name: bin
 on:
   workflow_dispatch:
