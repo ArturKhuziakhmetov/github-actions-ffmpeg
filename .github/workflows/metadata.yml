@@ -27,7 +27,8 @@ jobs:
         run: |
           shopt -s globstar
           mv **/${{ inputs.include }} .
-          mkdir -p out/{info,images,begin,end,crop}
+          mkdir -p out/{images,begin,end}
+          echo "files:" > out/files.yaml
 
           for file in ${{ inputs.include }}; do
 
@@ -51,8 +52,15 @@ jobs:
           } >> metadata
 
           cat << EOF >> out/files.yaml
-          - file: "$file"
-            duration: $duration
+            - file: "$file"
+              duration: $duration
+              ops:
+                <<: *ops
+                vf:
+                  - trim: *trim
+                  - crop:
+                      <<: *crop
+                  - fps: *fps    
           EOF
 
           done

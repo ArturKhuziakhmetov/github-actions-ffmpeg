@@ -22,20 +22,9 @@ jobs:
       matrix: 
         include: ${{ fromJson(inputs.data) }}
     env:
-      title: ${{ inputs.title }}
       ifile: ${{ matrix.file }}
 
     steps:
-      - name: Variables
-        run: |
-          name=${ifile%.*}
-          {
-            echo "name=$name"
-            echo "ofile=tmp/$name.mkv"
-            echo "ofile2=out/$title/$name.mkv"
-          } >> "$GITHUB_ENV"
-
-
       - uses: actions/cache/restore@v4
         with:
           key: bin
@@ -44,10 +33,17 @@ jobs:
 
       - name: Download
         run: |
-          rclone copy "${{ vars.INPUT_ROOT }}/$title" . \
+          rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . \
           --include="${{ matrix.file }}" -v &
 
-          mkdir -p tmp out/{info,logs,images2,begin2,end2,reports,"$title"}
+          name=${ifile%.*}
+          cat << EOF >> "$GITHUB_ENV"
+          name=$name
+          ofile=tmp/$name.mkv
+          ofile2=out/${{ inputs.try && begin2 || inputs.title }}/$name.mkv
+          EOF
+
+          mkdir -p tmp out/{info,logs,images2,begin2,end2,reports,"${{ inputs.title }}"}
           echo ${{ vars.PRESET }} | base64 -d > preset 
           shopt -s globstar; wait; mv -n **/"$ifile" .
 
@@ -59,15 +55,15 @@ jobs:
           echo "${{ matrix.ops }}"
 
           FFREPORT=file=ffmpeg.log:level=32 \
-          ffmpeg -hide_banner -nostdin -nostats -benchmark \
-          -i "$ifile" ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile2"
+          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "${{ matrix.file }}" \
+          ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile2"
 
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -copyts \
-          -i "$ifile" ${{ matrix.ops }} -fpre preset "out/end2/$name.mkv"
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -copyts -i "${{ matrix.file }}" \
+          ${{ matrix.ops }} -fpre preset "out/end2/$name.mkv"
 
 
       - name: Process
-        if: ${{ !inputs.try }}
+        if: ${{ ! inputs.try }}
         run: |
           sudo apt install -yqq libfuse2 &> /dev/null &
 
@@ -76,7 +72,7 @@ jobs:
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
-          -i "$ifile" ${{ matrix.ops }} -fpre preset "$ofile"
+          -i "${{ matrix.file }}" ${{ matrix.ops }} -fpre preset "$ofile"
 
           ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv"
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv"
@@ -103,4 +99,4 @@ jobs:
 
 
       - name: Upload
-        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/$title" -v --no-update-modtime
+        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" -v --no-update-modtime
