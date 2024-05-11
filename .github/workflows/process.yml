@@ -40,7 +40,7 @@ jobs:
           cat << EOF >> "$GITHUB_ENV"
           name=$name
           ofile=tmp/$name.mkv
-          ofile2=out/${{ inputs.try && begin2 || inputs.title }}/$name.mkv
+          ofile2=out/${{ inputs.try && 'begin2' || inputs.title }}/$name.mkv
           EOF
 
           mkdir -p tmp out/{info,logs,images2,begin2,end2,reports,"${{ inputs.title }}"}
