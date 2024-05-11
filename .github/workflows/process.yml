@@ -1,5 +1,7 @@
 # git commit -am.; git push -q; yq --from-file "scripts\job.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title" -f try=true
 
+# git commit -am.; git push -q; yq --from-file "scripts\job.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title" -f t=5
+
 run-name: ${{ inputs.title }}
 on:
   workflow_dispatch:
