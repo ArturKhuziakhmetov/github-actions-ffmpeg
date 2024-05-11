@@ -26,7 +26,7 @@ jobs:
       - name: Process
         run: |
           shopt -s globstar
-          mv **/${{ inputs.include }} .
+          mv -n **/${{ inputs.include }} .
           mkdir -p out/{images,begin,end}
           echo "files:" > out/files.yaml
 

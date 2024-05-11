@@ -11,7 +11,6 @@ on:
       t:
         default: 10
       try:
-        type: boolean
         default: false
 
 jobs:
