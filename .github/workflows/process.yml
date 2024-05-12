@@ -1,6 +1,6 @@
-# git commit -am.; git push -q; yq --from-file "scripts\job.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title" -f try=true
+# git ffmpeg-commit && git ffmpeg-push; yq --from-file C:/msys64/home/artur/work/github-actions-ffmpeg/scripts/job.jq C:/msys64/home/artur/work/github-actions-ffmpeg/jobs/"$title".yaml -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title" -f try=true -f t=10
 
-# git commit -am.; git push -q; yq --from-file "scripts\job.jq" "jobs/$title.yaml" -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title" -f t=5
+# git ffmpeg-commit && git ffmpeg-push; yq --from-file C:/msys64/home/artur/work/github-actions-ffmpeg/scripts/job.jq C:/msys64/home/artur/work/github-actions-ffmpeg/jobs/"$title".yaml -oj -I0 | gh ffmpeg-wrun process.yml -F data=@- -f title="$title"
 
 run-name: ${{ inputs.title }}
 on:
@@ -11,7 +11,7 @@ on:
       data:
         required: true
       t:
-        default: 10
+        default: 5
       try:
         type: boolean
         default: false
@@ -21,7 +21,7 @@ jobs:
     name: ${{ matrix.file }}
     runs-on: ubuntu-latest
     strategy:
-      matrix: 
+      matrix:
         include: ${{ fromJson(inputs.data) }}
     env:
       ifile: ${{ matrix.file }}
@@ -46,7 +46,7 @@ jobs:
           EOF
 
           mkdir -p tmp out/{info,logs,images2,begin2,end2,reports,"${{ inputs.title }}"}
-          echo ${{ vars.PRESET }} | base64 -d > preset 
+          echo ${{ vars.PRESET }} | base64 -d > preset
           shopt -s globstar; wait; mv -n **/"$ifile" .
 
 
@@ -90,12 +90,12 @@ jobs:
 
           ffmpeg -v 24 -i "$ofile2" -frames 1 -update 1 "out/images2/$name.png"
 
-          { 
+          {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
               (.streams[0] | .width, .height, .r_frame_rate),
               (.format | .duration, .size, .bit_rate), "*", ""] | @tsv'
             ffprobe -v 24 -show_streams -show_format -of json "$ofile2" | jq -r --arg filename "$name.mkv" '[
-              (.streams[0] | .width, .height, .r_frame_rate), 
+              (.streams[0] | .width, .height, .r_frame_rate),
               (.format | .duration, .size, .bit_rate, "\"$filename\"")] | @tsv'
           } | tee "out/reports/$name.txt"
 

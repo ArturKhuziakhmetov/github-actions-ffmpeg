@@ -1,5 +1,5 @@
-# git commit -am.; git push -q; 
-# gh workflow run script.yml -F data=@- -F script=@scripts/.sh -f title=""
+# git ffmpeg-commit && git ffmpeg-push; 
+# gh ffmpeg-wrun script.yml -F data=@- -F script=@scripts/.sh -f title=""
 
 name: script
 run-name: ${{ inputs.title }}

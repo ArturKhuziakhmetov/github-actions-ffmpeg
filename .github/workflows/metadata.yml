@@ -1,4 +1,4 @@
-# git commit -am.; git push -q; gh workflow run metadata.yml -f title="$title" 
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun metadata.yml -f title="$title"
 
 run-name: ${{ inputs.title }}
 on:

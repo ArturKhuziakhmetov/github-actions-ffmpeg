@@ -1,4 +1,4 @@
-# git commit -am.; git push -q; gh workflow run ping.yml
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun ping.yml
 
 name: ping
 on:
