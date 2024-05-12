@@ -96,7 +96,7 @@ jobs:
               (.format | .duration, .size, .bit_rate), "*", ""] | @tsv'
             ffprobe -v 24 -show_streams -show_format -of json "$ofile2" | jq -r --arg filename "$name.mkv" '[
               (.streams[0] | .width, .height, .r_frame_rate), 
-              (.format | .duration, .size, .bit_rate, "\"filename\"")] | @tsv'
+              (.format | .duration, .size, .bit_rate, "\"$filename\"")] | @tsv'
           } | tee "out/reports/$name.txt"
 
 
