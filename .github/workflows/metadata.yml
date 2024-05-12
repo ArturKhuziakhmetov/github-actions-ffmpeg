@@ -11,7 +11,8 @@ on:
       t:
         default: 10
 jobs:
-  job:
+  process:
+    name: ${{ inputs.title }}
     runs-on: ubuntu-latest
     steps:
 
@@ -46,7 +47,7 @@ jobs:
           to=$(grep start silence | tail -1 | cut -c21-)
           printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          { 
+          {
             printf '%s@' $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file")
             echo
           } >> metadata
@@ -60,7 +61,8 @@ jobs:
                   - trim: *trim
                   - crop:
                       <<: *crop
-                  - fps: *fps    
+                  - fillborders: *fillborders
+                  - fps: *fps
           EOF
 
           done

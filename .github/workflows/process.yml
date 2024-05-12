@@ -1,6 +1,4 @@
-# git ffmpeg-commit && git ffmpeg-push; yq --from-file C:/msys64/home/artur/work/github-actions-ffmpeg/scripts/job.jq C:/msys64/home/artur/work/github-actions-ffmpeg/jobs/"$title".yaml -oj -I0 | gh workflow run process.yml -F data=@- -f title="$title" -f try=true -f t=10
-
-# git ffmpeg-commit && git ffmpeg-push; yq --from-file C:/msys64/home/artur/work/github-actions-ffmpeg/scripts/job.jq C:/msys64/home/artur/work/github-actions-ffmpeg/jobs/"$title".yaml -oj -I0 | gh ffmpeg-wrun process.yml -F data=@- -f title="$title"
+# git ffmpeg-commit && git ffmpeg-push; yq --from-file C:/msys64/home/artur/work/github-actions-ffmpeg/scripts/job.jq C:/msys64/home/artur/work/github-actions-ffmpeg/jobs/"$title".yaml -oj -I0 | gh ffmpeg-wrun process.yml -F data=@- -f title="$title" -f try=true -f t=10
 
 run-name: ${{ inputs.title }}
 on:
