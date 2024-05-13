@@ -1,5 +1,4 @@
-# git ffmpeg-commit && git ffmpeg-push;
-# gh ffmpeg-wrun script.yml -F data=@- -F script=@scripts/.sh -f title=""
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun script.yml -F script=@DL/script.sh -F data=@- -f title=""
 
 name: script
 run-name: ${{ inputs.title }}
@@ -10,7 +9,7 @@ on:
         type: boolean
         default: false
       data:
-        required: true
+        required: false
       script:
         required: true
       title:
