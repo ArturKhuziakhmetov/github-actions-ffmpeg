@@ -1,4 +1,4 @@
-# git commit -am.; git push -q; gh workflow run cache.yml -f test=true
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun cache.yml
 
 name: cache
 on:
