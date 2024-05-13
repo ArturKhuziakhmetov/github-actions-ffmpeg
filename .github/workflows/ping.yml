@@ -14,12 +14,11 @@ jobs:
           key: bin
           path: /home/runner/.local/bin
 
-      - name: Ping blomp
+      - name: Ping blomp + mega
         run: |
-          rclone config dump | jq ' 
-            to_entries[] | 
-            select( (.key | startswith("blomp")) and .value.type == "alias" ) | 
-            "\(.key):\(.key)" ' > args
-          xargs -a args -n1 -P10 rclone touch
-          xargs -a args -n1 -P10 rclone lsf --format pt --separator "  " | sort
-
+          rclone config dump | jq ' to_entries[] | select(
+            ( .key | startswith("blomp") ) and .value.type == "alias" or
+            ( .key | startswith("mega") )
+            ) | "\(.key):\(.key)" ' > args
+          xargs -a args -n1 -P0 rclone touch
+          xargs -a args -n1 -P0 rclone lsf --format pt --separator "  " | sort
