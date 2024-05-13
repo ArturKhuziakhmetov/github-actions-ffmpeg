@@ -1,4 +1,4 @@
-# git ffmpeg-commit && git ffmpeg-push; 
+# git ffmpeg-commit && git ffmpeg-push;
 # gh ffmpeg-wrun script.yml -F data=@- -F script=@scripts/.sh -f title=""
 
 name: script
@@ -18,14 +18,14 @@ on:
       cache:
         type: boolean
         default: true
-  
+
 jobs:
 
   script-matrix:
     if: inputs.matrix
     runs-on: ubuntu-latest
     strategy:
-      matrix: 
+      matrix:
         data: ${{ fromJson(inputs.data) }}
     env:
       data: ${{ matrix.data }}
@@ -41,6 +41,7 @@ jobs:
         run: |
           # script
           ${{ inputs.script }}
+
 
   script:
     if: !inputs.matrix

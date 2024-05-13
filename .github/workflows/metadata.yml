@@ -1,5 +1,6 @@
 # git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun metadata.yml -f title="$title"
 
+name: metadata
 run-name: ${{ inputs.title }}
 on:
   workflow_dispatch:
