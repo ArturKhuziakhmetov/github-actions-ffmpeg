@@ -1,4 +1,4 @@
-# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun script.yml -F script=@DL/script.sh -F data=@- -f title=""
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun script.yml -F script=@$DL/script.sh -F data=@- -f title=""
 
 name: script
 run-name: ${{ inputs.title }}
@@ -43,7 +43,7 @@ jobs:
 
 
   script:
-    if: !inputs.matrix
+    if: ${{ ! inputs.matrix }}
     runs-on: ubuntu-latest
     env:
       data: ${{ inputs.data }}
