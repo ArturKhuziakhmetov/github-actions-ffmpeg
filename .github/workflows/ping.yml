@@ -16,10 +16,10 @@ jobs:
 
       - name: Ping blomp + mega
         run: |
-          touch empty
+          date | tee date.txt
           rclone config dump | jq ' to_entries[] | select(
             ( .key | startswith("blomp") ) and .value.type == "alias" or
             ( .key | startswith("mega") )
             ) | "\(.key):\(.key)" ' > args
-          xargs -a args -n1 -P0 rclone copyto empty
+          xargs -a args -n1 -P0 rclone copyto date.txt
           xargs -a args -n1 -P0 rclone lsf --format pt --separator "  " | sort
