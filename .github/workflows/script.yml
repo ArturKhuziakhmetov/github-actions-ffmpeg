@@ -1,4 +1,4 @@
-# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun script.yml -F script=@$DL/script.sh -F data=@- -f title=""
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun script.yml -F script=@ -F data=@- -f title="" -f matrix=true
 
 name: script
 run-name: ${{ inputs.title }}
