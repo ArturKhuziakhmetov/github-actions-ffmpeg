@@ -40,7 +40,7 @@ jobs:
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
-          silence=$(ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null -)
+          ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null -
 
           ss=$(grep -m1 end silence | cut -c19-)
           printf -v ss %.6f ${ss:-0}
