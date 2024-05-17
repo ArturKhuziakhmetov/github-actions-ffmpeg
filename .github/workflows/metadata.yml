@@ -62,7 +62,9 @@ jobs:
                   - trim: *trim
                   - crop:
                       <<: *crop
-                  - fillborders: *fillborders
+                  - pad: *pad
+                  - fillborders:
+                      <<: *fillborders
                   - fps: *fps
           EOF
 
