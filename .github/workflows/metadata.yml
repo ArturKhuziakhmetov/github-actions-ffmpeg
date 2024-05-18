@@ -38,7 +38,8 @@ jobs:
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy out/end/"$file"
           ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 out/images/"$file".png
 
-          ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie='$file',select=gte(scene\,.5)" > out/scenes/"$file".txt
+          qfile=${file//,/\\,}; qfile=${qfile//\'/\\\\\\\'}
+          ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=$qfile,select=gte(scene\,.5)" > out/scenes/"$file".txt
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
