@@ -85,7 +85,7 @@ jobs:
           mv preset out/info
           sed 2,4d ffmpeg.log > "out/logs/$name.log"
 
-          ffmpeg -v 0 -i "$ofile2" -frames 1 -update 1 "out/images2/$name.png"
+          ffmpeg -v 24 -i "$ofile2" -frames 1 -update 1 "out/images2/$name.png" || echo "No video"
 
           {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
