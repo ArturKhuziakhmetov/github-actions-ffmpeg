@@ -23,7 +23,7 @@ jobs:
           path: /home/runner/.local/bin
 
       - name: Download
-        run: rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . --include='${{ inputs.include }}' --stats-one-line --transfers=16 -v
+        run: rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . --include='${{ inputs.include }}' --stats-one-line --transfers=16 -v --no-check-certificate
 
       - name: Process
         run: |
@@ -78,4 +78,4 @@ jobs:
           column -ts@ -N ss,to,duration,file,w,h,fps,afps -O 7,8,5,6 -R1,2,3 -E4 metadata | tee out/metadata.txt
 
       - name: Upload
-        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" --stats-one-line --no-update-modtime --transfers=16 -v
+        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" --stats-one-line --no-update-modtime --transfers=16 -v --no-check-certificate
