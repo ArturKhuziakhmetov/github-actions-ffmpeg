@@ -10,6 +10,8 @@ on:
         default: false
       data:
         required: false
+      data2:
+        required: false
       script:
         required: true
       title:
@@ -28,6 +30,7 @@ jobs:
         data: ${{ fromJson(inputs.data) }}
     env:
       data: ${{ matrix.data }}
+      data2: ${{ inputs.data2 }}
     steps:
 
       - if: inputs.cache
@@ -47,6 +50,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       data: ${{ inputs.data }}
+      data2: ${{ inputs.data2 }}
     steps:
 
       - if: inputs.cache
