@@ -89,7 +89,7 @@ jobs:
 
 
       - name: Delete old cache
-        run: gh cache delete -R ${{ github.repository }} $(gh cache list -R ${{ github.repository }} --json id,key -q '.[]|select(.key=="bin")|.id')
+        run: gh cache delete -R ${{ github.repository }} bin
 
 
       - uses: actions/cache/save@v4
