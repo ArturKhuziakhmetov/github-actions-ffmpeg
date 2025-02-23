@@ -17,6 +17,7 @@ jobs:
 
       - name: Download programs
         run: |
+          set -x
           mkdir -p $path
           cd $path
 
