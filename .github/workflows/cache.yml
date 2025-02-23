@@ -17,7 +17,7 @@ jobs:
 
       - name: Download programs
         run: |
-          mkdir $path
+          mkdir -p $path
           cd $path
 
           sudo apt install -yqq libfuse2 &> /dev/null &
