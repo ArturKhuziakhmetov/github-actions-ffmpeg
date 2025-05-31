@@ -27,6 +27,7 @@ jobs:
 
       - name: Process
         run: |
+          set -x
           shopt -s globstar
           mv -n **/${{ inputs.include }} .
           mkdir -p out/{images,begin,end,scenes}
