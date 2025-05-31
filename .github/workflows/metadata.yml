@@ -23,11 +23,10 @@ jobs:
           path: /home/runner/.local/bin
 
       - name: Download
-        run: rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . --include='${{ inputs.include }}' --stats-one-line --transfers=16 -v
+        run: rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" ./download --include='${{ inputs.include }}' --stats-one-line --transfers=16 -v
 
       - name: Process
         run: |
-          set -x
           shopt -s globstar
           mv -n **/${{ inputs.include }} .
           mkdir -p out/{images,begin,end,scenes}
