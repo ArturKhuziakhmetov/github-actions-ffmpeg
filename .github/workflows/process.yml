@@ -33,7 +33,7 @@ jobs:
 
       - name: Download
         run: |
-          rclone lsf -R "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" | grep -F "${{ matrix.file }}" | rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" . --files-from-raw=- -v &
+          rclone lsf -R "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" | grep -F "${{ matrix.file }}" | rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" ./download --files-from-raw=- -v &
 
           name=${ifile%.*}
           cat << EOF >> "$GITHUB_ENV"
