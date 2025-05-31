@@ -9,10 +9,9 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/cache/restore@v4
-        with:
-          key: bin
-          path: /home/runner/.local/bin
+      - name: Get rclone
+        run: |
+          curl -s https://downloads.rclone.org/rclone-current-linux-amd64.deb | dpkg --fsys-tarfile - | tar -x --strip=3 ./usr/bin/rclone
 
       - name: Ping blomp + mega
         run: |
