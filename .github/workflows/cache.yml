@@ -112,7 +112,7 @@ jobs:
 
   test:
     if: inputs.test
-    needs: cache
+    needs: save
     runs-on: ubuntu-latest
     steps:
 
