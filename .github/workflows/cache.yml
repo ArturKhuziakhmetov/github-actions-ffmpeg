@@ -1,17 +1,20 @@
-# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun cache.yml
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun cache.yml -f test=true
 
 name: cache
 on:
   workflow_dispatch:
     inputs:
+      delete:
+        type: boolean
+        default: true
       test:
         type: boolean
 env:
   path: /home/runner/.local/bin
   GH_TOKEN: ${{ github.token }}
-
 jobs:
-  cache:
+
+  download:
     runs-on: ubuntu-latest
     steps:
 
@@ -88,14 +91,24 @@ jobs:
           yq -V
 
 
-      # - name: Delete old cache
-      #   run: gh cache delete -R ${{ github.repository }} $(gh cache list -R ${{ github.repository }} --json id,key -q '.[]|select(.key=="bin")|.id')
+  delete:
+    if: inputs.delete
+    needs: download
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old cache
+        run: gh cache delete -R ${{ github.repository }} $(gh cache list -R ${{ github.repository }} --json id,key -q '.[]|select(.key=="bin")|.id')
 
 
-      - uses: actions/cache/save@v4
+  save:
+    needs: delete
+    runs-on: ubuntu-latest
+    steps:
+     - uses: actions/cache/save@v4
         with:
           key: bin
           path: ${{ env.path }}
+
 
   test:
     if: inputs.test
