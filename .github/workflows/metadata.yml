@@ -64,7 +64,8 @@ jobs:
               ops:
                 <<: *ops
                 vf:
-                  - trim: *trim
+                  - trim:
+                      <<: *trim
                   - crop:
                       <<: *crop
                   # - pad: *pad
