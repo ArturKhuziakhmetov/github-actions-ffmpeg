@@ -14,10 +14,18 @@ env:
   GH_TOKEN: ${{ github.token }}
 jobs:
 
-  download:
+
+  delete:
+    if: inputs.delete
     runs-on: ubuntu-latest
     steps:
+      - name: Delete old cache
+        run: gh cache delete -R ${{ github.repository }} $(gh cache list -R ${{ github.repository }} --json id,key -q '.[]|select(.key=="bin")|.id')
 
+
+  cache:
+    runs-on: ubuntu-latest
+    steps:
       - name: Download programs
         run: |
           set -x
@@ -91,19 +99,6 @@ jobs:
           yq -V
 
 
-  delete:
-    if: inputs.delete
-    needs: download
-    runs-on: ubuntu-latest
-    steps:
-      - name: Delete old cache
-        run: gh cache delete -R ${{ github.repository }} $(gh cache list -R ${{ github.repository }} --json id,key -q '.[]|select(.key=="bin")|.id')
-
-
-  save:
-    needs: delete
-    runs-on: ubuntu-latest
-    steps:
       - uses: actions/cache/save@v4
         with:
           key: bin
@@ -112,7 +107,7 @@ jobs:
 
   test:
     if: inputs.test
-    needs: save
+    needs: cache
     runs-on: ubuntu-latest
     steps:
 
