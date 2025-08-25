@@ -12,6 +12,8 @@ on:
         required: false
       data2:
         required: false
+      remote:
+        required: false
       script:
         required: true
       title:
@@ -51,6 +53,7 @@ jobs:
     env:
       data: ${{ inputs.data }}
       data2: ${{ inputs.data2 }}
+      remote: ${{ inputs.remote }}
     steps:
 
       - if: inputs.cache
