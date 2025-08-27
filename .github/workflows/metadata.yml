@@ -36,16 +36,18 @@ jobs:
 
           echo "$file"
 
-          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy out/begin/"$file"
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy out/end/"$file"
-          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 out/images/"$file".png
+          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy out/begin/"$file" &
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy out/end/"$file" &
+          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 out/images/"$file".png &
 
           qfile=${file//,/\\,}; qfile=${qfile//\'/\\\\\\\'}
-          ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=$qfile,select=gte(scene\,.5)" > out/scenes/"$file".txt
+          ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=$qfile,select=gte(scene\,.5)" > out/scenes/"$file".txt &
+
+          ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
+
+          wait
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
-
-          ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null -
 
           ss=$(grep -m1 end silence | cut -c19-)
           printf -v ss %.6f ${ss:-0}
@@ -55,7 +57,6 @@ jobs:
 
           {
             printf '%s@' $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file")
-            echo
           } >> metadata
 
           cat << EOF >> out/files.yaml
