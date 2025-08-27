@@ -57,6 +57,7 @@ jobs:
 
           {
             printf '%s@' $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file")
+            echo
           } >> metadata
 
           cat << EOF >> out/files.yaml
