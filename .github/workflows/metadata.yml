@@ -23,7 +23,7 @@ jobs:
           path: /home/runner/.local/bin
 
       - name: Download
-        run: rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" ./download --include='${{ inputs.include }}' --stats-one-line --transfers=16 -v
+        run: rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" ./download --include='${{ inputs.include }}' --stats-one-line --transfers=16 -v --inplace --local-no-preallocate --local-no-sparse --multi-thread-streams=0 --ignore-checksum --no-traverse --no-update-dir-modtime --no-update-modtime --size-only
 
       - name: Process
         run: |
