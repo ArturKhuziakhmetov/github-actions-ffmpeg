@@ -54,7 +54,7 @@ jobs:
         run: |
           file="${{ matrix.Path }}"
           echo "$file"
-          mkdir -p out/{images,begin,end,scenes,files,metadata}
+          mkdir -p out/{images,begin,end,scenes,files,metadata,crop}
 
           ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy out/begin/"$file" &
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy out/end/"$file" &

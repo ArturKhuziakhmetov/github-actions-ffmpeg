@@ -47,7 +47,8 @@ jobs:
 
           # ffmpeg
           # gh get BtbN/FFmpeg-Builds '*master*linux64-gpl.*' - | tar -xJ --strip=2 ffmpeg-master-latest-linux64-gpl/bin/{ffmpeg,ffprobe} &
-          gh get BtbN/FFmpeg-Builds '*latest-linux64-gpl-7.1.*' - | tar -xJ --strip=2 ffmpeg-n7.1-latest-linux64-gpl-7.1/bin/{ffmpeg,ffprobe} &
+          # gh get BtbN/FFmpeg-Builds '*latest-linux64-gpl-7.1.*' - | tar -xJ --strip=2 ffmpeg-n7.1-latest-linux64-gpl-7.1/bin/{ffmpeg,ffprobe} &
+          curl -sZLO "https://ffmpeg.martin-riedl.de/redirect/latest/linux/amd64/release/{ffmpeg,ffprobe}.zip" && unzip -qq \*.zip && rm *.zip &
 
           # 7z
           gh get ip7z/7zip '*linux-x64*' - | tar -xJ --xform "s/zs//" 7zzs &
