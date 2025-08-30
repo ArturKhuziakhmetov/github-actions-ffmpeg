@@ -29,7 +29,7 @@ jobs:
     steps:
       - name: Download programs
         run: |
-          set -x
+          # set -x
           mkdir -p $path
           cd $path
 
