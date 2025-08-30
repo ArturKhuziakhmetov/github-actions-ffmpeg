@@ -29,7 +29,9 @@ jobs:
 
       - name: Define matrix
         id: files
-        run: echo "files=$(rclone lsjson --recursive --files-only --no-mimetype --no-modtime --include='*.m??' "${{ inputs.input-root }}/${{ inputs.title }}")" >> "$GITHUB_OUTPUT"
+        run: |
+          json=$(rclone lsjson --recursive --files-only --no-mimetype --no-modtime --include='*.m??' "${{ inputs.input-root }}/${{ inputs.title }}")
+          echo "files=$json" >> "$GITHUB_OUTPUT"
 
   process:
     name: ${{ inputs.title }}
