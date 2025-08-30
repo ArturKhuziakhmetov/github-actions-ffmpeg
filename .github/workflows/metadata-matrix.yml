@@ -32,6 +32,7 @@ jobs:
         run: |
           json=$(rclone lsjson --recursive --files-only --no-mimetype --no-modtime --include='*.m??' "${{ inputs.input-root }}/${{ inputs.title }}")
           echo "files=$json" | tr -d '\n' >> "$GITHUB_OUTPUT"
+          echo $json
 
   process:
     name: ${{ inputs.title }}
@@ -51,7 +52,7 @@ jobs:
 
       - name: Process
         run: |
-          file=${{ matrix.Path }}
+          file="${{ matrix.Path }}"
           echo "$file"
           mkdir -p out/{images,begin,end,scenes,files,metadata}
 
