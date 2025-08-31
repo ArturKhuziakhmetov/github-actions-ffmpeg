@@ -23,6 +23,7 @@ jobs:
       - name: Define matrix
         id: matrix
         run: |
+          echo "${{ inputs.title }}"
           base64 -d <<< ${{ vars.JOB_JQ }} > job.jq
           cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
