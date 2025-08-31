@@ -20,7 +20,7 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      files: ${{ steps.files.outputs.files }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/cache/restore@v4
         with:
