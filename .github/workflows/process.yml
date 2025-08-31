@@ -9,6 +9,10 @@ on:
         required: true
       yaml:
         required: true
+      input-root:
+        default: blomp:chess-videos
+      output-root:
+        default: koofr:done
       t:
         default: 5
       try:
@@ -50,7 +54,7 @@ jobs:
 
       - name: Download
         run: |
-          rclone lsf -R "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" | grep -F "${{ matrix.file }}" | rclone copy "${{ vars.INPUT_ROOT }}/${{ inputs.title }}" ./download --files-from-raw=- -v &
+          rclone copyto "${{ inputs.input-root }}/${{ inputs.title }}/${{ matrix.path }}" "$ifile" --stats-one-line -v &
 
           name=${ifile%.*}
           cat << EOF >> "$GITHUB_ENV"
@@ -61,7 +65,7 @@ jobs:
 
           mkdir -p tmp out/{info,logs,images2,begin2,end2,reports,"${{ inputs.title }}"}
           echo ${{ vars.PRESET }} | base64 -d > preset
-          shopt -s globstar; wait; mv -n **/"$ifile" .
+          wait
 
 
       - name: Try process
@@ -71,10 +75,10 @@ jobs:
           echo "${{ matrix.ops }}"
 
           FFREPORT=file=ffmpeg.log:level=32 \
-          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "${{ matrix.file }}" \
+          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
           ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile2"
 
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -copyts -i "${{ matrix.file }}" \
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -copyts -i "$ifile" \
           ${{ matrix.ops }} -fpre preset "out/end2/$name.mkv"
 
 
@@ -88,7 +92,7 @@ jobs:
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
-          -i "${{ matrix.file }}" ${{ matrix.ops }} -fpre preset "$ofile"
+          -i "$ifile" ${{ matrix.ops }} -fpre preset "$ofile"
 
           ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv"
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv"
@@ -119,4 +123,4 @@ jobs:
 
 
       - name: Upload
-        run: rclone copy out "${{ vars.OUTPUT_ROOT }}/${{ inputs.title }}" -v --no-update-modtime --retries 10
+        run: rclone copy out "${{ inputs.output-root }}/${{ inputs.title }}" -v --no-update-modtime --retries 10
