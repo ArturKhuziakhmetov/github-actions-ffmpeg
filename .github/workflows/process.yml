@@ -24,7 +24,7 @@ jobs:
         id: matrix
         run: |
           base64 -d <<< ${{ vars.JOB_JQ }} > job.jq
-          job.yaml << "EOF"
+          cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
           matrix=$(yq --from-file job.jq -oj -I0 job.yaml)
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
@@ -113,7 +113,7 @@ jobs:
               (.filename | split("/")[-1] | @sh) )] | @tsv'
           } | tee "out/reports/$name.txt"
 
-          job.yaml << "EOF"
+          cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
 
 
