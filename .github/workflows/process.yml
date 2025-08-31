@@ -114,7 +114,7 @@ jobs:
               (.filename | split("/")[-1] | @sh) )] | @tsv'
           } | tee "out/reports/$name.txt"
 
-          cat << "EOF" > job.yaml
+          cat << "EOF" > out/job.yaml
           ${{ inputs.yaml }}EOF
 
 
