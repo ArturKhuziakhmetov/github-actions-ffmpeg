@@ -78,9 +78,6 @@ jobs:
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
           ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile2"
 
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -copyts -i "$ifile" \
-          ${{ matrix.ops }} -fpre preset "out/end2/$name.mkv"
-
 
       - name: Process
         if: ${{ ! inputs.try }}
