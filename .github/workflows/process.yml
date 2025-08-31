@@ -23,7 +23,7 @@ jobs:
       - name: Define matrix
         id: matrix
         run: |
-          echo "${{ vars.JOB_JQ }}" | base64 -d > job.jq
+          base64 -d <<< ${{ vars.JOB_JQ }} > job.jq
           matrix=$(yq --from-file job.jq -oj -I0 <<< ${{ inputs.yaml }})
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
           echo $matrix
