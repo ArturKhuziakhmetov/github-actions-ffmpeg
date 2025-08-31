@@ -153,4 +153,4 @@ jobs:
           echo ${{ vars.JOB_JQ }} | base64 -d > job.jq
 
       - name: Upload
-        run: rclone copy . "${{ inputs.output-root }}/${{ inputs.title }}" --create-empty-src-dirs --stats-one-line -v
+        run: rclone copy . "${{ inputs.output-root }}/${{ inputs.title }}" --create-empty-src-dirs --stats-one-line -v --no-update-modtime
