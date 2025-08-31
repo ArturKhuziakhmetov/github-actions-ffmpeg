@@ -30,9 +30,9 @@ jobs:
       - name: Define matrix
         id: matrix
         run: |
-          json=$(rclone lsjson --recursive --files-only --no-mimetype --no-modtime --include='*.m??' "${{ inputs.input-root }}/${{ inputs.title }}")
+          json=$(rclone lsjson -R --include=${{ inputs.include }} --files-only --no-mimetype --no-modtime "${{ inputs.input-root }}/${{ inputs.title }}")
           echo "matrix=$json" | tr -d '\n' >> "$GITHUB_OUTPUT"
-          echo $json
+          echo "$json"
 
   process:
     name: ${{ matrix.Name }}
@@ -52,16 +52,16 @@ jobs:
 
       - name: Process
         run: |
-          file="${{ matrix.Path }}"
+          file="${{ matrix.Name }}"
           echo "$file"
           mkdir -p out/{images,begin,end,scenes,files,metadata}
 
-          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy out/begin/"$file" &
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy out/end/"$file" &
-          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 out/images/"$file".png &
+          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" &
+          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png" &
 
           qfile=${file//,/\\,}; qfile=${qfile//\'/\\\\\\\'}
-          ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=$qfile,select=gte(scene\,.5)" > out/scenes/"$file".txt &
+          ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=$qfile,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
 
           ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
@@ -78,10 +78,11 @@ jobs:
           {
             printf '%s@' $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file")
             echo
-          } > out/metadata/"$file".txt
+          } > "out/metadata/$file.txt"
 
-          cat << EOF > out/files/"$file".yaml
+          cat << EOF > "out/files/$file.yaml"
             - file: "$file"
+              path: "${{ matrix.Path }}"
               duration: $duration
               ops:
                 <<: *ops
