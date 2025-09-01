@@ -70,7 +70,8 @@ jobs:
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" &
 
           ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
-          curl -qsF file=@"out/images/$file.png" http://helpman.komtera.lt/predict | jq -c ".results[0]" > "out/ocr/$file.json"
+          curl -qsF file=@"out/images/$file.png" http://helpman.komtera.lt/predict
+          curl -qsF file=@"out/images/$file.png" http://helpman.komtera.lt/predict | jq -c ".results[0]" > "out/ocr/$file.png.json"
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
