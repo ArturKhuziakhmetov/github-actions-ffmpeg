@@ -30,7 +30,9 @@ jobs:
       - name: Define matrix
         id: matrix
         run: |
-          json=$(rclone lsjson -R --include=${{ inputs.include }} --files-only --no-mimetype --no-modtime "${{ inputs.input-root }}/${{ inputs.title }}")
+          json=$(rclone lsjson -R --include=${{ inputs.include }} \
+          --files-only --no-mimetype --no-modtime \
+          "${{ inputs.input-root }}/${{ inputs.title }}")
           echo "matrix=$json" | tr -d '\n' >> "$GITHUB_OUTPUT"
           echo "$json"
 
@@ -48,26 +50,31 @@ jobs:
           path: /home/runner/.local/bin
 
       - name: Download
-        run: rclone copyto "${{ inputs.input-root }}/${{ inputs.title }}/${{ matrix.Path }}" "${{ matrix.Name }}" --stats-one-line -v
+        run: |
+          rclone copyto "${{ inputs.input-root }}/${{ inputs.title }}/${{ matrix.Path }}" \
+          "${{ matrix.Name }}" --stats-one-line -v
 
       - name: Process
         run: |
           file="${{ matrix.Name }}"
           echo "$file"
-          mkdir -p out/{images,begin,end,scenes,files,metadata}
+          mkdir -p out/{images,begin,end,scenes,files,metadata,ocr}
 
-          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" &
-          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png" &
-
-          qfile=${file//,/\\,}; qfile=${qfile//\'/\\\\\\\'}
+          qfile=${file//,/\\,}
+          qfile=${qfile//\'/\\\\\\\'}
           ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=$qfile,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
 
           ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
-          wait
+          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" &
+
+          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
+          curl -qsF file=@"out/images/$file.png" http://helpman.komtera.lt/predict | jq -c ".results[0]" > "out/ocr/$file.json"
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
+
+          wait
 
           ss=$(grep -m1 end silence | cut -c19-)
           printf -v ss %.6f ${ss:-0}
@@ -75,10 +82,7 @@ jobs:
           to=$(grep start silence | tail -1 | cut -c21-)
           printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          {
-            printf '%s@' $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file")
-            echo
-          } > "out/metadata/$file.txt"
+          { printf '%s@' $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file"); echo; } > "out/metadata/$file.txt"
 
           cat << EOF > "out/files/$file.yaml"
             - file: "$file"

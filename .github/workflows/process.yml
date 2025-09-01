@@ -59,11 +59,10 @@ jobs:
           name=${ifile%.*}
           cat << EOF >> "$GITHUB_ENV"
           name=$name
-          ofile=tmp/$name.mkv
-          ofile2=out/${{ inputs.try && 'begin2' || inputs.title }}/$name.mkv
+          ofile=out/${{ inputs.try && 'begin2' || inputs.title }}/$name.mkv
           EOF
 
-          mkdir -p tmp out/{info,logs,images2,begin2,end2,reports,"${{ inputs.title }}"}
+          mkdir -p out/{info,logs,images2,begin2,end2,reports,"${{ inputs.title }}"}
           echo ${{ vars.PRESET }} | base64 -d > preset
           wait
 
@@ -76,7 +75,7 @@ jobs:
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
-          ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile2"
+          ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile"
 
 
       - name: Process
@@ -91,11 +90,12 @@ jobs:
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
           -i "$ifile" ${{ matrix.ops }} -fpre preset "$ofile"
 
-          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv"
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv"
+          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" &
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" &
 
           wait
-          mkvmerge "$ofile" -o "$ofile2"
+          mkvmerge "$ofile" -o "$ofile"~
+          mv "$ofile"~ "$ofile"
 
 
       - name: Report
@@ -103,13 +103,13 @@ jobs:
           mv preset out/info
           sed 2,4d ffmpeg.log > "out/logs/$name.log"
 
-          ffmpeg -v 24 -i "$ofile2" -frames 1 -update 1 "out/images2/$name.png" || echo "No video"
+          ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png" || echo "No video"
 
           {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
               (.streams[0] | .width, .height, .r_frame_rate),
               (.format | .duration, .size, .bit_rate), "*", ""] | @tsv'
-            ffprobe -v 24 -show_streams -show_format -of json "$ofile2" | jq -r '[
+            ffprobe -v 24 -show_streams -show_format -of json "$ofile" | jq -r '[
               (.streams[0] | .width, .height, .r_frame_rate),
               (.format | .duration, .size, .bit_rate,
               (.filename | split("/")[-1] | @sh) )] | @tsv'
