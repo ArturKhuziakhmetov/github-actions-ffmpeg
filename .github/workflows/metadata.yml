@@ -96,10 +96,10 @@ jobs:
               path: "${{ matrix.Path }}"
               duration: $duration
               ops:
-                !!merge <<: *ops
+                <<: *ops
                 vf:
                   - trim:
-                      !!merge <<: *trim
+                      <<: *trim
                   - crop:
                       h: ow
                       w: $w
