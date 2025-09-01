@@ -57,7 +57,6 @@ jobs:
       - name: Process
         run: |
           file="${{ matrix.Name }}"
-          echo "$file"
           mkdir -p out/{images,begin,end,scenes,files,metadata,ocr}
 
           qfile=${file//,/\\,}
@@ -70,7 +69,10 @@ jobs:
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" &
 
           ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
-          curl -qsF file=@"out/images/$file.png" http://helpman.komtera.lt/predict | jq -c '.results[0]' > "out/ocr/$file.png.json"
+          curl -qsF file=@"out/images/$file.png" http://helpman.komtera.lt/predict | jq -c '.results[0]' | tee "out/ocr/$file.png.json"
+          w=$(ffprobe -v 24 -show_entries stream=width -of csv=p=0 "$file")
+          h=$(ffprobe -v 24 -show_entries stream=height -of csv=p=0 "$file")
+          read w x y <<< $(jq -r --argjson w $w --argjson h $h '([$w * .width, $h * .height] | max / 8 + 1 | floor * 8) as $d | [$d, (([$w * .xc, $h * .yc][] - $d / 2) / 2 | round * 2)] | @sh' "out/ocr/$file.png.json")
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
@@ -82,20 +84,22 @@ jobs:
           to=$(grep start silence | tail -1 | cut -c21-)
           printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          { printf '%s@' $ss $to $duration "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file"); echo; } > "out/metadata/$file.txt"
+          { printf '%s@' $ss $to $duration $w $x $y "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file"); echo; } | tee "out/metadata/$file.txt"
 
           cat << EOF > "out/files/$file.yaml"
             - file: "$file"
               path: "${{ matrix.Path }}"
               duration: $duration
               ops:
-                <<: *ops
+                !!merge <<: *ops
                 vf:
                   - trim:
-                      <<: *trim
+                      !!merge <<: *trim
                   - crop:
-                      <<: *crop
-                  # - pad: *pad
+                      h: ow
+                      w: $w
+                      x: $x
+                      y: $y
                   # - fillborders:
                       # <<: *fillborders
                   - fps: *fps
@@ -129,12 +133,6 @@ jobs:
           trim: &trim
             start:
             end:
-          crop: &crop
-            w:
-            h: ow
-            x:
-            y:
-            exact: 1
           fillborders: &fillborders
             left:
             right:
@@ -151,7 +149,7 @@ jobs:
 
           cat files/* >> job.yaml
 
-          cat metadata/* | column -tc0 -s@ -Nss,to,duration,file,w,h,fps,afps -O7,8,5,6 -R1-3 | tee metadata.txt
+          cat metadata/* | column -tc0 -s@ -Nss,to,duration,ow,x,y,file,w,h,fps,afps -O10,11,8,9 -R1-6 | tee metadata.txt
 
           mkdir crop
           echo ${{ vars.JOB_JQ }} | base64 -d > job.jq
