@@ -69,10 +69,18 @@ jobs:
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" &
 
           ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
+
+          while : ; do
           curl -qsF file=@"out/images/$file.png" http://helpman.komtera.lt/predict | jq -c '.results[0]' | tee "out/ocr/$file.png.json"
+          [[ -s "out/ocr/$file.png.json" ]] && break
+          sleep 1
+          done
+
           w=$(ffprobe -v 24 -show_entries stream=width -of csv=p=0 "$file")
           h=$(ffprobe -v 24 -show_entries stream=height -of csv=p=0 "$file")
+
           read w x y <<< $(jq -r --argjson w $w --argjson h $h '([$w * .width, $h * .height] | max / 8 + 1 | floor * 8) as $d | [$d, (([$w * .xc, $h * .yc][] - $d / 2) / 2 | round * 2)] | @sh' "out/ocr/$file.png.json")
+          echo $w $x $y
 
           duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
 
