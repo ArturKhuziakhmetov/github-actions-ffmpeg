@@ -54,7 +54,6 @@ jobs:
 
       - name: Process
         run: |
-          set -x
           file="${{ matrix.Name }}"
           mkdir -p out/{images,begin,end,scenes,files,metadata,ocr}
 
@@ -70,7 +69,7 @@ jobs:
 
           link "out/images/$file.png" f.png
 
-          curl -sF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]|del(.fen)' | tee "out/ocr/$file.png.json" f.json
+          curl -sF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]' | tee "out/ocr/$file.png.json" f.json
 
           source <(ffprobe -v 24 "$file" -of json -show_streams | yq -os '.streams[0]')
 
