@@ -30,9 +30,7 @@ jobs:
       - name: Define matrix
         id: matrix
         run: |
-          json=$(rclone lsjson -R --include=${{ inputs.include }} \
-          --files-only --no-mimetype --no-modtime \
-          "${{ inputs.input-root }}/${{ inputs.title }}")
+          json=$(rclone lsjson -R --include=${{ inputs.include }} --files-only --no-mimetype --no-modtime "${{ inputs.input-root }}/${{ inputs.title }}")
           echo "matrix=$json" | tr -d '\n' >> "$GITHUB_OUTPUT"
           echo "$json"
 
@@ -59,9 +57,8 @@ jobs:
           file="${{ matrix.Name }}"
           mkdir -p out/{images,begin,end,scenes,files,metadata,ocr}
 
-          qfile=${file//,/\\,}
-          qfile=${qfile//\'/\\\\\\\'}
-          ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=$qfile,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
+          link "$file" f
+          ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
 
           ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
@@ -69,19 +66,19 @@ jobs:
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" &
 
           ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
-          cp "out/images/$file.png" f.png
 
-          curl -qsF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]' | tee "out/ocr/$file.png.json"
+          link "out/images/$file.png" f.png
 
-          w=$(ffprobe -v 24 -show_entries stream=width -of csv=p=0 "$file")
-          h=$(ffprobe -v 24 -show_entries stream=height -of csv=p=0 "$file")
+          curl -sF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]|del(.fen)' | tee "out/ocr/$file.png.json" f.json
 
-          read w x y <<< $(jq -r --argjson w $w --argjson h $h '([$w * .width, $h * .height] | max / 8 + 1 | floor * 8) as $d | [$d, (([$w * .xc, $h * .yc][] - $d / 2) / 2 | round * 2)] | @sh' "out/ocr/$file.png.json")
+          source <(ffprobe -v 24 "$file" -of json -show_streams | yq -os '.streams[0]')
+
+          read w x y < <(jq -r --argjson w $width --argjson h $height '([$w * .width, $h * .height] | max / 8 + 1 | floor * 8) as $d | [$d, (([$w * .xc, $h * .yc][] - $d / 2) / 2 | round * 2)] | @sh' f.json)
           echo $w $x $y
 
-          duration=$(ffprobe -v 24 -show_entries format=duration -of csv=p=0 "$file")
-
           wait
+
+          [[ -s "out/scenes/$file.txt" ]] && scene=x || rm "out/scenes/$file.txt"
 
           ss=$(grep -m1 end silence | cut -c19-)
           printf -v ss %.6f ${ss:-0}
@@ -89,7 +86,7 @@ jobs:
           to=$(grep start silence | tail -1 | cut -c21-)
           printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          { printf '%s@' $ss $to $duration $w $x $y "$file" $(ffprobe -v 24 -select_streams v -show_entries stream=width,height,r_frame_rate,avg_frame_rate -of csv=p=0:s=@ "$file"); echo; } | tee "out/metadata/$file.txt"
+          { printf '%s@' $r_frame_rate $avg_frame_rate $width $height $ss $to $duration $scene $w $x $y "$file"; echo; } | tee "out/metadata/$file.txt"
 
           cat << EOF > "out/files/$file.yaml"
             - file: "$file"
@@ -123,7 +120,7 @@ jobs:
           path: /home/runner/.local/bin
 
       - name: Download
-        run: rclone copy "${{ inputs.output-root }}/${{ inputs.title }}" . --include={files,metadata}/\* --stats-one-line -v
+        run: rclone copy "${{ inputs.output-root }}/${{ inputs.title }}" . --include={files,metadata,scenes}/\* --stats-one-line -v
 
       - name: Process
         run: |
@@ -133,7 +130,6 @@ jobs:
             ss:
             to:
             vf:
-            crf: 48
             ac: 1
           trim: &trim
             start:
@@ -154,7 +150,16 @@ jobs:
 
           cat files/* >> job.yaml
 
-          cat metadata/* | column -tc0 -s@ -Nss,to,duration,ow,x,y,file,w,h,fps,afps -O10,11,8,9 -R1-6 | tee metadata.txt
+          {
+            echo
+            cat metadata/* | column -tc0 -s@ -Nfps,afps,w,h,ss,to,duration,scene,ow,x,y,file, -R3-11
+
+            rclone size --include=${{ inputs.include }} --files-only --no-mimetype --no-modtime "${{ inputs.input-root }}/${{ inputs.title }}"
+
+            printf "Metadata: $(yq '.files|length' job.yaml)"
+            echo "Scenes: $(ls -1 scenes | wc -l)"
+
+          } | tee metadata.txt
 
           mkdir crop
           echo ${{ vars.JOB_JQ }} | base64 -d > job.jq
