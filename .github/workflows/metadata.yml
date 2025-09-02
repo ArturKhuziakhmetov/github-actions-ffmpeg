@@ -54,6 +54,7 @@ jobs:
 
       - name: Process
         run: |
+          set -x
           file="${{ matrix.Name }}"
           mkdir -p out/{images,begin,end,scenes,files,metadata,ocr}
 
