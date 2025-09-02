@@ -124,6 +124,9 @@ jobs:
 
       - name: Process
         run: |
+          mkdir crop scenes
+          echo ${{ vars.JOB_JQ }} | base64 -d > job.jq
+
           cat << EOF > job.yaml
           title: ${{ inputs.title }}
           ops: &ops
@@ -157,9 +160,6 @@ jobs:
             echo "Metadata: $(yq '.files|length' job.yaml)"
             echo "Scenes: $(ls -1 scenes | wc -l)"
           } | tee metadata.txt
-
-          mkdir crop
-          echo ${{ vars.JOB_JQ }} | base64 -d > job.jq
 
       - name: Upload
         run: rclone copy . "${{ inputs.output-root }}/${{ inputs.title }}" --create-empty-src-dirs --stats-one-line -v --no-update-modtime
