@@ -78,7 +78,7 @@ jobs:
 
           wait
 
-          [[ -s "out/scenes/$file.txt" ]] && scene=x || rm "out/scenes/$file.txt"
+          [[ -s "out/scenes/$file.txt" ]] || rm "out/scenes/$file.txt"
 
           ss=$(grep -m1 end silence | cut -c19-)
           printf -v ss %.6f ${ss:-0}
@@ -86,7 +86,7 @@ jobs:
           to=$(grep start silence | tail -1 | cut -c21-)
           printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          { printf '%s@' $r_frame_rate $avg_frame_rate $width $height $ss $to $duration $scene $w $x $y "$file"; echo; } | tee "out/metadata/$file.txt"
+          echo $r_frame_rate@$avg_frame_rate@$width@$height@$ss@$to@$duration@$w@$x@$y@"$file" | tee "out/metadata/$file.txt"
 
           cat << EOF > "out/files/$file.yaml"
             - file: "$file"
@@ -151,14 +151,11 @@ jobs:
           cat files/* >> job.yaml
 
           {
+            cat metadata/* | column -tc0 -s@ -Nfps,afps,w,h,ss,to,duration,ow,x,y,file, -R3-10
             echo
-            cat metadata/* | column -tc0 -s@ -Nfps,afps,w,h,ss,to,duration,scene,ow,x,y,file, -R3-11
-
-            rclone size --include=${{ inputs.include }} --files-only --no-mimetype --no-modtime "${{ inputs.input-root }}/${{ inputs.title }}"
-
-            printf "Metadata: $(yq '.files|length' job.yaml)"
+            rclone size --include=${{ inputs.include }} "${{ inputs.input-root }}/${{ inputs.title }}"
+            echo "Metadata: $(yq '.files|length' job.yaml)"
             echo "Scenes: $(ls -1 scenes | wc -l)"
-
           } | tee metadata.txt
 
           mkdir crop
