@@ -70,7 +70,7 @@ jobs:
 
           link "out/images/$file.png" f.png
 
-          curl -sF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]' | tee "out/ocr/$file.png.json" f.json
+          until curl -sF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]' > >(tee "out/ocr/$file.png.json" f.json); do sleep 1; done
 
           source <(ffprobe -v 24 "$file" -of json -show_streams | yq -os '.streams[0]')
 
