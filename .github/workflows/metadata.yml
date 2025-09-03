@@ -125,7 +125,7 @@ jobs:
 
       - name: Process
         run: |
-          mkdir crop scenes
+          mkdir -p crop scenes
           echo ${{ vars.JOB_JQ }} | base64 -d > job.jq
 
           cat << EOF > job.yaml
