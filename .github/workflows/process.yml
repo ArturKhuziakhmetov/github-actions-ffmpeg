@@ -28,8 +28,10 @@ jobs:
         id: matrix
         run: |
           echo "${{ inputs.title }}"
-          yq "$(base64 -d <<< ${{ vars.JOB_JQ }})" <<< "${{ inputs.yaml }}" | tee y
-          { printf "data="; yq 'sort_by(.duration)|reverse' -j -I0 y; } >> $GITHUB_OUTPUT
+          cat << "EOF" > job.yaml
+          ${{ inputs.yaml }}EOF
+          yq "$(base64 -d <<< ${{ vars.JOB_JQ }})" job.yaml | tee y
+          { printf "data="; yq 'sort_by(.duration)|reverse' -oj -I0 y; } >> $GITHUB_OUTPUT
 
   process:
     name: ${{ matrix.file }}
