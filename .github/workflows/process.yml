@@ -22,18 +22,14 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.matrix.outputs.matrix }}
+      matrix: ${{ steps.matrix.outputs.data }}
     steps:
       - name: Define matrix
         id: matrix
         run: |
           echo "${{ inputs.title }}"
-          base64 -d <<< ${{ vars.JOB_JQ }} > job.jq
-          cat << "EOF" > job.yaml
-          ${{ inputs.yaml }}EOF
-          matrix=$(yq --from-file job.jq -oj -I0 job.yaml)
-          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-          echo $matrix
+          yq "$(base64 -d <<< ${{ vars.JOB_JQ }})" <<< "${{ inputs.yaml }}" | tee y
+          { printf "data="; yq 'sort_by(.duration)|reverse' -j -I0 y; } >> $GITHUB_OUTPUT
 
   process:
     name: ${{ matrix.file }}
@@ -41,7 +37,7 @@ jobs:
     needs: prepare
     strategy:
       matrix:
-        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
+        include: ${{ fromJson(needs.prepare.outputs.data) }}
     env:
       ifile: ${{ matrix.file }}
 
