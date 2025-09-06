@@ -57,7 +57,9 @@ jobs:
         run: |
           file="${{ matrix.Path }}"
           mkdir -p out/{begin,end,files,images,images1,metadata,ocr,scenes}/"$(dirname "$file")"
-          alias tm="env time -f '\"%C\": %es'"
+
+          shopt -s expand_aliases
+          alias tm="\time -f '\"%C\": %es'"
 
           link "$file" f
           tm ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
