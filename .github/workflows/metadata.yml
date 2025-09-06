@@ -56,6 +56,7 @@ jobs:
       - name: Process
         run: |
           file="${{ matrix.Path }}"
+
           mkdir -p out/{begin,end,files,images,images1,metadata,ocr,scenes}/"$(dirname "$file")"
 
           shopt -s expand_aliases
@@ -123,7 +124,7 @@ jobs:
           path: /home/runner/.local/bin
 
       - name: Download
-        run: rclone copy "$odir" . --include={files,metadata,scenes}/\* --stats-one-line -v
+        run: rclone copy "$odir" . --include="{files,metadata,scenes}/**" --stats-one-line -v
 
       - name: Process
         run: |
