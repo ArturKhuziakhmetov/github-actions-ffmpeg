@@ -15,6 +15,8 @@ on:
         default: \*.{mkv,mp4}
       t:
         default: 20
+      scenes:
+        default: false
 env:
   idir: ${{ inputs.iroot }}/${{ inputs.title }}
   odir: ${{ inputs.oroot }}/${{ inputs.title }}
@@ -63,7 +65,8 @@ jobs:
           alias tm="\time -f '\"%C\": %es'"
 
           link "$file" f
-          tm ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
+
+          ${{ inputs.scenes && '' || '# '}}tm ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
 
           tm ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
