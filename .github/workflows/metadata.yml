@@ -56,18 +56,18 @@ jobs:
       - name: Process
         run: |
           file="${{ matrix.Path }}"
-          mkdir -p out/{begin,end,files,images,images1,metadata,ocr,scenes}
-          alias time="\time -f '\"%C\": %es'"
+          mkdir -p out/{begin,end,files,images,images1,metadata,ocr,scenes}/"$(dirname "$file")"
+          alias tm="env time -f '\"%C\": %es'"
 
           link "$file" f
-          time ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
+          tm ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
 
-          time ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
+          tm ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
-          time ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
-          time ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images1/$file.png" &
+          tm ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
+          tm ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images1/$file.png" &
 
-          time ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
+          tm ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
 
           link "out/images/$file.png" f.png
 
