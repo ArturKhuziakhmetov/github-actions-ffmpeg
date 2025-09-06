@@ -86,7 +86,7 @@ jobs:
 
           wait
 
-          [[ -s "out/scenes/$file.txt" ]] || rm "out/scenes/$file.txt"
+          [[ -s "out/scenes/$file.txt" ]] || rm -f "out/scenes/$file.txt"
 
           ss=$(grep -m1 end silence | cut -c19-)
           printf -v ss %.6f ${ss:-0}
