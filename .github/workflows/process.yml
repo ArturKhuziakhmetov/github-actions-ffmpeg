@@ -28,7 +28,8 @@ jobs:
         id: matrix
         run: |
           echo "${{ inputs.title }}"
-          yq "$(base64 -d <<< ${{ vars.JOB_JQ }})" << "EOF" | tee y
+          yq --yaml-fix-merge-anchor-to-spec=true \
+          "$(base64 -d <<< ${{ vars.JOB_JQ }})" << "EOF" | tee y
           ${{ inputs.yaml }}EOF
           { printf "data="; yq 'sort_by(.duration)|reverse' -oj -I0 y; } >> $GITHUB_OUTPUT
 

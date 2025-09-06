@@ -34,11 +34,11 @@ jobs:
       - name: Define matrix
         id: matrix
         run: |
-          rclone lsjson -R --include=${{ inputs.include }} --files-only --no-mimetype --no-modtime "$idir" | jq 'map({Path,Name,Size})' | tee j
+          rclone lsjson -R --include=${{ inputs.include }} --files-only --no-mimetype --no-modtime "$idir" | jq 'map({Path,Size})' | tee j
           { printf "data="; jq -c 'sort_by(.Size)|reverse' j; } >> $GITHUB_OUTPUT
 
   process:
-    name: ${{ matrix.Name }}
+    name: ${{ matrix.Path }}
     runs-on: ubuntu-latest
     needs: setup
     strategy:
@@ -51,22 +51,23 @@ jobs:
           path: /home/runner/.local/bin
 
       - name: Download
-        run: rclone copyto "$idir/${{ matrix.Path }}" "${{ matrix.Name }}" --stats-one-line -v
+        run: rclone copyto "$idir/${{ matrix.Path }}" "${{ matrix.Path }}" --stats-one-line -v
 
       - name: Process
         run: |
-          file="${{ matrix.Name }}"
-          mkdir -p out/{images,begin,end,scenes,files,metadata,ocr}
+          file="${{ matrix.Path }}"
+          mkdir -p out/{begin,end,files,images,images1,metadata,ocr,scenes}
+          alias time="\time -f '\"%C\": %es'"
 
           link "$file" f
-          ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
+          time ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
 
-          ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
+          time ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
-          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" &
+          time ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
+          time ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images1/$file.png" &
 
-          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
+          time ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
 
           link "out/images/$file.png" f.png
 
@@ -91,7 +92,6 @@ jobs:
 
           cat << EOF > "out/files/$file.yaml"
             - file: "$file"
-              path: "${{ matrix.Path }}"
               duration: $duration
               ops:
                 <<: *ops
@@ -152,10 +152,10 @@ jobs:
           files:
           EOF
 
-          cat files/* >> job.yaml
+          find files -type f -print0 | sort -zV | xargs -0 cat >> job.yaml
 
           {
-          cat metadata/* | column -tc0 -Nfps,afps,w,h,ss,to,duration,ow,x,y,file -R3-10 -l11
+          find metadata -type f -print0 | sort -zV | xargs -0 cat | column -tc0 -R3-10 -l11 -Nfps,afps,w,h,ss,to,duration,ow,x,y,file
           echo
           rclone size --include=${{ inputs.include }} "$idir"
           echo "Metadata: $(yq '.files|length' job.yaml)"
