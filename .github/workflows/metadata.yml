@@ -61,19 +61,16 @@ jobs:
 
           mkdir -p out/{begin,crop,end,files,images,images1,metadata,ocr,scenes}/"$(dirname "$file")"
 
-          shopt -s expand_aliases
-          alias tm="\time -f '\"%C\": %es'"
-
           link "$file" f
 
-          ${{ inputs.scenes && '' || '# '}}tm ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
+          ${{ inputs.scenes && '' || '# '}}ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
 
-          tm ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
+          ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
-          tm ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
-          tm ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images1/$file.png" &
+          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images1/$file.png" &
 
-          tm ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
+          ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
 
           link "out/images/$file.png" f.png
 
@@ -97,21 +94,21 @@ jobs:
           echo "$r_frame_rate $avg_frame_rate $width $height $ss $to $duration $w $x $y $file" | tee "out/metadata/$file.txt"
 
           cat << EOF > "out/files/$file.yaml"
-            - file: "$file"
-              duration: $duration
-              ops:
-                <<: *ops
-                vf:
-                  - trim: *trim
-                  - crop:
-                      x: $x
-                      y: $y
-                      w: $w
-                      h: $w
-                  - drawbox:
-                      t: 0
-                      c:
-                  - fps: *fps
+          - file: "$file"
+            duration: $duration
+            ops:
+              <<: *ops
+              vf:
+                - trim: *trim
+                - crop:
+                    x: $x
+                    y: $y
+                    w: $w
+                    h: $w
+                - drawbox:
+                    t: 0
+                    c:
+                - fps: *fps
           EOF
 
       - name: Upload

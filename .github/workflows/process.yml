@@ -81,15 +81,12 @@ jobs:
           cat preset
           echo "${{ matrix.ops }}"
 
-          shopt -s expand_aliases
-          alias tm="\time -f '\"%C\": %es'"
-
-          tm FFREPORT=file=ffmpeg.log:level=32 \
+          FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
           -i "$ifile" ${{ matrix.ops }} -fpre preset "$ofile"
 
-          tm ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" &
-          tm ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" &
+          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" &
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" &
 
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
