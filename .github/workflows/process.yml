@@ -81,6 +81,8 @@ jobs:
           cat preset
           echo "${{ matrix.ops }}"
 
+          ls -l
+
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
           -i "$ifile" ${{ matrix.ops }} -fpre preset "$ofile"
