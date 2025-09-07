@@ -51,7 +51,7 @@ jobs:
 
       - name: Download
         run: |
-          rclone copyto "${{ inputs.input-root }}/${{ inputs.title }}/${{ matrix.path }}" "$ifile" --stats-one-line -v &
+          rclone copyto "${{ inputs.input-root }}/${{ inputs.title }}/${{ matrix.file }}" "$ifile" --stats-one-line -v &
 
           name=${ifile%.*}
           cat << EOF >> "$GITHUB_ENV"
@@ -81,7 +81,6 @@ jobs:
           cat preset
           echo "${{ matrix.ops }}"
 
-          ls -l
           tree
 
           FFREPORT=file=ffmpeg.log:level=32 \
