@@ -59,7 +59,7 @@ jobs:
         run: |
           file="${{ matrix.Path }}"
 
-          mkdir -p out/{begin,end,files,images,images1,metadata,ocr,scenes}/"$(dirname "$file")"
+          mkdir -p out/{begin,crop,end,files,images,images1,metadata,ocr,scenes}/"$(dirname "$file")"
 
           shopt -s expand_aliases
           alias tm="\time -f '\"%C\": %es'"
@@ -115,7 +115,7 @@ jobs:
           EOF
 
       - name: Upload
-        run: rclone copy out "$odir" --stats-one-line --no-update-modtime -v
+        run: rclone copy out "$odir" --create-empty-src-dirs --stats-one-line --no-update-modtime -v
 
   complete:
     runs-on: ubuntu-latest
@@ -131,9 +131,6 @@ jobs:
 
       - name: Process
         run: |
-          mkdir -p crop scenes
-          echo ${{ vars.JOB_JQ }} | base64 -d > job.jq
-
           cat << EOF > job.yaml
           title: ${{ inputs.title }}
           ops: &ops
@@ -152,6 +149,7 @@ jobs:
 
           find files -type f -print0 | sort -zV | xargs -0 cat >> job.yaml
           cp job.yaml job-orig.yaml
+          echo ${{ vars.JOB_JQ }} | base64 -d > job.jq
 
           {
           find metadata -type f -print0 | sort -zV | xargs -0 cat | column -tc0 -R3-10 -l11 -Nfps,afps,w,h,ss,to,duration,ow,x,y,file
@@ -162,4 +160,4 @@ jobs:
           } | tee metadata.txt
 
       - name: Upload
-        run: rclone copy . "$odir" --create-empty-src-dirs --stats-one-line -v --no-update-modtime
+        run: rclone copy . "$odir" --stats-one-line -v --no-update-modtime
