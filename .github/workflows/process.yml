@@ -59,7 +59,7 @@ jobs:
           ofile=out/${{ inputs.try && 'begin2' || inputs.title }}/$name.mkv
           EOF
 
-          mkdir -p out/{info,logs,images2,begin2,end2,reports,"${{ inputs.title }}"}
+          mkdir -p out/{info,logs,images2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
           echo ${{ vars.PRESET }} | base64 -d > preset
           wait
 
@@ -76,12 +76,11 @@ jobs:
       - name: Process
         if: ${{ ! inputs.try }}
         run: |
+          tree
           sudo apt install -yqq libfuse2 &> /dev/null &
 
           cat preset
           echo "${{ matrix.ops }}"
-
-          tree
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
