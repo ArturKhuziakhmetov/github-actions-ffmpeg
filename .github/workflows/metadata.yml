@@ -102,15 +102,15 @@ jobs:
               ops:
                 <<: *ops
                 vf:
-                  - trim:
-                      <<: *trim
+                  - trim: *trim
                   - crop:
-                      h: ow
-                      w: $w
                       x: $x
                       y: $y
-                  # - fillborders:
-                      # <<: *fillborders
+                      w: $w
+                      h: $w
+                  - drawbox:
+                      t: 0
+                      c:
                   - fps: *fps
           EOF
 
@@ -139,18 +139,10 @@ jobs:
           ops: &ops
             ss:
             to:
-            vf:
             ac: 1
           trim: &trim
             start:
             end:
-          fillborders: &fillborders
-            left:
-            right:
-            top:
-            bottom:
-            mode: fixed
-            color: Silver
           fps: &fps
             fps: source_fps
             start_time: 0
@@ -159,6 +151,7 @@ jobs:
           EOF
 
           find files -type f -print0 | sort -zV | xargs -0 cat >> job.yaml
+          cp job.yaml job-orig.yaml
 
           {
           find metadata -type f -print0 | sort -zV | xargs -0 cat | column -tc0 -R3-10 -l11 -Nfps,afps,w,h,ss,to,duration,ow,x,y,file
