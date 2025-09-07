@@ -82,6 +82,7 @@ jobs:
           echo "${{ matrix.ops }}"
 
           ls -l
+          tree
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark \
