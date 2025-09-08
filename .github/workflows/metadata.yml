@@ -63,7 +63,7 @@ jobs:
 
           link "$file" f
 
-          ${{ inputs.scenes && '' || '# '}}ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
+          ${{ inputs.scenes || '#'}}ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
 
           ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
@@ -74,7 +74,7 @@ jobs:
 
           link "out/images/$file.png" f.png
 
-          until curl -sF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]' > >(tee "out/ocr/$file.png.json" f.json); do sleep 1; done
+          until curl -sF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]|del(.fen)' > >(tee "out/ocr/$file.png.json" f.json); do sleep 1; done
 
           source <(ffprobe -v 24 "$file" -of json -show_streams | yq -os '.streams[0]')
 
@@ -96,8 +96,11 @@ jobs:
           cat << EOF > "out/files/$file.yaml"
           - file: "$file"
             duration: $duration
+            s_ss: $ss
+            s_to: $to
             ops:
-              <<: *ops
+              ss:
+              to:
               vf:
                 - trim: *trim
                 - crop:
@@ -105,10 +108,9 @@ jobs:
                     y: $y
                     w: $w
                     h: $w
-                - drawbox:
-                    t: 0
-                    c:
+                - fillborders:
                 - fps: *fps
+              ac: 1
           EOF
 
       - name: Upload
@@ -130,10 +132,6 @@ jobs:
         run: |
           cat << EOF > job.yaml
           title: ${{ inputs.title }}
-          ops: &ops
-            ss:
-            to:
-            ac: 1
           trim: &trim
             start:
             end:
