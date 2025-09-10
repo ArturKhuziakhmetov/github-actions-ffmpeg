@@ -84,7 +84,7 @@ jobs:
           wait
 
           [[ -s "out/scenes/$file.txt" ]] || rm -f "out/scenes/$file.txt"
-          cat silence | tee "out/silence/$file.txt"
+          cp silence "out/silence/$file.txt"
 
           # ss=$(grep -m1 end silence | cut -c19-)
           # printf -v ss %.6f ${ss:-0}
@@ -93,13 +93,14 @@ jobs:
 
           ss=$(grep -A2 =0$ silence | tail -1 | cut -c19-)
           to=$(tail -1 silence | grep start | cut -c21-)
+          tor=$(bc <<< ${to:-$duration}-$duration)
 
-          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:--} ${to:--} $duration $w $x $y $file" | tee "out/metadata/$file.txt"
+          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:-0} $tor $duration $w $x $y $file" | tee "out/metadata/$file.txt"
 
           cat << EOF | tee "out/files/$file.yaml"
           - file: "$file"
             duration: $duration
-            tor: $(bc <<< ${to:-$duration}-$duration)
+            tor: $tor
             apad: *apad
             ops:
               ss: $ss
@@ -155,7 +156,7 @@ jobs:
           echo
           rclone size --include=${{ inputs.include }} "$idir"
           echo "Metadata: $(yq '.files|length' job.yaml)"
-          echo "Scenes: $(ls -1 scenes | wc -l)"
+          echo "Scenes: $({{ inputs.scenes }} && ls -1 scenes | wc -l || echo '?')"
           } | tee metadata.txt
 
       - name: Upload
