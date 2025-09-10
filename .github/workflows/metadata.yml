@@ -59,7 +59,7 @@ jobs:
         run: |
           file="${{ matrix.Path }}"
 
-          mkdir -p out/{begin,crop,end,files,images,images1,metadata,ocr,scenes}/"$(dirname "$file")"
+          mkdir -p out/{begin,crop,end,files,images,images1,metadata,ocr,silence,scenes}/"$(dirname "$file")"
 
           link "$file" f
 
@@ -84,23 +84,26 @@ jobs:
           wait
 
           [[ -s "out/scenes/$file.txt" ]] || rm -f "out/scenes/$file.txt"
+          cp silence "out/silence/$file.txt"
 
-          ss=$(grep -m1 end silence | cut -c19-)
-          printf -v ss %.6f ${ss:-0}
+          # ss=$(grep -m1 end silence | cut -c19-)
+          # printf -v ss %.6f ${ss:-0}
+          # to=$(grep start silence | tail -1 | cut -c21-)
+          # printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          to=$(grep start silence | tail -1 | cut -c21-)
-          printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
+          ss=$(grep -q =0$ silence && grep -m1 end silence | cut -c19-)
+          to=$(tail -1 silence | grep start | cut -c21-)
 
           echo "$r_frame_rate $avg_frame_rate $width $height $ss $to $duration $w $x $y $file" | tee "out/metadata/$file.txt"
 
           cat << EOF > "out/files/$file.yaml"
           - file: "$file"
             duration: $duration
-            s_ss: $ss
-            s_to: $to
+            to_r: $(bc <<< ${to:-$duration}-$duration)
+            apad: *apad
             ops:
-              ss:
-              to:
+              ss: $ss
+              to: $to
               vf:
                 - trim: *trim
                 - crop:
@@ -132,6 +135,7 @@ jobs:
         run: |
           cat << EOF > job.yaml
           title: ${{ inputs.title }}
+          apad: 0
           trim: &trim
             start:
             end:
