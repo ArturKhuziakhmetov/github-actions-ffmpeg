@@ -94,7 +94,7 @@ jobs:
           ss=$(grep -A2 =0$ silence | tail -1 | cut -c19-)
           to=$(tail -1 silence | grep start | cut -c21-)
 
-          echo "$r_frame_rate $avg_frame_rate $width $height $ss $to $duration $w $x $y $file" | tee "out/metadata/$file.txt"
+          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:--} ${to:--} $duration $w $x $y $file" | tee "out/metadata/$file.txt"
 
           cat << EOF | tee "out/files/$file.yaml"
           - file: "$file"
