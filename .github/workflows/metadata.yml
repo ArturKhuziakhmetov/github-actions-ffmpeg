@@ -99,7 +99,7 @@ jobs:
           cat << EOF | tee "out/files/$file.yaml"
           - file: "$file"
             duration: $duration
-            to_r: $(bc <<< ${to:-$duration}-$duration)
+            tor: $(bc <<< ${to:-$duration}-$duration)
             apad: *apad
             ops:
               ss: $ss
