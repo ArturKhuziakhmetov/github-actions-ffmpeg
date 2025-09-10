@@ -91,7 +91,7 @@ jobs:
           # to=$(grep start silence | tail -1 | cut -c21-)
           # printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
-          ss=$(grep -q =0$ silence && grep -m1 end silence | cut -c19-)
+          ss=$(grep -A2 =0$ silence | tail -1 | cut -c19-)
           to=$(tail -1 silence | grep start | cut -c21-)
 
           echo "$r_frame_rate $avg_frame_rate $width $height $ss $to $duration $w $x $y $file" | tee "out/metadata/$file.txt"
