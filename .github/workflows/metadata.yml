@@ -107,6 +107,7 @@ jobs:
                     y: $y
                     w: $w
                     h: $w
+                    exact: 1
                 - fillborders:
                 - fps: *fps
               ac: 1
