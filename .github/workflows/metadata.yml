@@ -59,7 +59,7 @@ jobs:
         run: |
           file="${{ matrix.Path }}"
 
-          mkdir -p out/{begin,crop,end,files,images,images_end,metadata,ocr,silence,scenes}/"$(dirname "$file")"
+          mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,silence,scenes}/"$(dirname "$file")"
 
           link "$file" f
 
@@ -131,10 +131,10 @@ jobs:
         run: |
           cat << EOF > job.yaml
           title: ${{ inputs.title }}
-          apad: &apad 0
+          apad: &apad 0.5
           trim: &trim
-            start:
-            end:
+            start: -2
+            end: -2
           fps: &fps
             fps: source_fps
             start_time: 0
