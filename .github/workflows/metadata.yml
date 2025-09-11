@@ -59,7 +59,7 @@ jobs:
         run: |
           file="${{ matrix.Path }}"
 
-          mkdir -p out/{begin,crop,end,files,images,images1,metadata,ocr,silence,scenes}/"$(dirname "$file")"
+          mkdir -p out/{begin,crop,end,files,images,images_end,metadata,ocr,silence,scenes}/"$(dirname "$file")"
 
           link "$file" f
 
@@ -68,7 +68,7 @@ jobs:
           ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
           ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images1/$file.png" &
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images_end/$file.png" &
 
           ffmpeg -v 24 -an -ss 60 -i "$file" -frames 1 -update 1 "out/images/$file.png"
 
@@ -85,11 +85,6 @@ jobs:
 
           [[ -s "out/scenes/$file.txt" ]] || rm -f "out/scenes/$file.txt"
           cp silence "out/silence/$file.txt"
-
-          # ss=$(grep -m1 end silence | cut -c19-)
-          # printf -v ss %.6f ${ss:-0}
-          # to=$(grep start silence | tail -1 | cut -c21-)
-          # printf -v to %.6f $(bc <<< ${to:-$duration}-$duration)
 
           ss=$(grep -A2 =0$ silence | tail -1 | cut -c19-)
           to=$(tail -1 silence | grep start | cut -c21-)
@@ -149,7 +144,6 @@ jobs:
 
           find files -type f -print0 | sort -zV | xargs -0 cat >> job.yaml
           cp job.yaml job-orig.yaml
-          echo ${{ vars.JOB_JQ }} | base64 -d > job.jq
 
           {
           find metadata -type f -print0 | sort -zV | xargs -0 cat | column -tc0 -R3-10 -l11 -Nfps,afps,w,h,ss,to,duration,ow,x,y,file

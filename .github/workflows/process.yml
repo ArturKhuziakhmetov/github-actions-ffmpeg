@@ -58,7 +58,7 @@ jobs:
           ofile=out/${{ inputs.try && 'begin2' || inputs.title }}/$name.mkv
           EOF
 
-          mkdir -p out/{info,logs,images2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
+          mkdir -p out/{info,logs,images2,images_end2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
           echo ${{ vars.PRESET }} | base64 -d > preset
           wait
 
@@ -90,14 +90,16 @@ jobs:
 
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
+
+          mv preset out/info
           wait
 
       - name: Report
         run: |
-          mv preset out/info
           sed 2,4d ffmpeg.log > "out/logs/$name.log"
 
-          ffmpeg -v 24 -i "$ofile" -frames 1 -update 1 "out/images2/$name.png" || echo "No video"
+          ffmpeg -v 24 -i "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png"
+          ffmpeg -v 24 -i "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png"
 
           {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
