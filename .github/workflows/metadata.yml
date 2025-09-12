@@ -69,7 +69,7 @@ jobs:
           [[ -s scdet2 ]] && {
             wait
             mkvmerge "$file" --split parts:$(jq -sr 'map("\(.-5)s-\(.+5)s")|join(",")' scdet2) -o scenes/"$file"
-            find scenes -type f > files
+            find scenes -type f | sort > files
             paste -d' -.' files <(cut -c-$((7+${#file})) files) scdet2 <(cut -c$((9+${#file}))-$((11+${#file})) files) | xargs -L1 mv
             mv scdet "out/scdet/$file.txt"
             mv scenes out
@@ -136,7 +136,7 @@ jobs:
           path: /home/runner/.local/bin
 
       - name: Download
-        run: rclone copy "$odir" . --include="{files,metadata,scenes}/**" --stats-one-line -v
+        run: rclone copy "$odir" . --include="{files,metadata,scdet}/**" --stats-one-line -v
 
       - name: Process
         run: |
