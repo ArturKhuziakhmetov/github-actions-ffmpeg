@@ -59,11 +59,20 @@ jobs:
         run: |
           file="${{ matrix.Path }}"
 
-          mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,silence,scenes}/"$(dirname "$file")"
+          mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,silence,scdet}/"$(dirname "$file")"
 
-          link "$file" f
-
-          ${{ inputs.scenes }} && ffprobe -v 24 -of default=nw=1:nk=1 -show_entries frame=best_effort_timestamp_time -f lavfi "movie=f,select=gte(scene\,.5)" > "out/scenes/$file.txt" &
+          # scenes
+          ${{ inputs.scenes }} && {
+          ffmpeg -v 24 -an -i "$file" -vf scdet,metadata=key=lavfi.scd.time:mode=print:file=scdet -f null -
+          grep -Po '=\K.*' scdet | jq -bs 'range(0;length) as $i | .[$i] as $x | if $i == 0 or $x > .[$i-1]+10 then $x else empty end' > scdet2
+          [[ -s scdet2 ]] && {
+            mkvmerge "$file" --split parts:$(jq -sr 'map("\(.-5)s-\(.+5)s")|join(",")' scdet2) -o scenes/"$file"
+            ls scenes/* > files
+            paste -d' -.' files <(cut -c-$((7+${#file})) files) scdet2 <(cut -c$((9+${#file}))-$((11+${#file})) files) | xargs -L1 mv
+            mv scdet "out/scdet/$file.txt"
+            mv scenes out
+          }
+          } &
 
           ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
@@ -83,7 +92,6 @@ jobs:
 
           wait
 
-          [[ -s "out/scenes/$file.txt" ]] || rm -f "out/scenes/$file.txt"
           cp silence "out/silence/$file.txt"
 
           ss=$(grep -A2 =0$ silence | tail -1 | cut -c19-)
@@ -151,7 +159,7 @@ jobs:
           echo
           rclone size --include=${{ inputs.include }} "$idir"
           echo "Metadata: $(yq '.files|length' job.yaml)"
-          echo "Scenes: $({{ inputs.scenes }} && ls -1 scenes | wc -l || echo '?')"
+          echo "Scenes: $(${{ inputs.scenes }} && find scdet -type f | wc -l || echo '?')"
           } | tee metadata.txt
 
       - name: Upload
