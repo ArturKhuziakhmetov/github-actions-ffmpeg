@@ -65,12 +65,12 @@ jobs:
           ${{ inputs.scenes }} && {
           sudo apt install -yqq libfuse2 &> /dev/null &
           ffmpeg -v 24 -an -i "$file" -vf scdet,metadata=key=lavfi.scd.time:mode=print:file=scdet -f null -
-          grep -Po '=\K.*' scdet | jq -bs 'range(0;length) as $i | .[$i] as $x | if $i == 0 or $x > .[$i-1]+10 then $x else empty end' > scdet2
-          [[ -s scdet2 ]] && {
+          [[ -s scdet ]] && {
+            grep -Po '=\K.*' scdet | jq -s 'range(0;length) as $i | .[$i] as $x | if $i == 0 or $x > .[$i-1]+10 then $x else empty end' > scdet2
             wait
-            mkvmerge "$file" --split parts:$(jq -sr 'map("\(.-5)s-\(.+5)s")|join(",")' scdet2) -o scenes/"$file"
-            find scenes -type f | sort > files
-            paste -d' -.' files <(cut -c-$((7+${#file})) files) scdet2 <(cut -c$((9+${#file}))-$((11+${#file})) files) | xargs -L1 mv
+            mkvmerge "$file" --split parts:$(jq -sr 'map("\(.-5)s-\(.+5)s")|join(",")' scdet2) -o scenes/"$file"-%03d | grep -Po 'decision: \K.{12}' split | tr : - > split2
+            paste scdet2 <(sed -n 'p;n' split2) <(sed -n 'n;p' split2) <(find scenes -type f | sort) | while read t t1 t2 f; do mv "$f" "$f - $t - [$t1 - $t2] .${file##*.}"; done
+            ls -1 scenes/*
             mv scdet "out/scdet/$file.txt"
             mv scenes out
           }
