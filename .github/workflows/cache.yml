@@ -118,6 +118,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
+      - name: Sudo tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+
       - uses: actions/cache/restore@v4
         with:
           key: bin
