@@ -33,7 +33,8 @@ jobs:
           mkdir -p $path
           cd $path
 
-          sudo apt install -yqq libfuse2 &> /dev/null &
+          sudo apt install -yqq libfuse2t64 &> /dev/null &
+
           gh alias set get 'release download -R $1 -p $2 -O $3'
 
           # curl
@@ -105,7 +106,9 @@ jobs:
       - uses: actions/cache/save@v4
         with:
           key: bin
-          path: ${{ env.path }}
+          path: |
+            ${{ env.path }}
+            /lib/x86_64-linux-gnu/lib{fuse,ulockmgr}*
 
 
   test:
@@ -117,12 +120,13 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           key: bin
-          path: ${{ env.path }}
+          path: |
+            ${{ env.path }}
+            /lib/x86_64-linux-gnu/lib{fuse,ulockmgr}*
 
 
       - name: Check programs
         run: |
-          sudo apt install -yqq libfuse2 &> /dev/null
           ls -l $path
           curl -V | head -1
           7z | head -2 | tail -1

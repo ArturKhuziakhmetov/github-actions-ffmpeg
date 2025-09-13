@@ -68,8 +68,8 @@ jobs:
           [[ -s scdet ]] && {
             grep -Po '=\K.*' scdet | jq -s 'range(0;length) as $i | .[$i] as $x | if $i == 0 or $x > .[$i-1]+10 then $x else empty end' > sc
             wait
-            mkvmerge "$file" --split parts:$(jq -sr 'map("\(.-5)s-\(.+5)s")|join(",")' sc) -o scenes/"$file"-%03d | grep -Po 'decision: \K.{12}' | tr : - > s
-            paste sc <(sed -n 'p;n' s) <(sed -n 'n;p' s) <(find scenes -type f | sort) | while read t t1 t2 f; do mv "$f" "$f - $t - [$t1 - $t2] .${file##*.}"; done
+            mkvmerge "$file" --split parts:$(jq -sr 'map("\(.-5)s-\(.+5)s")|join(",")' sc) -o scenes/"$file"-%03d | grep -Po 'decision: \K.{12}' > s
+            paste sc <(sed -n 'p;n' s) <(sed -n 'n;p' s) <(find scenes -type f | sort) | while read t t1 t2 f; do t0=$(date -ud@$t +%T.%N); fo="$f - $t - ${t0:0:12} - [$t1 - $t2] .${file##*.}"; mv "$f" "${fo//:/-}"; done
             ls -1 scenes/*
             mv scdet "out/scdet/$file.txt"
             mv scenes out
