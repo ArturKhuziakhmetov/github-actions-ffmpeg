@@ -11,7 +11,7 @@ on:
         type: boolean
 env:
   path: /home/runner/.local/bin
-  GH_TOKEN: ${{ github.token }}
+  # GH_TOKEN: ${{ github.token }}
 jobs:
 
 
@@ -32,9 +32,6 @@ jobs:
           # set -x
           mkdir -p $path
           cd $path
-
-          sudo apt install -yqq libfuse2t64 &> /dev/null &
-
           gh alias set get 'release download -R $1 -p $2 -O $3'
 
           # curl
@@ -55,6 +52,7 @@ jobs:
           gh get ip7z/7zip '*linux-x64*' - | tar -xJ --xform "s/zs//" 7zzs &
 
           # mkvmerge
+          sudo apt install -yqq libfuse2t64 &> /dev/null &
           curl -s https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | grep -oPm1 "(?<=<version>)[^<]+")-x86_64.AppImage -o mkvmerge &
 
           # magick
@@ -65,29 +63,7 @@ jobs:
 
           wait
           chmod 755 *
-
           echo "${{ secrets.RCLONE_CONF }}" | base64 -d | xz -d > rclone.conf
-
-          cat << 'EOF' > libx264.preset
-          vcodec=libx264
-          preset=veryfast
-          tune=animation
-          x264opts=no-scenecut
-          EOF
-
-          cat << 'EOF' > libaom.preset
-          vcodec=libaom-av1
-          cpu-used=8
-          EOF
-
-          cat << 'EOF' > libopus.preset
-          acodec=libopus
-          ab=16k
-          apply_phase_inv=0
-          frame_duration=60
-          application=voip
-          cutoff=12000
-          EOF
 
 
       - name: Check programs
