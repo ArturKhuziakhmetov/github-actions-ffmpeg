@@ -50,7 +50,10 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           key: bin
-          path: /home/runner/.local/bin
+          path: |
+            /home/runner/.local/bin
+            /lib/x86_64-linux-gnu/libfuse.*
+            /lib/x86_64-linux-gnu/libulockmgr.*
 
       - name: Download
         run: rclone copyto "$idir/${{ matrix.Path }}" "${{ matrix.Path }}" --stats-one-line -v
