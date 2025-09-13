@@ -36,10 +36,16 @@ jobs:
     steps:
 
       - if: inputs.cache
+        name: Sudo tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+
+      - if: inputs.cache
         uses: actions/cache/restore@v4
         with:
           key: bin
-          path: /home/runner/.local/bin
+          path: |
+            /home/runner/.local/bin
+            /lib/x86_64-linux-gnu/libfuse.*
 
       - name: Script
         run: |
@@ -57,10 +63,16 @@ jobs:
     steps:
 
       - if: inputs.cache
+        name: Sudo tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+
+      - if: inputs.cache
         uses: actions/cache/restore@v4
         with:
           key: bin
-          path: /home/runner/.local/bin
+          path: |
+            /home/runner/.local/bin
+            /lib/x86_64-linux-gnu/libfuse.*
 
       - name: Script
         run: |

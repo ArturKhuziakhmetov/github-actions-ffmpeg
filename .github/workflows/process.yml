@@ -43,10 +43,15 @@ jobs:
       ifile: ${{ matrix.file }}
 
     steps:
+      - name: Sudo tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+
       - uses: actions/cache/restore@v4
         with:
           key: bin
-          path: /home/runner/.local/bin
+          path: |
+            /home/runner/.local/bin
+            /lib/x86_64-linux-gnu/libfuse.*
 
       - name: Download
         run: |
@@ -76,8 +81,6 @@ jobs:
         if: ${{ ! inputs.try }}
         run: |
           tree
-          sudo apt install -yqq libfuse2 &> /dev/null &
-
           cat preset
           echo "${{ matrix.ops }}"
 
@@ -90,7 +93,6 @@ jobs:
 
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
-
           mv preset out/info
           wait
 

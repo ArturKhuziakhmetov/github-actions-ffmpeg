@@ -47,13 +47,15 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.setup.outputs.data) }}
     steps:
+      - name: Sudo tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+
       - uses: actions/cache/restore@v4
         with:
           key: bin
           path: |
             /home/runner/.local/bin
             /lib/x86_64-linux-gnu/libfuse.*
-            /lib/x86_64-linux-gnu/libulockmgr.*
 
       - name: Download
         run: rclone copyto "$idir/${{ matrix.Path }}" "${{ matrix.Path }}" --stats-one-line -v
@@ -66,7 +68,6 @@ jobs:
 
           # scenes
           ${{ inputs.scenes }} && {
-          sudo apt install -yqq libfuse2 &> /dev/null &
           ffmpeg -v 24 -an -i "$file" -vf scdet,metadata=key=lavfi.scd.time:mode=print:file=scdet -f null -
           [[ -s scdet ]] && {
             grep -Po '=\K.*' scdet | jq -s 'range(0;length) as $i | .[$i] as $x | if $i == 0 or $x > .[$i-1]+10 then $x else empty end' > sc

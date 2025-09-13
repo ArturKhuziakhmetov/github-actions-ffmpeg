@@ -109,7 +109,6 @@ jobs:
           path: |
             ${{ env.path }}
             /lib/x86_64-linux-gnu/libfuse.*
-            # /lib/x86_64-linux-gnu/libulockmgr.*
 
 
   test:
@@ -127,7 +126,6 @@ jobs:
           path: |
             ${{ env.path }}
             /lib/x86_64-linux-gnu/libfuse.*
-            # /lib/x86_64-linux-gnu/libulockmgr.*
 
 
       - name: Check programs
