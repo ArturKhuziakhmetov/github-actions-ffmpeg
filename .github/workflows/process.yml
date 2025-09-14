@@ -75,7 +75,7 @@ jobs:
 
           FFREPORT=file=ffmpeg.log:level=48 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
-          ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile"
+          ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset -crf 48 -cpu-used 8 "$ofile"
 
       - name: Process
         if: ${{ ! inputs.try }}
