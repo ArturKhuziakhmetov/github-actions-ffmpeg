@@ -22,5 +22,5 @@ jobs:
             ( .key | startswith("blomp") ) and .value.type == "alias" or
             ( .value.type == "mega" )
             ) | "\(.key):\(.key)" ' > args
-          xargs -a args -n1 -P0 rclone copyto --no-check-certificate -I date.txt
-          xargs -a args -n1 -P0 rclone lsf --no-check-certificate --format pt --separator "  " | sort
+          xargs -a args -n1 -P0 ./rclone copyto --no-check-certificate -I date.txt
+          xargs -a args -n1 -P0 ./rclone lsf --no-check-certificate --format pt --separator "  " | sort
