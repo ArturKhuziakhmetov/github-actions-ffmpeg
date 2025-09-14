@@ -70,12 +70,13 @@ jobs:
       - name: Try process
         if: inputs.try
         run: |
+          echo "aom-params=cpu-used=8:cq-level=48" >> preset
           cat preset
           echo "${{ matrix.ops }}"
 
           FFREPORT=file=ffmpeg.log:level=48 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
-          ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset -crf 48 -cpu-used 8 "$ofile"
+          ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile"
 
       - name: Process
         if: ${{ ! inputs.try }}
