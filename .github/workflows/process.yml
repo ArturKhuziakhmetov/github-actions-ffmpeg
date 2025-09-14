@@ -1,4 +1,4 @@
-# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun process.yml -F yaml=@"$title/job.yaml" -f title="$title" -f try=true -f t=10
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun process.yml -F yaml=@"$title/job.yaml" -f title="$title" -f try=true -f t=10 -f iroot=chess2
 
 name: process
 run-name: ${{ inputs.title }}
@@ -9,9 +9,9 @@ on:
         required: true
       yaml:
         required: true
-      input-root:
-        default: blomp:chess-videos
-      output-root:
+      iroot:
+        default: "chess:"
+      oroot:
         default: koofr:done
       t:
         default: 5
@@ -55,7 +55,7 @@ jobs:
 
       - name: Download
         run: |
-          rclone copyto "${{ inputs.input-root }}/${{ inputs.title }}/${{ matrix.file }}" "$ifile" --stats-one-line -v &
+          rclone copyto "${{ inputs.iroot }}/${{ inputs.title }}/${{ matrix.file }}" "$ifile" --stats-one-line -v &
 
           name=${ifile%.*}
           cat << EOF >> "$GITHUB_ENV"
@@ -119,4 +119,4 @@ jobs:
           ${{ inputs.yaml }}EOF
 
       - name: Upload
-        run: rclone copy out "${{ inputs.output-root }}/${{ inputs.title }}" -v --no-update-modtime --retries 10
+        run: rclone copy out "${{ inputs.oroot }}/${{ inputs.title }}" -v --no-update-modtime --retries 10

@@ -8,7 +8,7 @@ on:
       title:
         required: true
       iroot:
-        default: blomp:chess-videos
+        default: "chess:"
       oroot:
         default: koofr:done
       include:
@@ -16,7 +16,7 @@ on:
       t:
         default: 20
       scenes:
-        default: false
+        default: true
 env:
   idir: ${{ inputs.iroot }}/${{ inputs.title }}
   odir: ${{ inputs.oroot }}/${{ inputs.title }}
