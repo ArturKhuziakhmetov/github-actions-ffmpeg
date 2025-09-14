@@ -50,7 +50,7 @@ jobs:
           curl -s https://downloads.rclone.org/rclone-current-linux-amd64.deb | dpkg --fsys-tarfile - | tar -x --strip=3 ./usr/bin/rclone &
 
           # ffmpeg
-          curl -sZLO "https://ffmpeg.martin-riedl.de/redirect/latest/linux/amd64/${{ inputs.ffmpeg }}/{ffmpeg,ffprobe}.zip" && unzip -qq \*.zip && rm *.zip &
+          gh get BtbN/FFmpeg-Builds '*latest-linux64-gpl-8.0.*' - | tar -xJ --strip=2 ffmpeg-n8.0-latest-linux64-gpl-8.0/bin/{ffmpeg,ffprobe} &
 
           # 7z
           gh get ip7z/7zip '*linux-x64*' - | tar -xJ --xform "s/zs//" 7zzs &
