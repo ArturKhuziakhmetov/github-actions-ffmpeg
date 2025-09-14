@@ -7,12 +7,6 @@ on:
       delete:
         type: boolean
         default: true
-      ffmpeg:
-        type: choice
-        options:
-          - release
-          - snapshot
-        default: release
       test:
         type: boolean
 env:
@@ -50,6 +44,7 @@ jobs:
           curl -s https://downloads.rclone.org/rclone-current-linux-amd64.deb | dpkg --fsys-tarfile - | tar -x --strip=3 ./usr/bin/rclone &
 
           # ffmpeg
+          # gh get BtbN/FFmpeg-Builds '*master*linux64-gpl.*' - | tar -xJ --strip=2 ffmpeg-master-latest-linux64-gpl/bin/{ffmpeg,ffprobe} &
           gh get BtbN/FFmpeg-Builds '*latest-linux64-gpl-8.0.*' - | tar -xJ --strip=2 ffmpeg-n8.0-latest-linux64-gpl-8.0/bin/{ffmpeg,ffprobe} &
 
           # 7z
@@ -57,7 +52,7 @@ jobs:
 
           # mkvmerge
           sudo apt install -yqq libfuse2t64 &> /dev/null &
-          curl -s https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | yq .mkvtoolnix-releases.latest-source.version)-x86_64.AppImage -o mkvmerge &
+          curl -s https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | yq -px .mkvtoolnix-releases.latest-source.version)-x86_64.AppImage -o mkvmerge &
 
           # magick
           gh get ImageMagick/ImageMagick '*gcc-x86_64.AppImage' magick &

@@ -81,7 +81,7 @@ jobs:
       - name: Process
         if: ${{ ! inputs.try }}
         run: |
-          tree
+          tree --filesfirst
           cat preset
           echo "${{ matrix.ops }}"
 
