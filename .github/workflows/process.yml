@@ -100,9 +100,10 @@ jobs:
         run: |
           sed 2,4d ffmpeg.log > "out/logs/$name.log"
 
-          ffmpeg -v 24 -i "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png"
-          ffmpeg -v 24 -i "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png"
-
+          ${{ inputs.try }} || {
+            ffmpeg -v 24 -i "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png"
+            ffmpeg -v 24 -i "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png"
+          }
           {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
               (.streams[0] | .width, .height, .r_frame_rate),
