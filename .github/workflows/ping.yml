@@ -5,16 +5,12 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 0 * * 0' # weekly
-env:
-  path: /home/runner/.local/bin
 jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
       - name: Get rclone
         run: |
-          mkdir -p $path
-          cd $path
           curl -s https://downloads.rclone.org/rclone-current-linux-amd64.deb | dpkg --fsys-tarfile - | tar -x --strip=3 ./usr/bin/rclone
           chmod 755 *
           echo "${{ secrets.RCLONE_CONF }}" | base64 -d | xz -d > rclone.conf
@@ -22,9 +18,9 @@ jobs:
       - name: Ping blomp + mega
         run: |
           date | tee date.txt
-          rclone config dump | jq ' to_entries[] | select(
+          ./rclone config dump | jq ' to_entries[] | select(
             ( .key | startswith("blomp") ) and .value.type == "alias" or
-            ( .key | startswith("mega") )
+            ( .value.type == "mega" )
             ) | "\(.key):\(.key)" ' > args
           xargs -a args -n1 -P0 rclone copyto --no-check-certificate -I date.txt
           xargs -a args -n1 -P0 rclone lsf --no-check-certificate --format pt --separator "  " | sort
