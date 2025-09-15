@@ -81,12 +81,12 @@ jobs:
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
           ${{ matrix.ops }} ${{ vars.FFMPEG_OPTIONS }} "$ofile"
 
-          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png" &
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png" &
-
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
-          sed 2,4d ffmpeg.log > "out/logs/$name.log"
+
+          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png"
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png"
+
           {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
               (.streams[0] | .width, .height, .r_frame_rate),
@@ -96,7 +96,8 @@ jobs:
               (.format | .duration, .size, .bit_rate,
               (.filename | split("/")[-1] | @sh) )] | @tsv'
           } | tee "out/reports/$name.txt"
-          wait
+
+          sed 2,4d ffmpeg.log > "out/logs/$name.log"
           tree --filesfirst
           rclone copy out "$odir" --stats-one-line -v
 
@@ -118,10 +119,10 @@ jobs:
       - name: Process
         run: |
           rclone copy "$odir" . --include="{reports,logs,ocr,scdet,info}/**" --include="*.txt" --stats-one-line -v
-          rclone copy "$idir" "$title" --stats-one-line -v --exclude=\*.{mkv,mp4}
+          rclone copy "$idir" "${{ inputs.title }}" --stats-one-line -v --exclude=\*.{mkv,mp4}
           cat reports/**/* | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
           cp *.txt info
           cat << "EOF" > info/job.yaml
           ${{ inputs.yaml }}EOF
-          7z a "$title/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
+          7z a "${{ inputs.title }}/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
           rclone copy . "$odir" --stats-one-line -v --no-update-modtime
