@@ -53,8 +53,8 @@ jobs:
           gh get ImageMagick/ImageMagick '*gcc-x86_64.AppImage' magick &
 
           # ffmpeg
-          # gh get BtbN/FFmpeg-Builds '*master*linux64-gpl.*' - | tar -xJ --strip=2 ffmpeg-master-latest-linux64-gpl/bin/{ffmpeg,ffprobe} &
-          gh get BtbN/FFmpeg-Builds '*latest-linux64-gpl-8.0.*' - | tar -xJ --strip=2 ffmpeg-n8.0-latest-linux64-gpl-8.0/bin/{ffmpeg,ffprobe} &
+          gh get BtbN/FFmpeg-Builds '*master*linux64-gpl.*' - | tar -xJ --strip=2 ffmpeg-master-latest-linux64-gpl/bin/{ffmpeg,ffprobe} &
+          # gh get BtbN/FFmpeg-Builds '*latest-linux64-gpl-8.0.*' - | tar -xJ --strip=2 ffmpeg-n8.0-latest-linux64-gpl-8.0/bin/{ffmpeg,ffprobe} &
 
           # mkvmerge
           sudo apt install -yqq libfuse2t64 &> /dev/null &

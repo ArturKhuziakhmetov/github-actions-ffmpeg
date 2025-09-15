@@ -17,6 +17,9 @@ on:
         default: 5
       try:
         type: boolean
+env:
+  idir: ${{ inputs.iroot }}/${{ inputs.title }}
+  odir: ${{ inputs.oroot }}/${{ inputs.title }}
 
 jobs:
   prepare:
@@ -53,58 +56,39 @@ jobs:
             /home/runner/.local/bin
             /lib/x86_64-linux-gnu/libfuse.*
 
-      - name: Download
-        run: |
-          rclone copyto "${{ inputs.iroot }}/${{ inputs.title }}/${{ matrix.file }}" "$ifile" --stats-one-line -v &
-
-          name=${ifile%.*}
-          cat << EOF >> "$GITHUB_ENV"
-          name=$name
-          ofile=out/${{ inputs.try && 'begin2' || inputs.title }}/$name.mkv
-          EOF
-
-          mkdir -p out/{info,logs,images2,images_end2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
-          echo ${{ vars.PRESET }} | base64 -d > preset
-          wait
-
       - name: Try process
         if: inputs.try
         run: |
-          echo "aom-params=cpu-used=8:cq-level=48" >> preset
-          cat preset
-          echo "${{ matrix.ops }}"
+          rclone copyto "$idir/${{ matrix.file }}" "$ifile" --stats-one-line -v
+          mkdir -p out/try-{logs,ffmpeg}/"$(dirname "$ifile")"
 
-          FFREPORT=file=ffmpeg.log:level=48 \
+          FFREPORT=file=try.log:level=48 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
-          ${{ matrix.ops }} -t ${{ inputs.t }} -fpre preset "$ofile"
+          ${{ matrix.ops }} -t ${{ inputs.t }} ${{ vars.FFMPEG_OPTIONS }} "out/try-ffmpeg/${ifile%.*}.mkv"
+
+          mv *.log "out/try-logs/${ifile%.*}.log"
+          rclone copy out "$odir" -v
 
       - name: Process
         if: ${{ ! inputs.try }}
         run: |
+          name=${ifile%.*}
+          rclone copyto "$idir/${{ matrix.file }}" "$ifile" --stats-one-line -v
+          ofile=out/${{ inputs.title }}/${ifile%.*}.mkv
+          mkdir -p out/{info,logs,images2,images_end2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
           tree --filesfirst
-          cat preset
-          echo "${{ matrix.ops }}"
 
           FFREPORT=file=ffmpeg.log:level=32 \
-          ffmpeg -hide_banner -nostdin -nostats -benchmark \
-          -i "$ifile" ${{ matrix.ops }} -fpre preset "$ofile"
+          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
+          ${{ matrix.ops }} ${{ vars.FFMPEG_OPTIONS }} "$ofile"
 
-          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" &
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" &
+          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png" &
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png" &
 
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
           mv preset out/info
-          wait
-
-      - name: Report
-        run: |
           sed 2,4d ffmpeg.log > "out/logs/$name.log"
-
-          ${{ inputs.try }} || {
-            ffmpeg -v 24 -i "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png"
-            ffmpeg -v 24 -i "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png"
-          }
           {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
               (.streams[0] | .width, .height, .r_frame_rate),
@@ -114,9 +98,32 @@ jobs:
               (.format | .duration, .size, .bit_rate,
               (.filename | split("/")[-1] | @sh) )] | @tsv'
           } | tee "out/reports/$name.txt"
+          wait
+          tree --filesfirst
+          rclone copy out "$odir" -v
 
-          cat << "EOF" > out/job.yaml
+complete:
+    if: ${{ ! inputs.try }}
+    runs-on: ubuntu-latest
+    needs: process
+    steps:
+      - name: Sudo tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+
+      - uses: actions/cache/restore@v4
+        with:
+          key: bin
+          path: |
+            /home/runner/.local/bin
+            /lib/x86_64-linux-gnu/libfuse.*
+
+      - name: Process
+        run: |
+          rclone copy "$odir" . --include="{reports,logs,ocr,scdet,info}/**" --include="*.txt" -v
+          rclone copy "$idir" "$title" -v --exclude=\*.{mkv,mp4}
+          cat reports/**/* | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
+          cp *.txt info
+          cat << "EOF" > info/job.yaml
           ${{ inputs.yaml }}EOF
-
-      - name: Upload
-        run: rclone copy out "${{ inputs.oroot }}/${{ inputs.title }}" -v --no-update-modtime --retries 10
+          7z a "$title/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
+          rclone copy . "$odir" -v --no-update-modtime
