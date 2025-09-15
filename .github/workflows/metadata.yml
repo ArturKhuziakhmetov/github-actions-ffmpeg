@@ -107,7 +107,7 @@ jobs:
           to=$(tail -1 silence | grep start | cut -c21-)
           tor=$(bc <<< ${to:-$duration}-$duration)
 
-          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:-0} $tor $duration $w $h $x $y $file" | tee "out/metadata/$file.txt"
+          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:-0} $tor $duration $(date -ud@$duration +%T) $w $h $x $y $file" | tee "out/metadata/$file.txt"
 
           cat << EOF | tee "out/files/$file.yaml"
           - file: "$file"
@@ -168,7 +168,7 @@ jobs:
           cp job.yaml job-orig.yaml
 
           {
-          find metadata -type f -print0 | sort -zV | xargs -0 cat | column -tc0 -R3-11 -l12 -Nfps,afps,w,h,ss,to,duration,ow,oh,x,y,file
+          find metadata -type f -print0 | sort -zV | xargs -0 cat | column -tc0 -R3-12 -l13 -Nfps,afps,w,h,ss,to,duration,hh:mm:ss,ow,oh,x,y,file
           echo
           rclone size --include=${{ inputs.include }} "$idir"
           echo "Metadata: $(yq '.files|length' job.yaml)"
