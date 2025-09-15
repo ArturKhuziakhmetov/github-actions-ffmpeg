@@ -64,7 +64,7 @@ jobs:
 
       - if: inputs.cache
         name: Sudo tar
-        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s $_
 
       - if: inputs.cache
         uses: actions/cache/restore@v4

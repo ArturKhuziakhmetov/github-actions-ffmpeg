@@ -84,8 +84,8 @@ jobs:
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
 
-          ffmpeg -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png"
-          ffmpeg -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png"
+          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png" &
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png" &
 
           {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
@@ -98,7 +98,8 @@ jobs:
           } | tee "out/reports/$name.txt"
 
           sed 2,4d ffmpeg.log > "out/logs/$name.log"
-          tree --filesfirst
+          wait
+          tree --filesfirst -s
           rclone copy out "$odir" --stats-one-line -v
 
   complete:
@@ -118,9 +119,9 @@ jobs:
 
       - name: Process
         run: |
-          rclone copy "$odir" . --include="{reports,logs,ocr,scdet}/**" --include="*.txt" --stats-one-line -v
+          rclone copy "$odir" . --include="{reports,logs,ocr,scdet}/**" --include="*.txt" --stats-one-line
           rclone copy "$idir" "${{ inputs.title }}" --stats-one-line -v --exclude=\*.{mkv,mp4}
-          cat reports/**/* | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
+          cat reports/**/*.txt | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
           mkdir info
           cp *.txt info
           cat << "EOF" > info/job.yaml
