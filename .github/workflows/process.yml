@@ -75,7 +75,7 @@ jobs:
           rclone copyto "$idir/${{ matrix.file }}" "$ifile" --stats-one-line -v
           name=${ifile%.*}
           ofile=out/"${{ inputs.title }}"/${ifile%.*}.mkv
-          mkdir -p out/{info,logs,images2,images_end2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
+          mkdir -p out/{logs,images2,images_end2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
@@ -84,8 +84,8 @@ jobs:
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
 
-          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png"
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png"
+          ffmpeg -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png"
+          ffmpeg -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png"
 
           {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
@@ -118,11 +118,12 @@ jobs:
 
       - name: Process
         run: |
-          rclone copy "$odir" . --include="{reports,logs,ocr,scdet,info}/**" --include="*.txt" --stats-one-line -v
+          rclone copy "$odir" . --include="{reports,logs,ocr,scdet}/**" --include="*.txt" --stats-one-line -v
           rclone copy "$idir" "${{ inputs.title }}" --stats-one-line -v --exclude=\*.{mkv,mp4}
           cat reports/**/* | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
+          mkdir info
           cp *.txt info
           cat << "EOF" > info/job.yaml
           ${{ inputs.yaml }}EOF
           7z a "${{ inputs.title }}/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
-          rclone copy . "$odir" --stats-one-line -v --no-update-modtime
+          rclone copy . "$odir" --stats-one-line -v --no-update-modtime --create-empty-src-dirs
