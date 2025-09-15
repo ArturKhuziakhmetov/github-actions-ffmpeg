@@ -29,7 +29,7 @@ jobs:
       data: ${{ steps.matrix.outputs.data }}
     steps:
       - name: Sudo tar
-        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s $_
 
       - uses: actions/cache/restore@v4
         with:
@@ -42,7 +42,7 @@ jobs:
         id: matrix
         run: |
           rclone lsjson -R --include=${{ inputs.include }} --files-only --no-mimetype --no-modtime "$idir" | jq 'map({Path,Size})' | tee j
-          { printf "data="; jq -c 'sort_by(.Size)|reverse' j; } >> $GITHUB_OUTPUT
+          { echo -n "data="; jq -c 'sort_by(.Size)|reverse' j; } >> $GITHUB_OUTPUT
 
   process:
     name: ${{ matrix.Path }}
@@ -53,7 +53,7 @@ jobs:
         include: ${{ fromJson(needs.setup.outputs.data) }}
     steps:
       - name: Sudo tar
-        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s $_
 
       - uses: actions/cache/restore@v4
         with:
@@ -62,12 +62,10 @@ jobs:
             /home/runner/.local/bin
             /lib/x86_64-linux-gnu/libfuse.*
 
-      - name: Download
-        run: rclone copyto "$idir/${{ matrix.Path }}" "${{ matrix.Path }}" --stats-one-line -v
-
       - name: Process
         run: |
           file="${{ matrix.Path }}"
+          rclone copyto "$idir/${{ matrix.Path }}" "${{ matrix.Path }}" --stats-one-line -v
 
           mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,silence,scdet}/"$(dirname "$file")"
 
@@ -98,8 +96,8 @@ jobs:
 
           source <(ffprobe -v 24 "$file" -of json -show_streams | yq -os '.streams[0]')
 
-          read w x y < <(jq -r --argjson w $width --argjson h $height '([$w * .width, $h * .height] | max / 8 + 1 | floor * 8) as $d | [$d, (([$w * .xc, $h * .yc][] - $d / 2) / 2 | round * 2)] | @sh' f.json)
-          echo $w $x $y
+          read w h x y < <(jq -r --argjson w $width --argjson h $height '[ $w*.width, $h*.height, $w*(.xc-.width/2), $h*(.yc-.height/2) | round ] | @sh' f.json)
+          echo $w $h $x $y
 
           wait
 
@@ -109,7 +107,7 @@ jobs:
           to=$(tail -1 silence | grep start | cut -c21-)
           tor=$(bc <<< ${to:-$duration}-$duration)
 
-          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:-0} $tor $duration $w $x $y $file" | tee "out/metadata/$file.txt"
+          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:-0} $tor $duration $w $h $x $y $file" | tee "out/metadata/$file.txt"
 
           cat << EOF | tee "out/files/$file.yaml"
           - file: "$file"
@@ -139,7 +137,7 @@ jobs:
     needs: process
     steps:
       - name: Sudo tar
-        run: sudo chown root /usr/bin/tar && sudo chmod u+s /usr/bin/tar
+        run: sudo chown root /usr/bin/tar && sudo chmod u+s $_
 
       - uses: actions/cache/restore@v4
         with:
@@ -170,7 +168,7 @@ jobs:
           cp job.yaml job-orig.yaml
 
           {
-          find metadata -type f -print0 | sort -zV | xargs -0 cat | column -tc0 -R3-10 -l11 -Nfps,afps,w,h,ss,to,duration,ow,x,y,file
+          find metadata -type f -print0 | sort -zV | xargs -0 cat | column -tc0 -R3-11 -l12 -Nfps,afps,w,h,ss,to,duration,ow,oh,x,y,file
           echo
           rclone size --include=${{ inputs.include }} "$idir"
           echo "Metadata: $(yq '.files|length' job.yaml)"
