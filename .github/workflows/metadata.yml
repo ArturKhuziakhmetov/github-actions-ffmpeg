@@ -129,7 +129,6 @@ jobs:
                     exact: 1
                 - fillborders:
                 - fps: *fps
-              ac: 1
           EOF
 
       - name: Upload

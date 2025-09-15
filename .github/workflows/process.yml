@@ -74,7 +74,7 @@ jobs:
         run: |
           name=${ifile%.*}
           rclone copyto "$idir/${{ matrix.file }}" "$ifile" --stats-one-line -v
-          ofile=out/${{ inputs.title }}/${ifile%.*}.mkv
+          ofile=out/"${{ inputs.title }}"/${ifile%.*}.mkv
           mkdir -p out/{info,logs,images2,images_end2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
           tree --filesfirst
 
