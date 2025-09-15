@@ -67,7 +67,7 @@ jobs:
           ${{ matrix.ops }} -t ${{ inputs.t }} ${{ vars.FFMPEG_OPTIONS }} "out/try-ffmpeg/${ifile%.*}.mkv"
 
           mv *.log "out/try-logs/${ifile%.*}.log"
-          rclone copy out "$odir" -v
+          rclone copy out "$odir" --stats-one-line -v
 
       - name: Process
         if: ${{ ! inputs.try }}
@@ -100,7 +100,7 @@ jobs:
           } | tee "out/reports/$name.txt"
           wait
           tree --filesfirst
-          rclone copy out "$odir" -v
+          rclone copy out "$odir" --stats-one-line -v
 
   complete:
     if: ${{ ! inputs.try }}
@@ -119,11 +119,11 @@ jobs:
 
       - name: Process
         run: |
-          rclone copy "$odir" . --include="{reports,logs,ocr,scdet,info}/**" --include="*.txt" -v
-          rclone copy "$idir" "$title" -v --exclude=\*.{mkv,mp4}
+          rclone copy "$odir" . --include="{reports,logs,ocr,scdet,info}/**" --include="*.txt" --stats-one-line -v
+          rclone copy "$idir" "$title" --stats-one-line -v --exclude=\*.{mkv,mp4}
           cat reports/**/* | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
           cp *.txt info
           cat << "EOF" > info/job.yaml
           ${{ inputs.yaml }}EOF
           7z a "$title/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
-          rclone copy . "$odir" -v --no-update-modtime
+          rclone copy . "$odir" --stats-one-line -v --no-update-modtime
