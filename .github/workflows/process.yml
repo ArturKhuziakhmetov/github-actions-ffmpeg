@@ -121,10 +121,10 @@ jobs:
         run: |
           rclone copy "$odir" . --include="{reports,logs,ocr,scdet}/**" --include="*.txt" --stats-one-line
           rclone copy "$idir" "${{ inputs.title }}" --stats-one-line -v --exclude=\*.{mkv,mp4}
-          cat reports/**/*.txt | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
-          mkdir info
-          cp *.txt info
-          cat << "EOF" > info/job.yaml
+          shopt -s globstar; cat reports/**/*.txt | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
+          cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
+          mkdir info
+          cp *.txt job.yaml info
           7z a "${{ inputs.title }}/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
           rclone copy . "$odir" --stats-one-line -v --no-update-modtime --create-empty-src-dirs
