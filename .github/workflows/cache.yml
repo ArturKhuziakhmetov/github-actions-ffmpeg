@@ -99,6 +99,7 @@ jobs:
 
       - name: Check programs
         run: |
+          set -x
           ls -l $path
           curl -V | head -1
           7z | head -2 | tail -1
