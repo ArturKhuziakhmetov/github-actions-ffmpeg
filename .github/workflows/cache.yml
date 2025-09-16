@@ -58,7 +58,7 @@ jobs:
           { mkdir $RUNNER_TEMP/mkvtoolnix; cd $_
           curl -sO https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | yq -px .mkvtoolnix-releases.latest-source.version)-x86_64.AppImage
           chmod +x *
-          * --appimage-extract > /dev/null
+          ./* --appimage-extract > /dev/null
           mv squashfs-root $path/mkvtoolnix
           } &
 
