@@ -47,7 +47,7 @@ jobs:
           curl -s https://downloads.rclone.org/rclone-current-linux-amd64.deb | dpkg --fsys-tarfile - | tar -x --strip=3 ./usr/bin/rclone &
 
           # magick
-          gh get ImageMagick/ImageMagick '*gcc-x86_64.AppImage' magick &
+          # gh get ImageMagick/ImageMagick '*gcc-x86_64.AppImage' magick &
 
           # ffmpeg
           gh get BtbN/FFmpeg-Builds '*master*linux64-gpl.*' - | tar -xJ --strip=2 ffmpeg-master-latest-linux64-gpl/bin/{ffmpeg,ffprobe} &
@@ -77,7 +77,7 @@ jobs:
           rclone version | head -1
           ffmpeg -version | head -1
           mkvmerge -V
-          magick -version | head -1
+          # magick -version | head -1
           jq -V
           yq -V
 
@@ -106,7 +106,7 @@ jobs:
           rclone version | head -1
           ffmpeg -version | head -1
           mkvmerge -V
-          magick -version | head -1
+          # magick -version | head -1
           jq -V
           yq -V
 
