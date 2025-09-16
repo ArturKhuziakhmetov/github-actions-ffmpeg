@@ -25,10 +25,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download programs
-        working-directory: ${{ env.path }}
         run: |
-          # set -x
-          # mkdir -p $path; cd $_
+          mkdir -p $path
+          cd $_
           # sudo apt install -yqq libfuse2t64 &> /dev/null &
 
           gh alias set get 'release download -R $1 -p $2 -O $3'
