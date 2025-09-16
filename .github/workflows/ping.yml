@@ -12,7 +12,7 @@ jobs:
       - name: Get rclone
         run: |
           curl -s https://downloads.rclone.org/rclone-current-linux-amd64.deb | dpkg --fsys-tarfile - | tar -x --strip=3 ./usr/bin/rclone
-          chmod 755 *
+          chmod +x *
           echo "${{ secrets.RCLONE_CONF }}" | base64 -d | xz -d > rclone.conf
 
       - name: Ping blomp + mega

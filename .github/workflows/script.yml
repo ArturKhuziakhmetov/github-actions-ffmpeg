@@ -21,6 +21,8 @@ on:
       cache:
         type: boolean
         default: true
+env:
+  path: /home/runner/.local/bin
 
 jobs:
 
@@ -34,18 +36,11 @@ jobs:
       data: ${{ matrix.data }}
       data2: ${{ inputs.data2 }}
     steps:
-
-      - if: inputs.cache
-        name: Sudo tar
-        run: sudo chown root /usr/bin/tar && sudo chmod u+s $_
-
       - if: inputs.cache
         uses: actions/cache/restore@v4
         with:
           key: bin
-          path: |
-            /home/runner/.local/bin
-            /lib/x86_64-linux-gnu/libfuse.*
+          path: ${{ env.path }}
 
       - name: Script
         run: |
@@ -61,18 +56,11 @@ jobs:
       data2: ${{ inputs.data2 }}
       remote: ${{ inputs.remote }}
     steps:
-
-      - if: inputs.cache
-        name: Sudo tar
-        run: sudo chown root /usr/bin/tar && sudo chmod u+s $_
-
       - if: inputs.cache
         uses: actions/cache/restore@v4
         with:
           key: bin
-          path: |
-            /home/runner/.local/bin
-            /lib/x86_64-linux-gnu/libfuse.*
+          path: ${{ env.path }}
 
       - name: Script
         run: |

@@ -1,4 +1,4 @@
-# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun cache.yml -f test=true -f ffmpeg=snapshot
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun cache.yml -f test=true
 
 name: cache
 on:
@@ -25,10 +25,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download programs
+        working-directory: ${{ env.path }}
         run: |
           # set -x
-          mkdir -p $path
-          cd $path
+          # mkdir -p $path; cd $_
+          # sudo apt install -yqq libfuse2t64 &> /dev/null &
+
           gh alias set get 'release download -R $1 -p $2 -O $3'
 
           # 7z
@@ -54,7 +56,6 @@ jobs:
           # gh get BtbN/FFmpeg-Builds '*latest-linux64-gpl-8.0.*' - | tar -xJ --strip=2 ffmpeg-n8.0-latest-linux64-gpl-8.0/bin/{ffmpeg,ffprobe} &
 
           # mkvmerge
-          # sudo apt install -yqq libfuse2t64 &> /dev/null &
           curl -s https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | yq -px .mkvtoolnix-releases.latest-source.version)-x86_64.AppImage -o AppImage
           chmod +x AppImage
           AppImage --appimage-extract > /dev/null
@@ -99,7 +100,6 @@ jobs:
 
       - name: Check programs
         run: |
-          set -x
           ls -l $path
           curl -V | head -1
           7z | head -2 | tail -1
