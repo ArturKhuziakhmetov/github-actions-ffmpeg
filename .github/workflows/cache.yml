@@ -56,15 +56,17 @@ jobs:
 
           # mkvmerge
           { mkdir $RUNNER_TEMP/mkvtoolnix; cd $_
-          curl -sO https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | yq -px .mkvtoolnix-releases.latest-source.version)-x86_64.AppImage -o AppImage
-          chmod +x AppImage
-          AppImage --appimage-extract > /dev/null
+          curl -sO https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | yq -px .mkvtoolnix-releases.latest-source.version)-x86_64.AppImage
+          chmod +x *
+          * --appimage-extract > /dev/null
           mv squashfs-root $path/mkvtoolnix
           } &
 
           wait
           chmod +x *
+
           echo "${{ secrets.RCLONE_CONF }}" | base64 -d | xz -d > rclone.conf
+
           cat << EOF > mkvmerge
           export APPDIR=$path/mkvtoolnix
           export ARGV0=mkvmerge
