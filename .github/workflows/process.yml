@@ -12,7 +12,7 @@ on:
       iroot:
         default: "chess:"
       oroot:
-        default: koofr:done
+        default: koofr:/done
       t:
         default: 5
       try:
@@ -55,7 +55,7 @@ jobs:
       - name: Try process
         if: inputs.try
         run: |
-          rclone copyto "$idir/${{ matrix.file }}" "$ifile" --stats-one-line -v
+          rclone copyto "$idir/${{ matrix.file }}" ./"$ifile" --stats-one-line -v
           mkdir -p out/try-{logs,ffmpeg}/"$(dirname "$ifile")"
 
           FFREPORT=file=try.log:level=48 \
@@ -68,7 +68,7 @@ jobs:
       - name: Process
         if: ${{ ! inputs.try }}
         run: |
-          rclone copyto "$idir/${{ matrix.file }}" "$ifile" --stats-one-line -v
+          rclone copyto "$idir/${{ matrix.file }}" ./"$ifile" --stats-one-line -v
           name=${ifile%.*}
           ofile=out/"${{ inputs.title }}"/${ifile%.*}.mkv
           mkdir -p out/{logs,images2,images_end2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
@@ -111,7 +111,7 @@ jobs:
       - name: Process
         run: |
           rclone copy "$odir" . --include="{reports,logs,ocr,scdet}/**" --include="*.txt" --stats-one-line
-          rclone copy "$idir" "${{ inputs.title }}" --stats-one-line -v --exclude=\*.{mkv,mp4}
+          rclone copy "$idir" ./"${{ inputs.title }}" --stats-one-line -v --exclude=\*.{mkv,mp4}
           shopt -s globstar; cat reports/**/*.txt | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
           cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
