@@ -13,8 +13,6 @@ env:
   path: /home/runner/.local/bin
   GH_TOKEN: ${{ github.token }}
 jobs:
-
-
   delete:
     if: inputs.delete
     runs-on: ubuntu-latest
@@ -22,7 +20,6 @@ jobs:
       - name: Delete old cache(s)
         run: gh cache delete -R ${{ github.repository }} --succeed-on-no-caches --all
         # run: gh cache delete -R ${{ github.repository }} $(gh cache list -R ${{ github.repository }} --json id,key -q '.[]|select(.key=="bin")|.id')
-
 
   cache:
     runs-on: ubuntu-latest
@@ -57,13 +54,20 @@ jobs:
           # gh get BtbN/FFmpeg-Builds '*latest-linux64-gpl-8.0.*' - | tar -xJ --strip=2 ffmpeg-n8.0-latest-linux64-gpl-8.0/bin/{ffmpeg,ffprobe} &
 
           # mkvmerge
-          sudo apt install -yqq libfuse2t64 &> /dev/null &
-          curl -s https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | yq -px .mkvtoolnix-releases.latest-source.version)-x86_64.AppImage -o mkvmerge &
+          # sudo apt install -yqq libfuse2t64 &> /dev/null &
+          curl -s https://mkvtoolnix.download/appimage/MKVToolNix_GUI-$(curl -s https://mkvtoolnix.download/latest-release.xml | yq -px .mkvtoolnix-releases.latest-source.version)-x86_64.AppImage -o AppImage
+          chmod +x AppImage
+          AppImage --appimage-extract > /dev/null
+          rm AppImage
+          cat << EOF > mkvmerge
+          export APPDIR=$path/squashfs-root
+          export ARGV0=mkvmerge
+          $path/squashfs-root/AppRun "\$@"
+          EOF
 
           wait
-          chmod 755 *
+          chmod +x *
           echo "${{ secrets.RCLONE_CONF }}" | base64 -d | xz -d > rclone.conf
-
 
       - name: Check programs
         run: |
@@ -77,13 +81,10 @@ jobs:
           jq -V
           yq -V
 
-
       - uses: actions/cache/save@v4
         with:
           key: bin
-          path: |
-            ${{ env.path }}
-            /lib/x86_64-linux-gnu/libfuse.*
+          path: ${{ env.path }}
 
 
   test:
@@ -91,17 +92,10 @@ jobs:
     needs: cache
     runs-on: ubuntu-latest
     steps:
-
-      - name: Sudo tar
-        run: sudo chown root /usr/bin/tar && sudo chmod u+s $_
-
       - uses: actions/cache/restore@v4
         with:
           key: bin
-          path: |
-            ${{ env.path }}
-            /lib/x86_64-linux-gnu/libfuse.*
-
+          path: ${{ env.path }}
 
       - name: Check programs
         run: |
