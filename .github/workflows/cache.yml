@@ -62,16 +62,16 @@ jobs:
           mv squashfs-root $path/mkvtoolnix
           } &
 
-          wait
-          chmod +x *
-
-          echo "${{ secrets.RCLONE_CONF }}" | base64 -d | xz -d > rclone.conf
-
           cat << EOF > mkvmerge
           export APPDIR=$path/mkvtoolnix
           export ARGV0=mkvmerge
           $path/mkvtoolnix/AppRun "\$@"
           EOF
+
+          wait
+          chmod +x *
+          echo "${{ secrets.RCLONE_CONF }}" | base64 -d | xz -d > rclone.conf
+
 
       - name: Check programs
         run: |
