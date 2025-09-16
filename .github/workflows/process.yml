@@ -12,7 +12,7 @@ on:
       iroot:
         default: "chess:"
       oroot:
-        default: koofr:/done
+        default: koofr:done
       t:
         default: 5
       try:

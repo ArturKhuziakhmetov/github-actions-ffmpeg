@@ -56,7 +56,7 @@ jobs:
       - name: Process
         run: |
           file="${{ matrix.Path }}"
-          rclone copyto "$idir/${{ matrix.Path }}" "${{ matrix.Path }}" --stats-one-line -v
+          rclone copyto "$idir/${{ matrix.Path }}" ./"${{ matrix.Path }}" --stats-one-line -v
 
           mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,silence,scdet}/"$(dirname "$file")"
 
