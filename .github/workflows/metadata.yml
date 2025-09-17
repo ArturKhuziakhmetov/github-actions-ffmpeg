@@ -81,7 +81,7 @@ jobs:
           ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images_end/$file.png" &
 
-          ffmpeg -v 24 -an -ss $(bc <<< $duration/2) -i "$file" -frames 1 -update 1 "out/images/$file.png" &
+          ffmpeg -v 24 -an -ss $(bc <<< $duration/3) -i "$file" -frames 1 -update 1 "out/images/$file.png" &
 
           link "out/images/$file.png" f.png
 
