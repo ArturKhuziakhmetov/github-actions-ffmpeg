@@ -80,8 +80,8 @@ jobs:
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
 
-          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png" &
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$ofile" "out/end2/$name.mkv" -frames 1 -update 1 "out/images_end2/$name.png" &
+          ffmpeg -v 24 -i "$ofile" -t ${{ inputs.t }} -c copy "out/begin2/$name.mkv" -frames 1 -update 1 "out/images2/$name.png"
 
           {
             ffprobe -v 24 -show_streams -show_format -of json "$ifile" | jq -rj '[
@@ -112,7 +112,7 @@ jobs:
         run: |
           rclone copy "$odir" . --include="{reports,logs,ocr,scdet}/**" --include="*.txt" --stats-one-line
           rclone copy "$idir" ./"${{ inputs.title }}" --stats-one-line -v --exclude=\*.{mkv,mp4}
-          shopt -s globstar; cat reports/**/*.txt | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
+          find reports -type f -print0 | sort -zV | xargs -0 cat | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
           cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
           mkdir info
