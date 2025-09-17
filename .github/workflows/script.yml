@@ -1,11 +1,14 @@
 # git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun script.yml -F script=@ -F data=@- -f title="" -f matrix=true
 
 name: script
-run-name: ${{ inputs.title }}
+run-name: ${{ inputs.title || ( inputs.json && fromJSON(inputs.data).title) }}
 on:
   workflow_dispatch:
     inputs:
       matrix:
+        type: boolean
+        default: false
+      json:
         type: boolean
         default: false
       data:
@@ -25,6 +28,26 @@ env:
   path: /home/runner/.local/bin
 
 jobs:
+
+  script:
+    if: ${{ ! inputs.matrix }}
+    runs-on: ubuntu-latest
+    env:
+      data: ${{ inputs.json && fromJSON(inputs.data).data || inputs.data }}
+      data2: ${{ inputs.json && fromJSON(inputs.data).data2 || inputs.data2 }}
+      remote: ${{ inputs.remote }}
+    steps:
+      - if: inputs.cache
+        uses: actions/cache/restore@v4
+        with:
+          key: bin
+          path: ${{ env.path }}
+
+      - name: Script
+        run: |
+          # script
+          ${{ inputs.script }}
+
 
   script-matrix:
     if: inputs.matrix
@@ -47,22 +70,3 @@ jobs:
           # script
           ${{ inputs.script }}
 
-
-  script:
-    if: ${{ ! inputs.matrix }}
-    runs-on: ubuntu-latest
-    env:
-      data: ${{ inputs.data }}
-      data2: ${{ inputs.data2 }}
-      remote: ${{ inputs.remote }}
-    steps:
-      - if: inputs.cache
-        uses: actions/cache/restore@v4
-        with:
-          key: bin
-          path: ${{ env.path }}
-
-      - name: Script
-        run: |
-          # script
-          ${{ inputs.script }}
