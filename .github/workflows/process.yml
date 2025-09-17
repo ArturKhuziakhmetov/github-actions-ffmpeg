@@ -115,7 +115,7 @@ jobs:
           find reports -type f -print0 | sort -zV | xargs -0 cat | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
           cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
-          mkdir info
+          mkdir -p info
           cp *.txt job.yaml info
           7z a "${{ inputs.title }}/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
           rclone copy . "$odir" --stats-one-line -v --no-update-modtime --create-empty-src-dirs
