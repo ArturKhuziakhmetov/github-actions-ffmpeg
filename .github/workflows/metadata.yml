@@ -78,13 +78,11 @@ jobs:
 
           ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
-          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file" &
-          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images_end/$file.png" &
-
-          ffmpeg -v 24 -an -ss $(bc <<< $duration/3) -i "$file" -frames 1 -update 1 "out/images/$file.png" &
+          ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file"
+          ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images_end/$file.png"
+          ffmpeg -v 24 -an -ss $(bc <<< $duration/3) -i "$file" -frames 1 -update 1 "out/images/$file.png"
 
           link "out/images/$file.png" f.png
-
           until curl -sF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]|del(.fen)' > >(tee "out/ocr/$file.png.json" f.json); do sleep 1; done
 
           read w h x y < <(jq -r --argjson w $width --argjson h $height '[ $w*.width, $h*.height, $w*(.xc-.width/2), $h*(.yc-.height/2) | round ] | @sh' f.json)
