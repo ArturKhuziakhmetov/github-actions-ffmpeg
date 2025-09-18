@@ -63,6 +63,7 @@ jobs:
 
           # scenes
           ${{ inputs.scenes }} && {
+          set -x
           ffmpeg -v 24 -an -i "$file" -vf scdet,metadata=key=lavfi.scd.time:mode=print:file=scdet -f null -
           [[ -s scdet ]] && {
             cp scdet "out/scdet/$file.txt"
