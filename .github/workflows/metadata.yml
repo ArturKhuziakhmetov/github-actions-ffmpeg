@@ -103,7 +103,9 @@ jobs:
               ss: $ss
               to: $to
               vf:
-                - trim: *trim
+                - trim:
+                    start: -2
+                    end: -2
                 - crop:
                     x: $x
                     y: $y
@@ -134,9 +136,6 @@ jobs:
           cat << EOF > job.yaml
           title: "${{ inputs.title }}"
           apad: &apad 0.5
-          trim: &trim
-            start: -2
-            end: -2
           fps: &fps
             fps: source_fps
             start_time: 0
