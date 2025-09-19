@@ -64,15 +64,12 @@ jobs:
           ${{ inputs.scenes }} && {
           ffmpeg -v 24 -an -i "$file" -vf scdet,metadata=key=lavfi.scd.time:mode=print:file=scdet -f null -
           [[ -s scdet ]] && {
-            cp scdet "out/scdet/$file.txt"
-            grep -Po '=\K.*' scdet | jq -s 'range(0;length) as $i | .[$i] as $x | if $i == 0 or $x > .[$i-1]+10 then $x else empty end' > sc
-            [[ $(cat sc | wc -l) == 1 ]] && e=001 || e=%03d
-            mkvmerge "$file" --split parts:$(jq -sr 'map("\([.-5,0.1]|max)s-\(.+5)s")|join(",")' sc) -o scenes/"$file"-$e
-            paste sc <(find scenes -type f | sort) | while read t f; do t0=$(date -ud@$t +%T.%N); fo="$f - $t - ${t0:0:12}.${file##*.}"; mv "$f" "${fo//:/-}"; done
-            ls -1 scenes/*
-            mv scenes out
-          }
-          } &
+            cat scdet | tee "out/scdet/$file.txt"
+            mkdir -p out/scenes
+            read select frames < <(grep -Po "frame:\K\d+" scdet | jq -bsr '[map("between(n,\(.-1),\(.))")|join("+"),length*2]|@sh')
+            ffmpeg -v 24 -an -i "$file" -vf select=$select -frames $frames -fps_mode passthrough -frame_pts true out/scenes/"$file - %d-.jpg"
+            ls -1 out/scenes/*
+          }; } &
 
           ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
 
