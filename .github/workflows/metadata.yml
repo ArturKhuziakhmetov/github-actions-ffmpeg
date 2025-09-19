@@ -103,17 +103,17 @@ jobs:
               ss: $ss
               to: $to
               vf:
-                - trim:
-                    start: -2
-                    end: -2
-                - crop:
-                    x: $x
-                    y: $y
-                    w: $w
-                    h: $w
-                    exact: 1
-                - fillborders:
-                - fps: *fps
+              - trim:
+                  start: -2
+                  end: -2
+              - crop:
+                  x: $x
+                  y: $y
+                  w: $w
+                  h: $w
+                  exact: 1
+              - fillborders:
+              - fps: *fps
           EOF
 
       - name: Upload
