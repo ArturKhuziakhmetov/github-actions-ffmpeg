@@ -1,4 +1,4 @@
-# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun process.yml -F yaml=@"$title/job.yaml" -f title="$title" -f try=true -f t=10 -f iroot=chess2
+# git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun process.yml -F yaml=@"$title/job.yaml" -f title="$title" -f try=true -f t=10 -f idir=chess2
 
 name: process
 run-name: ${{ inputs.title }}
@@ -9,18 +9,19 @@ on:
         required: true
       yaml:
         required: true
-      iroot:
-        default: "chess:"
-      oroot:
-        default: koofr:done
+      idir:
+        default: chess:${{ inputs.title }}
+      odir:
+        default: koofr:done/$title
       t:
         default: 5
       try:
         type: boolean
 env:
   path: /home/runner/.local/bin
-  idir: ${{ inputs.iroot }}/${{ inputs.title }}
-  odir: ${{ inputs.oroot }}/${{ inputs.title }}
+  title: ${{ inputs.title }}
+  idir: ${{ inputs.idir }}
+  odir: ${{ inputs.odir }}
 
 jobs:
   prepare:
@@ -31,7 +32,7 @@ jobs:
       - name: Define matrix
         id: matrix
         run: |
-          echo "${{ inputs.title }}"
+          echo "$title"
           yq "$(base64 -d <<< ${{ vars.JOB_JQ }})" << "EOF" | tee y
           ${{ inputs.yaml }}EOF
           { printf "data="; yq 'sort_by(.duration)|reverse' -oj -I0 y; } >> $GITHUB_OUTPUT
@@ -70,8 +71,8 @@ jobs:
         run: |
           rclone copyto "$idir/${{ matrix.file }}" ./"$ifile" --stats-one-line -v
           name=${ifile%.*}
-          ofile=out/"${{ inputs.title }}"/${ifile%.*}.mkv
-          mkdir -p out/{logs,images2,images_end2,begin2,end2,reports,"${{ inputs.title }}"}/"$(dirname "$ifile")"
+          ofile=out/"$title"/${ifile%.*}.mkv
+          mkdir -p out/{logs,images2,images_end2,begin2,end2,reports,"$title"}/"$(dirname "$ifile")"
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
@@ -111,11 +112,11 @@ jobs:
       - name: Process
         run: |
           rclone copy "$odir" . --include="{reports,logs,ocr,scdet}/**" --include="*.txt" --stats-one-line
-          rclone copy "$idir" ./"${{ inputs.title }}" --stats-one-line -v --exclude=\*.{mkv,mp4}
+          rclone copy "$idir" ./"$title" --stats-one-line -v --exclude=\*.{mkv,mp4}
           find reports -type f -print0 | sort -zV | xargs -0 cat | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
           cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
           mkdir -p info
           cp *.txt job.yaml info
-          7z a "${{ inputs.title }}/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
+          7z a "$title/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
           rclone copy . "$odir" --stats-one-line -v --no-update-modtime --create-empty-src-dirs
