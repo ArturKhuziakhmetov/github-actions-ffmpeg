@@ -12,7 +12,7 @@ on:
       idir:
         default: chess:${{ inputs.title }}
       odir:
-        default: koofr:done/$title
+        default: koofr:done/${{ inputs.title }}
       t:
         default: 5
       try:
