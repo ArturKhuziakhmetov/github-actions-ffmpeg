@@ -20,8 +20,8 @@ on:
 env:
   path: /home/runner/.local/bin
   title: ${{ inputs.title }}
-  idir: ${{ inputs.idir || chess:${{ inputs.title }}}}
-  odir: ${{ inputs.odir || koofr:done/${{ inputs.title }}}}
+  idir: ${{ inputs.idir || format('chess:{0}', inputs.title) }}
+  odir: ${{ inputs.odir || format('koofr:done/{0}', inputs.title) }}
 
 jobs:
   prepare:
