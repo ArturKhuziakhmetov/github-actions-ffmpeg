@@ -1,7 +1,7 @@
 # git ffmpeg-commit && git ffmpeg-push; gh ffmpeg-wrun script.yml -F script=@ -F data=@- -f title="" -f matrix=true
 
 name: script
-run-name: ${{ inputs.title || ( inputs.json && fromJSON(inputs.data).title) }}
+run-name: ${{ inputs.title || ( inputs.json && fromJSON(inputs.data).title) || 'Script' }}
 on:
   workflow_dispatch:
     inputs:
