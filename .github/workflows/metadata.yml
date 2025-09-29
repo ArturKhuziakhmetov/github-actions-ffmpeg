@@ -91,6 +91,7 @@ jobs:
 
           wait
 
+          sed -ni '/frame/{h;n};/lavfi/{x;p;x;p}' black
           cp black "out/black/$file.txt"
           cp silence "out/silence/$file.txt"
 
