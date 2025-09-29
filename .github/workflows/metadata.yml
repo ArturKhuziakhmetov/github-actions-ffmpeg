@@ -73,7 +73,7 @@ jobs:
             ls -1 out/scenes/*
           }; } &
 
-          ffmpeg -v 24 -i "$file" -vf blackdetect=d=0.01,metadata=mode=print:file=black -af silencedetect=n=0.00001:d=0.1,ametadata=mode=print:file=silence -f null - &
+          ffmpeg -v 24 -i "$file" -vf blackdetect=d=0.01,metadata=mode=print:file=black -af silencedetect=n=0.0001:d=0.01,ametadata=mode=print:file=silence -f null - &
 
           source <(ffprobe -v 24 "$file" -of json -show_streams -show_format | yq -os '.streams[0],.format')
           ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file"
