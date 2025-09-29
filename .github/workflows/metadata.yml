@@ -7,20 +7,22 @@ on:
     inputs:
       title:
         required: true
-      iroot:
-        default: "chess:"
-      oroot:
-        default: koofr:done
+      idir:
+        required: false
+      odir:
+        required: false
       include:
         default: \*.{mkv,mp4}
       t:
         default: 20
       scenes:
         default: true
+      ocr:
+        default: true
 env:
   path: /home/runner/.local/bin
-  idir: ${{ inputs.iroot }}/${{ inputs.title }}
-  odir: ${{ inputs.oroot }}/${{ inputs.title }}
+  idir: ${{ inputs.idir || format('chess:{0}', inputs.title) }}
+  odir: ${{ inputs.odir || format('koofr:done/{0}', inputs.title) }}
 
 jobs:
 
@@ -58,7 +60,7 @@ jobs:
           file="${{ matrix.Path }}"
           rclone copyto "$idir/${{ matrix.Path }}" ./"${{ matrix.Path }}" --stats-one-line -v
 
-          mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,silence,scdet}/"$(dirname "$file")"
+          mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,black,silence,scdet}/"$(dirname "$file")"
 
           # scenes
           ${{ inputs.scenes }} && {
@@ -71,28 +73,32 @@ jobs:
             ls -1 out/scenes/*
           }; } &
 
-          ffmpeg -v 24 -vn -i "$file" -af silencedetect=d=1:n=1e-3,ametadata=mode=print:file=silence -f null - &
+          ffmpeg -v 24 -i "$file" -vf blackdetect=d=0.01,metadata=mode=print:file=black -af silencedetect=n=0.00001:d=0.1,ametadata=mode=print:file=silence -f null - &
 
           source <(ffprobe -v 24 "$file" -of json -show_streams -show_format | yq -os '.streams[0],.format')
           ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file"
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images_end/$file.png"
           ffmpeg -v 24 -an -ss $(bc <<< $duration/3) -i "$file" -frames 1 -update 1 "out/images/$file.png"
 
+          # ocr
+          ${{ inputs.ocr }} && {
           link "out/images/$file.png" f.png
           until curl -sF file=@f.png http://helpman.komtera.lt/predict | jq -c '.results[0]|del(.fen)' > >(tee "out/ocr/$file.png.json" f.json); do sleep 1; done
 
           read w h x y < <(jq -r --argjson w $width --argjson h $height '[ $w*.width, $h*.height, $w*(.xc-.width/2), $h*(.yc-.height/2) | round ] | @sh' f.json)
           echo $w $h $x $y
+          }
 
           wait
 
+          cp black "out/black/$file.txt"
           cp silence "out/silence/$file.txt"
 
           ss=$(grep -A2 =0$ silence | tail -1 | cut -c19-)
           to=$(tail -1 silence | grep start | cut -c21-)
           tor=$(bc <<< ${to:-$duration}-$duration)
 
-          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:-0} $tor $duration $(date -ud@$duration +%T) $w $h $x $y '$file'" | tee "out/metadata/$file.txt"
+          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:-0} $tor $duration $(date -ud@$duration +%T) ${w:-$width} ${h:-$height} ${x:-0} ${y:-0} '$file'" | tee "out/metadata/$file.txt"
 
           cat << EOF | tee "out/files/$file.yaml"
           - file: "$file"
@@ -107,10 +113,10 @@ jobs:
                   start: -2
                   end: -2
               - crop:
-                  x: $x
-                  y: $y
-                  w: $w
-                  h: $w
+                  x: ${x:-0}
+                  y: ${y:-0}
+                  w: ${w:-$width}
+                  h: ${h:-$height}
                   exact: 1
               - fillborders:
               - fps: *fps
@@ -135,7 +141,7 @@ jobs:
         run: |
           cat << EOF > job.yaml
           title: "${{ inputs.title }}"
-          apad: &apad 0.5
+          apad: &apad 0.3
           fps: &fps
             fps: source_fps
             start_time: 0

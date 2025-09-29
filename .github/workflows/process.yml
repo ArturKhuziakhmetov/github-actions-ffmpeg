@@ -13,6 +13,8 @@ on:
         required: false
       odir:
         required: false
+      ffmpeg_options:
+        default: ${{ vars.FFMPEG_OPTIONS }}
       t:
         default: 5
       try:
@@ -61,7 +63,7 @@ jobs:
 
           FFREPORT=file=try.log:level=48 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
-          ${{ matrix.ops }} -t ${{ inputs.t }} ${{ vars.FFMPEG_OPTIONS }} "out/try-ffmpeg/${ifile%.*}.mkv"
+          ${{ matrix.ops }} -t ${{ inputs.t }} ${{ inputs.ffmpeg_options }} "out/try-ffmpeg/${ifile%.*}.mkv"
 
           mv *.log "out/try-logs/${ifile%.*}.log"
           rclone copy out "$odir" --stats-one-line -v
@@ -76,7 +78,7 @@ jobs:
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
-          ${{ matrix.ops }} ${{ vars.FFMPEG_OPTIONS }} "$ofile"
+          ${{ matrix.ops }} ${{ inputs.ffmpeg_options }} "$ofile"
 
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
