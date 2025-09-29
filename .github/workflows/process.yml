@@ -14,7 +14,7 @@ on:
       odir:
         required: false
       ffmpeg_options:
-        default: ${{ vars.FFMPEG_OPTIONS }}
+        required: false
       t:
         default: 5
       try:
@@ -24,6 +24,7 @@ env:
   title: ${{ inputs.title }}
   idir: ${{ inputs.idir || format('chess:{0}', inputs.title) }}
   odir: ${{ inputs.odir || format('koofr:done/{0}', inputs.title) }}
+  ffmpeg_options: ${{ inputs.ffmpeg_options || vars.FFMPEG_OPTIONS }}
 
 jobs:
   prepare:
@@ -63,7 +64,7 @@ jobs:
 
           FFREPORT=file=try.log:level=48 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
-          ${{ matrix.ops }} -t ${{ inputs.t }} ${{ inputs.ffmpeg_options }} "out/try-ffmpeg/${ifile%.*}.mkv"
+          ${{ matrix.ops }} -t ${{ inputs.t }} $ffmpeg_options "out/try-ffmpeg/${ifile%.*}.mkv"
 
           mv *.log "out/try-logs/${ifile%.*}.log"
           rclone copy out "$odir" --stats-one-line -v
@@ -78,7 +79,7 @@ jobs:
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
-          ${{ matrix.ops }} ${{ inputs.ffmpeg_options }} "$ofile"
+          ${{ matrix.ops }} $ffmpeg_options "$ofile"
 
           mkvmerge "$ofile" -o "$ofile"~
           mv "$ofile"~ "$ofile"
