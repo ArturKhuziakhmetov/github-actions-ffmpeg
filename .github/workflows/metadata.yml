@@ -60,7 +60,7 @@ jobs:
           file="${{ matrix.Path }}"
           rclone copyto "$idir/${{ matrix.Path }}" ./"${{ matrix.Path }}" --stats-one-line -v
 
-          mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,black,silence,scdet}/"$(dirname "$file")"
+          mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,vframes,silence,scdet}/"$(dirname "$file")"
 
           # scenes
           ${{ inputs.scenes }} && {
@@ -73,7 +73,7 @@ jobs:
             ls -1 out/scenes/*
           }; } &
 
-          ffmpeg -v 24 -i "$file" -vf blackdetect=d=0.01,metadata=mode=print:file=black -af silencedetect=n=0.0001:d=0.01,ametadata=mode=print:file=silence -f null - &
+          ffmpeg -v 24 -i "$file" -vf blackdetect=d=0.01,scdet,metadata=mode=print:file=vframes -af silencedetect=n=1e-4:d=0.01,ametadata=mode=print:file=silence -f null - &
 
           source <(ffprobe -v 24 "$file" -of json -show_streams -show_format | yq -os '.streams[0],.format')
           ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file"
@@ -91,9 +91,9 @@ jobs:
 
           wait
 
-          sed -ni '/frame/{h;n};/lavfi/{x;p;x;p}' black
-          cp black "out/black/$file.txt"
-          cp silence "out/silence/$file.txt"
+          cp silence "out/silence/$file.log"
+          cp vframes "out/vframes/$file.log"
+          gzip "$_"
 
           ss=$(grep -A2 =0$ silence | tail -1 | cut -c19-)
           to=$(tail -1 silence | grep start | cut -c21-)
