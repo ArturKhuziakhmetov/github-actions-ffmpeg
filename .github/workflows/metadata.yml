@@ -57,6 +57,7 @@ jobs:
 
       - name: Process
         run: |
+          set -x
           file="${{ matrix.Path }}"
           rclone copyto "$idir/${{ matrix.Path }}" ./"${{ matrix.Path }}" --stats-one-line -v
 
