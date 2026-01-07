@@ -19,6 +19,8 @@ on:
         default: true
       ocr:
         default: true
+      debug:
+        default: false
 env:
   path: /home/runner/.local/bin
   idir: ${{ inputs.idir || format('{0}{1}', vars.INPUT_ROOT, inputs.title) }}
@@ -57,7 +59,8 @@ jobs:
 
       - name: Process
         run: |
-          set -x
+          ${{ inputs.debug }} && set -x
+
           file="${{ matrix.Path }}"
           rclone copyto "$idir/${{ matrix.Path }}" ./"${{ matrix.Path }}" --stats-one-line -v
 
