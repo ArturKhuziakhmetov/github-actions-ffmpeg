@@ -115,7 +115,7 @@ jobs:
       - name: Process
         run: |
           rclone copy "$odir" . --include="{reports,logs,ocr,scdet}/**" --include="*.txt" --stats-one-line
-          rclone copy "$idir" ./"$title" --stats-one-line -v --exclude=\*.{mkv,mp4}
+          rclone copy "$idir" ./"$title" --stats-one-line -v --exclude=\*.{mkv,mp4,ts}
           find reports -type f -print0 | sort -zV | xargs -0 cat | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
           cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
