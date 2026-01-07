@@ -22,8 +22,8 @@ on:
 env:
   path: /home/runner/.local/bin
   title: ${{ inputs.title }}
-  idir: ${{ inputs.idir || format('chess:{0}', inputs.title) }}
-  odir: ${{ inputs.odir || format('koofr:done/{0}', inputs.title) }}
+  idir: ${{ inputs.idir || format('{0}{1}', vars.INPUT_ROOT, inputs.title) }}
+  odir: ${{ inputs.odir || format('{0}{1}', vars.OUTPUT_ROOT, inputs.title) }}
   ffmpeg_options: ${{ inputs.ffmpeg_options || vars.FFMPEG_OPTIONS }}
 
 jobs:
