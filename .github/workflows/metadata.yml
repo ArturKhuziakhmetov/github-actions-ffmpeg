@@ -12,7 +12,7 @@ on:
       odir:
         required: false
       include:
-        default: ${{ vars.DEFAULT_EXTENSIONS }}
+        default: \*.{mkv,mp4,ts}
       t:
         default: 20
       scenes:
