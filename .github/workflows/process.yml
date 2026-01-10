@@ -73,6 +73,13 @@ jobs:
         if: ${{ ! inputs.try }}
         run: |
           rclone copyto "$idir/${{ matrix.file }}" ./"$ifile" --stats-one-line -v
+
+          if [ ! -s "$ifile" ]; then
+            rclone copy "$idir" . --include='${{ matrix.file }}.0??' --transfers=16 --stats-one-line -v
+            cat "$ifile".0?? > "$ifile"
+            rm -v "$ifile".0??
+          fi
+
           name=${ifile%.*}
           ofile=out/"$title"/${ifile%.*}.mkv
           mkdir -p out/{logs,images2,images_end2,begin2,end2,reports,"$title"}/"$(dirname "$ifile")"
