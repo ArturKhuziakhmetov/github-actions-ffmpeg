@@ -62,8 +62,15 @@ jobs:
           ${{ inputs.debug }} && set -x
 
           file="${{ matrix.Path }}"
-          [ -s "$file" ] || cat "$file".0?? > "$file"
-          rclone copyto "$idir/${{ matrix.Path }}" ./"${{ matrix.Path }}" --stats-one-line -v
+
+          if [ -s "$file" ]
+          then
+            rclone copyto "$idir/${{ matrix.Path }}" ./"${{ matrix.Path }}" --stats-one-line -v
+          else
+            rclone copy "$idir" . --include='${{ matrix.Path }}.0??' --stats-one-line -v
+            cat "$file".0?? > "$file"
+            rm -v "$file".0??
+          fi
 
           mkdir -p out/{begin,crop,crop_end,end,files,images,images_end,metadata,ocr,vframes,silence,scdet}/"$(dirname "$file")"
 
