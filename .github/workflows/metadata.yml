@@ -148,7 +148,7 @@ jobs:
       - name: Download
         run: |
           rclone copy "$odir" . --include="{files,metadata,scdet}/**" --create-empty-src-dirs --stats-one-line -v
-          rclone copyto "$idir/filelist.txt" . --stats-one-line -v
+          rclone copyto "$idir/filelist.txt" filelist.txt --stats-one-line -v
 
       - name: Process
         run: |
