@@ -127,6 +127,7 @@ jobs:
           cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
           mkdir -p info
-          cp "$title"/*.txt *.txt job.yaml info
+          cp *.txt job.yaml info
+          [ -f "$title"/filelist.txt ] && cp "$title"/filelist.txt info
           7z a "$title/_info.7z" -mx ./{logs,ocr,scdet,info/*} | grep -i archive
           rclone copy . "$odir" --stats-one-line -v --no-update-modtime --create-empty-src-dirs
