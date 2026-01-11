@@ -65,7 +65,7 @@ jobs:
           rclone copyto "$idir/${{ matrix.Path }}" ./"${{ matrix.Path }}" --stats-one-line -v
 
           if [ ! -s "$file" ]; then
-            rclone copy "$idir" . --include='${{ matrix.Path }}.0??' --transfers=16 --stats-one-line -v
+            rclone copy "$idir" . --include='*.0??' --transfers=16 --stats-one-line -v
             cat "$file".0?? > "$file"
             rm -v "$file".0??
           fi
