@@ -16,9 +16,9 @@ on:
       t:
         default: 20
       scenes:
-        default: true
+        default: false
       ocr:
-        default: true
+        default: false
       debug:
         default: false
 env:
@@ -59,6 +59,7 @@ jobs:
 
       - name: Process
         run: |
+          # Process
           ${{ inputs.debug }} && set -x
 
           file="${{ matrix.Path }}"
@@ -124,7 +125,7 @@ jobs:
                   start: -2
                   end: -2
               - crop:
-                  x: ${x:-0}
+                  x: ${x:-$((width-height))}
                   y: ${y:-0}
                   w: ${w:-$width}
                   h: ${h:-$height}

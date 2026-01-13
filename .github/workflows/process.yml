@@ -72,6 +72,7 @@ jobs:
       - name: Download
         if: ${{ ! inputs.try }}
         run: |
+          # Download
           rclone copyto "$idir/${{ matrix.file }}" ./"$ifile" --stats-one-line -v
 
           if [ ! -s "$ifile" ]; then
@@ -83,6 +84,7 @@ jobs:
       - name: Process
         if: ${{ ! inputs.try }}
         run: |
+          # Process
           echo "$ifile"
           name=${ifile%.*}
           ofile=out/"$title"/${ifile%.*}.mkv
@@ -114,6 +116,7 @@ jobs:
       - name: Upload
         if: ${{ ! inputs.try }}
         run: |
+          # Upload
           tree --filesfirst --du
           rclone copy out "$odir" --stats-one-line -v
 
