@@ -41,6 +41,7 @@ jobs:
       - name: Define matrix
         id: matrix
         run: |
+          ${{ inputs.debug }} && set -x
           rclone lsjson -R --include=${{ inputs.include }} --files-only --no-mimetype --no-modtime "$idir" | jq 'map({Path,Size})' | tee j
           { echo -n "data="; jq -c 'sort_by(.Size)|reverse' j; } >> $GITHUB_OUTPUT
 
@@ -148,11 +149,15 @@ jobs:
 
       - name: Download
         run: |
+          # Download
+          ${{ inputs.debug }} && set -x
           rclone copy "$odir" . --include="{files,metadata,scdet}/**" --create-empty-src-dirs --stats-one-line -v
           rclone copyto "$idir/filelist.txt" filelist.txt --stats-one-line -v
 
       - name: Process
         run: |
+          # Process
+          ${{ inputs.debug }} && set -x
           cat << EOF > job.yaml
           title: "${{ inputs.title }}"
           apad: &apad 0.3
@@ -175,4 +180,7 @@ jobs:
           } | tee metadata.txt
 
       - name: Upload
-        run: rclone copy . "$odir" --stats-one-line -v --no-update-modtime
+        run: |
+          # Upload
+          ${{ inputs.debug }} && set -x
+          rclone copy . "$odir" --stats-one-line -v --no-update-modtime

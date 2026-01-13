@@ -19,6 +19,8 @@ on:
         default: 5
       try:
         type: boolean
+      debug:
+        default: false
 env:
   path: /home/runner/.local/bin
   title: ${{ inputs.title }}
@@ -41,6 +43,7 @@ jobs:
         id: matrix
         run: |
           # Prepare
+          ${{ inputs.debug }} && set -x
           echo "$title"
           yq "$(base64 -d <<< ${{ vars.JOB_JQ }})" << "EOF" | tee y
           ${{ inputs.yaml }}EOF
@@ -69,6 +72,7 @@ jobs:
       - name: Try process
         if: inputs.try
         run: |
+          ${{ inputs.debug }} && set -x
           rclone copyto "$idir/${{ matrix.file }}" ./"$ifile" --stats-one-line -v
           mkdir -p out/try-{logs,ffmpeg}/"$(dirname "$ifile")"
 
@@ -83,8 +87,8 @@ jobs:
         if: ${{ ! inputs.try }}
         run: |
           # Download
+          ${{ inputs.debug }} && set -x
           rclone copyto "$idir/${{ matrix.file }}" ./"$ifile" --stats-one-line -v
-
           if [ ! -s "$ifile" ]; then
             rclone copy "$idir" . --include='*.0??' --transfers=16 --stats-one-line -v
             cat "$ifile".0?? > "$ifile"
@@ -95,6 +99,7 @@ jobs:
         if: ${{ ! inputs.try }}
         run: |
           # Process
+          ${{ inputs.debug }} && set -x
           echo "$ifile"
           name=${ifile%.*}
           ofile=out/"$title"/${ifile%.*}.mkv
@@ -128,6 +133,7 @@ jobs:
         if: ${{ ! inputs.try }}
         run: |
           # Upload
+          ${{ inputs.debug }} && set -x
           tree --filesfirst --du
           rclone copy out "$odir" --stats-one-line -v
 
@@ -143,6 +149,7 @@ jobs:
 
       - name: Process
         run: |
+          ${{ inputs.debug }} && set -x
           rclone copy "$odir" . --include="{reports,logs,ocr,scdet}/**" --include="*.txt" --stats-one-line
           rclone copy "$idir" ./"$title" --stats-one-line -v --exclude=\*.{mkv,mp4,ts}
           find reports -type f -print0 | sort -zV | xargs -0 cat | column -ts$'\t' -T14 -R4,5,6,11,12,13 -N "w,h,fps,duration,size,brate, ,w,h,fps,duration,size,brate,filename" -c0 | tee report.txt
