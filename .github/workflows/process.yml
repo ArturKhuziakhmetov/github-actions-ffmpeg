@@ -104,7 +104,7 @@ jobs:
           name=${ifile%.*}
           ofile=out/"$title"/${ifile%.*}.mkv
           mkdir -p out/{logs,images2,images_end2,begin2,end2,reports,"$title"}/"$(dirname "$ifile")"
-          { sleep 3; sed -n 5p ffmpeg.log; } &
+          { sleep 5; sed -n 5p ffmpeg.log; } &
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -stats_period 300 -benchmark -i "$ifile" \
