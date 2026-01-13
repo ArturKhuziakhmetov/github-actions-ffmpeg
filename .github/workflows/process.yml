@@ -51,7 +51,7 @@ jobs:
 
           cat << "EOF" > job.yaml
           ${{ inputs.yaml }}EOF
-          rclone copyto job.yaml "$odir/job.yaml" --stats-one-line -v
+          rclone copyto job.yaml "$odir/job.yaml" --stats-one-line --no-update-modtime -v
 
   process:
     name: ${{ matrix.file }}
