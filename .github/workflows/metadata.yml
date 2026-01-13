@@ -109,7 +109,7 @@ jobs:
           to=$(tail -1 silence | grep start | cut -c21-)
           tor=$(bc <<< ${to:-$duration}-$duration)
 
-          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:-0} $tor $duration $(date -ud@$duration +%T) ${w:-$width} ${h:-$height} ${x:-0} ${y:-0} '$file'" | tee "out/metadata/$file.txt"
+          echo "$r_frame_rate $avg_frame_rate $width $height ${ss:-0} $tor $duration $(date -ud@$duration +%T) ${w:-$width} ${h:-$height} ${x:-$((width-height))} ${y:-0} '$file'" | tee "out/metadata/$file.txt"
 
           cat << EOF | tee "out/files/$file.yaml"
           - file: "$file"

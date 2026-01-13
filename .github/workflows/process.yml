@@ -69,7 +69,7 @@ jobs:
           mv *.log "out/try-logs/${ifile%.*}.log"
           rclone copy out "$odir" --stats-one-line -v
 
-      - name: Process
+      - name: Download
         if: ${{ ! inputs.try }}
         run: |
           rclone copyto "$idir/${{ matrix.file }}" ./"$ifile" --stats-one-line -v
@@ -80,12 +80,16 @@ jobs:
             rm -v "$ifile".0??
           fi
 
+      - name: Process
+        if: ${{ ! inputs.try }}
+        run: |
+          echo "$ifile"
           name=${ifile%.*}
           ofile=out/"$title"/${ifile%.*}.mkv
           mkdir -p out/{logs,images2,images_end2,begin2,end2,reports,"$title"}/"$(dirname "$ifile")"
 
           FFREPORT=file=ffmpeg.log:level=32 \
-          ffmpeg -hide_banner -nostdin -nostats -benchmark -i "$ifile" \
+          ffmpeg -hide_banner -nostdin -stats_period 300 -benchmark -i "$ifile" \
           ${{ matrix.ops }} $ffmpeg_options "$ofile"
 
           mkvmerge "$ofile" -o "$ofile"~
@@ -104,8 +108,12 @@ jobs:
               (.filename | split("/")[-1] | @sh) )] | @tsv'
           } | tee "out/reports/$name.txt"
 
-          sed 2,4d ffmpeg.log > "out/logs/$name.log"
+          cp ffmpeg.log "out/logs/$name.log"
           wait
+
+      - name: Upload
+        if: ${{ ! inputs.try }}
+        run: |
           tree --filesfirst --du
           rclone copy out "$odir" --stats-one-line -v
 
