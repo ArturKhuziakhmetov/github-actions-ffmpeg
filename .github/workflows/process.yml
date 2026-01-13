@@ -32,13 +32,18 @@ jobs:
     outputs:
       data: ${{ steps.matrix.outputs.data }}
     steps:
-      - name: Define matrix
+      - name: Prepare
         id: matrix
         run: |
+          # Prepare
           echo "$title"
           yq "$(base64 -d <<< ${{ vars.JOB_JQ }})" << "EOF" | tee y
           ${{ inputs.yaml }}EOF
           { printf "data="; yq 'sort_by(.duration)|reverse' -oj -I0 y; } >> $GITHUB_OUTPUT
+
+          cat << "EOF" > job.yaml
+          ${{ inputs.yaml }}EOF
+          rclone copyto job.yaml "$odir/job.yaml" --stats-one-line -v
 
   process:
     name: ${{ matrix.file }}
@@ -89,6 +94,7 @@ jobs:
           name=${ifile%.*}
           ofile=out/"$title"/${ifile%.*}.mkv
           mkdir -p out/{logs,images2,images_end2,begin2,end2,reports,"$title"}/"$(dirname "$ifile")"
+          { sleep 3 && sed -n 5p ffmpeg.log } &
 
           FFREPORT=file=ffmpeg.log:level=32 \
           ffmpeg -hide_banner -nostdin -stats_period 300 -benchmark -i "$ifile" \
