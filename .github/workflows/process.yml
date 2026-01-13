@@ -32,6 +32,11 @@ jobs:
     outputs:
       data: ${{ steps.matrix.outputs.data }}
     steps:
+      - uses: actions/cache/restore@v4
+        with:
+          key: bin
+          path: ${{ env.path }}
+
       - name: Prepare
         id: matrix
         run: |
