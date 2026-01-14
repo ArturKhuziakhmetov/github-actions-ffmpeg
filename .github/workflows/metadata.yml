@@ -131,8 +131,8 @@ jobs:
                   w: ${w:-$width}
                   h: ${h:-$height}
                   exact: 1
-              - zscale: *zscale
               - fillborders:
+              - zscale: *zscale
               - fps: *fps
           EOF
 
