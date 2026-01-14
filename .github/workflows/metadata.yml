@@ -131,6 +131,7 @@ jobs:
                   w: ${w:-$width}
                   h: ${h:-$height}
                   exact: 1
+              - zscale: *zscale
               - fillborders:
               - fps: *fps
           EOF
@@ -165,6 +166,10 @@ jobs:
             fps: source_fps
             start_time: 0
             eof_action: pass
+          zscale: &zscale
+            w: iw/2
+            h: ow
+            f: spline36
           files:
           EOF
 
