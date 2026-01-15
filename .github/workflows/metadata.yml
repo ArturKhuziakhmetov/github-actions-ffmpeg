@@ -87,6 +87,11 @@ jobs:
 
           ffmpeg -v 24 -i "$file" -vf blackdetect=d=0.01,scdet,metadata=mode=print:file=vframes -af silencedetect=n=1e-4:d=0.01,ametadata=mode=print:file=silence -f null - &
 
+          # generate frame images
+          mkdir -p "out/frame_images/${ifile%.*}"
+          ffmpeg -v 24 -an -vsync 0 -copyts -t ${{ inputs.t }} -i "$file" -vf scale=iw/4:ih/4,drawtext=fontsize=48:box=1:boxborderw=20:text_align=M:fix_bounds=1:text="%{n} %{pict_type} %{pts}" "out/frame_images/${ifile%.*}"/%06d.jpg
+          ffmpeg -v 24 -an -vsync 0 -copyts -sseof -${{ inputs.t }} -i "$file" -vf scale=iw/4:ih/4,drawtext=fontsize=48:box=1:boxborderw=20:text_align=M:fix_bounds=1:text="%{n} %{pict_type} %{pts}" "out/frame_images/${ifile%.*}"/%06d.jpg
+
           source <(ffprobe -v 24 "$file" -of json -show_streams -show_format | yq -os '.streams[0],.format')
           ffmpeg -v 24 -i "$file" -t ${{ inputs.t }} -c copy "out/begin/$file"
           ffmpeg -v 24 -sseof -${{ inputs.t }} -i "$file" -c copy "out/end/$file" -frames 1 -update 1 "out/images_end/$file.png"
