@@ -27,7 +27,8 @@ jobs:
       - name: Download programs
         run: |
           mkdir -p $path
-          cd $_
+          cd $path
+
           # sudo apt install -yqq libfuse2t64 &> /dev/null &
 
           gh alias set get 'release download -R $1 -p $2 -O $3'
@@ -68,6 +69,15 @@ jobs:
           $path/mkvtoolnix/AppRun "\$@"
           EOF
 
+          # python venv
+          { python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install pillow
+          # echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+          echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+          } &
+
+
           wait
           chmod +x *
           echo "${{ secrets.RCLONE_CONF }}" | base64 -d | xz -d > rclone.conf
@@ -84,6 +94,7 @@ jobs:
           # magick -version | head -1
           jq -V
           yq -V
+          python -m pip list
 
       - uses: actions/cache/save@v4
         with:
@@ -95,6 +106,8 @@ jobs:
     if: inputs.test
     needs: cache
     runs-on: ubuntu-latest
+    env:
+      VIRTUAL_ENV: /home/runner/.local/bin/.venv
     steps:
       - uses: actions/cache/restore@v4
         with:
@@ -112,4 +125,5 @@ jobs:
           # magick -version | head -1
           jq -V
           yq -V
+          python -m pip list
 

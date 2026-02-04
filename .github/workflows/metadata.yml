@@ -25,6 +25,7 @@ env:
   path: /home/runner/.local/bin
   idir: ${{ inputs.idir || format('{0}{1}', vars.INPUT_ROOT, inputs.title) }}
   odir: ${{ inputs.odir || format('{0}{1}', vars.OUTPUT_ROOT, inputs.title) }}
+  VIRTUAL_ENV: /home/runner/.local/bin/.venv
 
 jobs:
 
